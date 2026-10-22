@@ -4,6 +4,10 @@ mod agent_updates;
 mod agent_usage_providers;
 mod appearance;
 mod architect;
+mod workflow_plan;
+// Staged internal-only R4 journal; no executor/permission IPC exists yet.
+#[allow(dead_code)]
+mod workflow_journal;
 mod bots;
 mod browser;
 mod command_operations;
@@ -3018,6 +3022,7 @@ pub fn run() {
                 architect::profiles::architect_delete_profile,
                 architect::architect_get,
                 architect::architect_preview_schedule,
+                workflow_plan::workflow_validate_plan,
                 architect::architect_configure,
                 architect::architect_start,
                 architect::architect_control,
