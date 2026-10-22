@@ -313,6 +313,19 @@ pub(crate) fn turn_snapshot_paths(
     root: &Path,
     deadline: Instant,
 ) -> Result<Option<TurnSnapshotPaths>, String> {
+    // Non-Git test fixtures intentionally live under temp directories. Avoid
+    // launching Git for each fixture snapshot: process startup can exhaust the
+    // 500 ms capture budget under heavily parallelized Windows CI, leaving
+    // valid edits uncaptured. Git's own subprocess launcher clears GIT_* env
+    // variables, so a visible .git file/directory in an ancestor is the only
+    // supported repository discovery anchor for these test snapshots.
+    //
+    // Walk *all* ancestors: a checkout subdirectory and linked worktree have
+    // metadata above this path. For actual repositories keep the existing
+    // safe, bounded Git inventory/ignore enumeration unchanged.
+    if !root.ancestors().any(|directory| directory.join(".git").exists()) {
+        return Ok(None);
+    }
     let remaining = || {
         deadline
             .checked_duration_since(Instant::now())

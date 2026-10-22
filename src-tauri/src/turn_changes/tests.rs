@@ -71,6 +71,39 @@ fn capture(f: &Fixture, edit: impl FnOnce()) -> Captured {
     compare(&before, &after, false)
 }
 #[test]
+fn nongit_fixture_captures_edits_without_git_process_discovery() {
+    let f = Fixture::new(false);
+    f.write("dir/entry.txt", "original\n");
+    // A plain temp directory must use the bounded native directory inventory
+    // even when a Git process takes longer than the capture deadline.
+    let before =
+        crate::workspace::turn_snapshot_paths(&f.root, Instant::now() + SCAN_TIME).unwrap();
+    assert!(before.is_none());
+    let result = capture(&f, || f.write("dir/entry.txt", "updated\n"));
+    assert_eq!(result.summary.files.len(), 1, "{:?}", result.summary.error);
+    assert_eq!(result.summary.files[0].path, "dir/entry.txt");
+    assert_eq!(result.summary.files[0].status, "modified");
+}
+
+#[test]
+fn git_nested_fixture_preserves_git_inventory_and_ignore_behavior() {
+    let f = Fixture::new(true);
+    f.write(".gitignore", "ignored.txt\n");
+    f.write("nested/tracked.txt", "baseline\n");
+    f.commit();
+    f.write("nested/untracked.txt", "one\n");
+    f.write("nested/ignored.txt", "not included\n");
+    let nested = f.root.join("nested");
+    let inventory =
+        crate::workspace::turn_snapshot_paths(&nested, Instant::now() + Duration::from_secs(5))
+            .unwrap()
+            .expect("subdirectory must discover its parent's Git metadata");
+    assert!(inventory.0.iter().any(|path| path == "tracked.txt"));
+    assert!(inventory.0.iter().any(|path| path == "untracked.txt"));
+    assert!(!inventory.0.iter().any(|path| path == "ignored.txt"));
+}
+
+#[test]
 fn dirty_untracked_and_committed_bytes_compare_against_the_actual_start() {
     let f = Fixture::new(true);
     f.write("tracked.txt", "initial\n");
