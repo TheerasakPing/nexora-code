@@ -1,3 +1,52 @@
+# Nexora Code — Mandatory Agent Rules (fork policy)
+
+This is a fork of PandaCode. Preserve upstream license and attribution.
+The Nexora Code rules below override conflicting upstream release guidance
+in the older notes further down. Never infer permission to deploy or update.
+
+## NC-TEAM-001 — EVERY assigned work request
+
+1. **PLAN FIRST.** Before editing anything, create a fresh Markdown Task
+   Checklist Planner at docs/nexora/tasks/YYYY-MM-DD-task-slug.md using
+   [this template](docs/nexora/templates/TASK-CHECKLIST.md). Include the
+   exact user request, dependency graph, owner, DoD, test plan, risk and scope.
+   This applies to simple fixes, tests, documentation and requests to continue.
+2. **TEAM LEAD ASSIGNS.** Team Lead/Integration Lead divides work into
+   testable subtasks, assigns actual available Agent Workers by specialization,
+   records identity/ownership and schedules dependencies. Give each writer
+   an isolated branch/worktree and non-overlapping files. No concurrent
+   uncoordinated writes to shared schemas or IPC contracts.
+3. **REAL AGENTS ONLY.** Never invent agents, handoffs or independent reviews.
+   When no worker delegation capability exists, mark TEAM_LEAD_SERIAL in the
+   planner and have Team Lead perform tasks sequentially, disclose this and
+   keep truly independent review PENDING where it is mandatory.
+4. **WORKER HANDOFF.** Each worker returns owned-file diff/commit, exact tests
+   with evidence, risks, blockers and incomplete checklist items. Workers
+   cannot approve their own delivery.
+5. **LEAD MUST REVIEW.** Before delivering, the Team Lead examines every
+   worker diff, validates tests/CI and checks security, correctness, process
+   lifetime, backwards compatibility and permissions. Reject work that fails,
+   assign repairs, and verify again.
+6. **LEAD GO / NO-GO.** Mark checkboxes using actual evidence, record
+   reviewer identity, SHA, CI/OS/ignored-test status and GO/NO-GO decision
+   in the Task Planner. Report only after Team Lead's final assessment.
+   Protected main merges, installers, external MCP, secret access and releases
+   require separate permission and gates.
+7. **HONEST STATUS.** Pending CI/native tests remain PENDING; source-level
+   tests alone do not prove native acceptance. Read [SOP NC-TEAM-001](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
+   for the full process.
+
+These rules are MANDATORY for every assistant/agent entrypoint to this repo.
+No worker action or user delivery may skip the Task Planner and Team Lead gate.
+PR structure is checked by the Nexora Task Planner Gate workflow; this does
+not replace required independent review and branch-protection checks.
+
+The Task Planner PR gate is a necessary format check, not independent
+review. The Team Lead must still inspect actual changes and record GO/NO-GO.
+See SOP NC-TEAM-001 Section 3.2; branch protection activation is separate.
+
+---
+
 # PandaCode — working notes
 
 ## Project and releases
