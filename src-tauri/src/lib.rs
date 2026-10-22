@@ -3017,6 +3017,7 @@ pub fn run() {
                 architect::profiles::architect_save_profile,
                 architect::profiles::architect_delete_profile,
                 architect::architect_get,
+                architect::architect_preview_schedule,
                 architect::architect_configure,
                 architect::architect_start,
                 architect::architect_control,
