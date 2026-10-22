@@ -1,3 +1,4 @@
+import { buildWorkflowGraph, renderWorkflowGraph } from './workflow-graph.ts';
 
 export interface WorkflowPlan {
   schemaVersion: number;
@@ -115,6 +116,7 @@ export function mountWorkflowStudio(
   dialog.className = 'settings-dialog workflow-studio-dialog';
   dialog.replaceChildren(root);
   let disposed = false;
+  let planForGraph: WorkflowPlan | undefined;
   const controller = createWorkflowValidation(nativeValidate, value => {
     if (disposed || root.parentElement !== dialog || !dialog.open) return;
     check.disabled = value.phase === 'validating';
@@ -129,11 +131,14 @@ export function mountWorkflowStudio(
     } else {
       results.append(node('p', 'workflow-studio-summary',
         'Structure valid · ' + value.result.nodeCount + ' nodes · ' + value.result.waves.length + ' waves'));
-      const waves = node('ol', 'workflow-studio-waves');
-      value.result.waves.forEach((wave, index) => waves.append(
-        node('li', '', 'Wave ' + (index + 1) + ': ' + wave.nodeIds.join(', ')),
-      ));
-      results.append(waves,
+      try {
+        const graph = buildWorkflowGraph(planForGraph!, value.result);
+        results.append(renderWorkflowGraph(graph));
+      } catch (error) {
+        results.append(node('p', 'workflow-studio-error',
+          error instanceof Error ? error.message : String(error)));
+      }
+      results.append(
         node('p', 'workflow-studio-summary',
           'Approval nodes: ' + (value.result.approvalNodes.join(', ') || 'none')),
         node('p', 'workflow-studio-summary',
@@ -151,9 +156,13 @@ export function mountWorkflowStudio(
     close.removeEventListener('click', onClickClose);
   }
   const onClose = () => dispose();
-  const onReset = () => { editor.value = SAMPLE_WORKFLOW; controller.invalidate(); };
-  const onCheck = () => { void controller.check(editor.value); };
-  const onInput = () => controller.invalidate();
+  const onReset = () => { editor.value = SAMPLE_WORKFLOW; planForGraph = undefined; controller.invalidate(); };
+  const onCheck = () => {
+    try { planForGraph = parseWorkflowInput(editor.value); }
+    catch { planForGraph = undefined; }
+    void controller.check(editor.value);
+  };
+  const onInput = () => { planForGraph = undefined; controller.invalidate(); };
   const onClickClose = () => { if (dialog.open) dialog.close(); };
   reset.addEventListener('click', onReset);
   check.addEventListener('click', onCheck);
