@@ -23,7 +23,7 @@
 - [x] Branch-only, real linked worktree, missing and corrupt metadata tested.
 - [x] Errors classified UNVERIFIED, never absence/success; no mutating operations.
 - [x] Full tests, denied-warning Clippy and source review complete.
-- [ ] PR opened with exact result, CI and reviewer gates.
+- [x] PR opened with exact result, CI and reviewer gates.
 - [ ] Protected-branch merge and release remain blocked until real approval.
 
 **Team Lead GO/NO-GO:** GO for isolated source PR submission. NO-GO for protected merge or production execution/release pending exact-head GitHub CI, authorized independent Reviewer and native OS acceptance.
@@ -38,3 +38,13 @@
 - **Team Lead scope review:** Only read-only Git and SQLite inspection plus internal-only module registration. All unknown Git states stay unverified; every PREPARING claim still needs human triage.
 - **Explicitly not done:** actual Agent provisioning/recovery, reconciler mutation, native GUI run, real external MCP, signing, installation, native 3-OS E2E or protected branch merge.
 - **GitHub exact-head CI/independent reviewer:** PENDING at submission, to be recorded separately.
+
+## GitHub delivery / exact revision
+
+- **PR:** https://github.com/TheerasakPing/nexora-code/pull/19
+- **Initial feature commit:** 8ca579bc3a85650e3f1e4552d47ba7a0f3772d0d
+- **Base:** integration/r0-r4-consolidated (PR #18).
+- **Parent PR #18:** 6/6 required CI checks SUCCESS, but REVIEW_REQUIRED; no protected merge.
+- **PR #19 at submission:** six GitHub CI jobs IN_PROGRESS, not yet PASS.
+- **Reviewer:** PENDING, genuinely independent approval required before protected merge.
+- **Operational safety:** read-only source helper, no live Agent/GUI/installer, no automatic claim reconciliation or cleanup.
