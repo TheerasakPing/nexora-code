@@ -4,6 +4,7 @@ mod agent_updates;
 mod agent_usage_providers;
 mod appearance;
 mod architect;
+mod workflow_plan;
 mod bots;
 mod browser;
 mod command_operations;
@@ -3017,6 +3018,7 @@ pub fn run() {
                 architect::profiles::architect_save_profile,
                 architect::profiles::architect_delete_profile,
                 architect::architect_get,
+                workflow_plan::workflow_validate_plan,
                 architect::architect_configure,
                 architect::architect_start,
                 architect::architect_control,
