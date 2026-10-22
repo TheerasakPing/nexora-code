@@ -26,7 +26,7 @@
 - [x] Shared checkout warnings test and no data/state mutation.
 - [x] Full test matrix and strict Clippy PASS; CI pending honestly disclosed.
 - [x] Team Lead inspected every actual diff; no fictitious multi-agent review.
-- [ ] PR opened for review but no protected branch merge.
+- [x] PR opened for review without protected branch merge.
 **Team Lead decision:** GO for source-only PR submission after scoped Team Lead self-review; NO-GO for protected branch merge/release until independent reviewer and six required native CI gates.
 
 ## Local Team Lead review and evidence — Mac M4, 2026-10-22
@@ -41,3 +41,14 @@
 - **Native GUI E2E and OS 3-platform acceptance:** PENDING, not inferred from source tests.
 - **Automatic worker-specific worktree provisioning, crash cleanup, filesystem sandbox and merge approval:** NOT IMPLEMENTED by this PR and remain explicit R3 roadmap blockers.
 - **Review/CI:** independent GitHub Reviewer and exact-head CI remain PENDING at PR submission.
+
+## Published PR and live CI evidence
+
+- **PR #15:** https://github.com/TheerasakPing/nexora-code/pull/15
+- **Source implementation SHA:** dbfcffb1665faf4fed2719d38ebe3be2b8ae5a80
+- **Base:** integration/r3-r4-windows-stabilized (PR #14); the existing
+  integration PR's six CI checks were SUCCESS when the audit PR was opened.
+- **CI on this PR:** GitHub 3-OS checks began running after push; PENDING at
+  this record. Previously passing PR #14 cannot substitute for this head SHA.
+- **GitHub Reviewer:** PENDING. No self-approval, force merge, protected
+  develop/main mutation, native GUI install, real Agent process or OS sandbox.
