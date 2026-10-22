@@ -14,11 +14,11 @@
 
 | Task | Assigned worker | Scope | Acceptance | Status |
 | --- | --- | --- | --- | --- |
-| GOV-01 | Documentation worker (Team Lead executing serially) | docs/nexora/SOP-DEVELOPMENT-RELEASE.md | Mandatory lifecycle with review/GO-NO-GO | [x] |
-| GOV-02 | Agent-rules worker (Team Lead executing serially) | AGENTS.md | Prominent rule for all coding agents | [x] |
-| GOV-03 | Template worker (Team Lead executing serially) | docs/nexora/templates/TASK-CHECKLIST.md | Reusable per-request checkboxes and evidence | [x] |
-| GOV-04 | PR gate worker (Team Lead executing serially) | CONTRIBUTING.md + .github/pull_request_template.md | PR requires planner and Team Lead review | [x] |
-| GOV-05 | Team Lead / QA | This planner and all changed docs | Check links, no false approvals, diff, git status | [x] |
+| GOV-01 | TEAM_LEAD_SERIAL | docs/nexora/SOP-DEVELOPMENT-RELEASE.md | Mandatory lifecycle with review/GO-NO-GO | [x] |
+| GOV-02 | TEAM_LEAD_SERIAL | AGENTS.md | Prominent rule for all coding agents | [x] |
+| GOV-03 | TEAM_LEAD_SERIAL | docs/nexora/templates/TASK-CHECKLIST.md | Reusable per-request checkboxes and evidence | [x] |
+| GOV-04 | TEAM_LEAD_SERIAL | CONTRIBUTING.md + .github/pull_request_template.md | PR requires planner and Team Lead review | [x] |
+| GOV-05 | TEAM_LEAD_SERIAL / QA | This planner and all changed docs | Check links, no false approvals, diff, git status | [x] |
 
 > Multi-agent runtime is not invoked for this document-only request; roles are described
 > without inventing separate workers or independent approvals. When actual worker agents
@@ -30,7 +30,7 @@
 - [x] Markdown links and task template fields verified.
 - [x] Git diff --check clean.
 - [x] Checked existing provider/brand/upstream constraints remain intact.
-- [ ] Commit SHA and PR link recorded (pending publication).
+- [x] Commit SHA and PR link recorded: 8e6732a and https://github.com/TheerasakPing/nexora-code/pull/4 (CI still pending).
 - [x] Team Lead outcome recorded as GO / NO-GO, with blockers if any.
 
 **Team Lead verdict:** GO for submitting a documentation-only PR; NO-GO for protected-main merge or production release pending CI and actual reviewer approval.
@@ -39,4 +39,6 @@
 
 **Agents used:** TEAM_LEAD_SERIAL, no independent worker or reviewer invoked. This absence is disclosed; an independent PR reviewer remains PENDING.
 
-**Open checks:** Independent PR review, CI after push, owner-specific approvals for merge/release. No installer, native GUI, external MCP or live secrets accessed.
+**Open checks:** Independent PR review, CI run after push, owner-specific approvals for merge/release. No installer, native GUI, external MCP or live secrets accessed.
+
+**Published evidence:** [PR #4](https://github.com/TheerasakPing/nexora-code/pull/4) · initial governance commit 8e6732a. The PR must not be merged until applicable checks/reviewer approval pass.
