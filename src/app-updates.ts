@@ -25,7 +25,8 @@ export interface AppUpdates {
   restart(): Promise<void>;
 }
 
-const KEY = 'pandacode.autoUpdate';
+const NEXORA_R0_UPDATES_DISABLED = true;
+const KEY = 'nexora-code.autoUpdate';
 const FIRST_CHECK = 30_000;
 
 type Pending = { version: string; download(onEvent: (event: { event: string; data?: { contentLength?: number; chunkLength?: number } }) => void): Promise<void>; install(): Promise<void> };
@@ -34,6 +35,20 @@ let instance: AppUpdates | undefined;
 export const appUpdates = (): AppUpdates | undefined => instance;
 
 export function startAppUpdates(host: UpdatesHost): AppUpdates {
+  // No Nexora update signing key yet. Never query or install upstream updates.
+  if (NEXORA_R0_UPDATES_DISABLED) {
+    const disabled: AppUpdates = {
+      get state() { return { kind: 'off' } as const; },
+      get automatic() { return false; },
+      supported: false,
+      subscribe: () => () => {},
+      setAutomatic: () => {},
+      check: async () => {},
+      restart: async () => {},
+    };
+    instance = disabled;
+    return disabled;
+  }
   const listeners = new Set<() => void>();
   let state: UpdateState = preview ? { kind: 'off' } : { kind: 'idle' };
   let automatic = (() => { try { return localStorage.getItem(KEY) !== 'off'; } catch { return true; } })();
@@ -70,7 +85,7 @@ export function startAppUpdates(host: UpdatesHost): AppUpdates {
 
   async function restart(): Promise<void> {
     if (!pending) return;
-    if (host.busy()) { host.notify('PandaCode will restart to update when your agents finish.'); return; }
+    if (host.busy()) { host.notify('Nexora Code will restart to update when your agents finish.'); return; }
     if (state.kind === 'available') { try { await download(pending); } catch (cause) { set({ kind: 'error', message: message(cause) }); return; } }
     const version = pending.version;
     set({ kind: 'installing', version });

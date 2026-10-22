@@ -4,10 +4,11 @@ import { appUpdates, describeUpdate } from './app-updates';
 
 /** Public project links. Opening one is user-initiated; only the update check runs on its own. */
 export const PROJECT_LINKS = {
-  repository: 'https://github.com/aicodeking/pandacode',
-  issues: 'https://github.com/aicodeking/pandacode/issues',
-  releases: 'https://github.com/aicodeking/pandacode/releases',
-  license: 'https://github.com/aicodeking/pandacode/blob/main/LICENSE',
+  repository: 'https://github.com/TheerasakPing/nexora-code',
+  issues: 'https://github.com/TheerasakPing/nexora-code/issues',
+  releases: 'https://github.com/TheerasakPing/nexora-code/releases',
+  license: 'https://github.com/TheerasakPing/nexora-code/blob/main/LICENSE',
+  upstream: 'https://github.com/aicodeking/pandacode',
 } as const;
 
 const link = (label: string, url: string) =>
@@ -16,9 +17,10 @@ const link = (label: string, url: string) =>
 /** The About group: app version, license, updates from GitHub Releases, and links. */
 export function aboutSettingsHtml(): string {
   return `<div class="settings-group settings-about" aria-labelledby="settings-about-heading">
-    <div class="setting-row"><div><strong id="settings-about-heading">About PandaCode</strong><small class="settings-about-version">Version …</small></div></div>
-    <div class="setting-row"><div><strong>License</strong><small>Open source (MIT-based). No account, no telemetry.</small></div>${link('PandaCode License', PROJECT_LINKS.license)}</div>
-    <div class="setting-row settings-updates"><div><strong>Updates</strong><small class="settings-update-status" aria-live="polite">Checks GitHub Releases automatically.</small></div><div class="settings-row-actions"><button type="button" class="secondary-button settings-update-action" hidden></button>${link('Releases', PROJECT_LINKS.releases)}</div></div>
+    <div class="setting-row"><div><strong id="settings-about-heading">About Nexora Code</strong><small class="settings-about-version">Version …</small></div></div>
+    <div class="setting-row"><div><strong>License</strong><small>MIT-based PandaCode fork license with attribution. No account or telemetry.</small></div>${link('PandaCode License', PROJECT_LINKS.license)}</div>
+    <div class="setting-row"><div><strong>Fork attribution</strong><small>This is a fork of PandaCode — https://github.com/aicodeking/pandacode</small></div>${link('Original PandaCode', PROJECT_LINKS.upstream)}</div>
+    <div class="setting-row settings-updates"><div><strong>Updates</strong><small class="settings-update-status" aria-live="polite">Disabled pending Nexora signing keys.</small></div><div class="settings-row-actions"><button type="button" class="secondary-button settings-update-action" hidden></button>${link('Releases', PROJECT_LINKS.releases)}</div></div>
     <div class="setting-row settings-updates-auto"><div><strong>Install updates automatically</strong><small>Downloads in the background and restarts when no agent is working.</small></div><input type="checkbox" class="settings-switch" data-update-automatic aria-label="Install updates automatically"></div>
     <div class="setting-row"><div><strong>Source code</strong><small>Report bugs and follow development.</small></div><div class="settings-row-actions">${link('GitHub repository', PROJECT_LINKS.repository)}${link('Issues', PROJECT_LINKS.issues)}</div></div>
   </div>`;

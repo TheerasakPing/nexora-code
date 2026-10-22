@@ -2840,7 +2840,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         // Updates come only from GitHub Releases, verified against the public key in tauri.conf.json.
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        // R0: own signing keys not provisioned; updater disabled
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             if let Ok(cache) = app.path().app_cache_dir() {

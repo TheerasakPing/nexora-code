@@ -186,7 +186,7 @@ mod mac {
             return Reply::Probe(SecKeychain::user_interaction_allowed().unwrap_or(true));
         }
         let (service, account) = if target == "glm" {
-            ("app.pandacode.providers", "zai-coding-plan".into())
+            ("app.nexora.code.providers", "zai-coding-plan".into())
         } else {
             let Some(account) = account_name() else {
                 return Reply::Blocked;

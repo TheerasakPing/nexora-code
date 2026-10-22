@@ -24,12 +24,12 @@ export function readyToRestart(busy: boolean, lastInput: number, now = Date.now(
 /** One line for Settings → About. */
 export function describeUpdate(state: UpdateState, automatic: boolean, now = Date.now()): string {
   switch (state.kind) {
-    case 'off': return 'Updates are installed by the desktop app.';
+    case 'off': return 'Updates disabled for R0 until Nexora signing keys are configured.';
     case 'checking': return 'Checking GitHub Releases…';
     case 'current': { const minutes = Math.round((now - state.checkedAt) / 60_000); return `Up to date · checked ${minutes < 1 ? 'just now' : minutes < 60 ? `${minutes}m ago` : `${Math.round(minutes / 60)}h ago`}`; }
-    case 'available': return `PandaCode ${state.version} is available.`;
+    case 'available': return `Nexora Code ${state.version} is available.`;
     case 'downloading': return `Downloading ${state.version}${state.percent === null ? '…' : ` · ${state.percent}%`}`;
-    case 'ready': return `${state.version} is ready. ${automatic ? 'PandaCode restarts when your agents are done and you step away.' : 'Restart to finish.'}`;
+    case 'ready': return `${state.version} is ready. ${automatic ? 'Nexora Code restarts when your agents are done and you step away.' : 'Restart to finish.'}`;
     case 'installing': return `Installing ${state.version}…`;
     case 'error': return `Couldn’t check for updates: ${state.message}`;
     default: return automatic ? 'Checks GitHub Releases automatically.' : 'Automatic updates are off.';
