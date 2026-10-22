@@ -14,14 +14,14 @@
 | --- | --- | --- | --- | --- |
 | GOV-CONT-01 | TEAM_LEAD_SERIAL | Review existing governance PR and links | All relative paths valid | [x] |
 | GOV-CONT-02 | TEAM_LEAD_SERIAL | Create CI planner guard and regression tests | Refuse missing/unapproved planners | [x] |
-| GOV-CONT-03 | TEAM_LEAD_SERIAL | Source build and full tests | Node 119, release 31, Vite, R0 | [x] |
+| GOV-CONT-03 | TEAM_LEAD_SERIAL | Source build and full tests | Node 120, release 31, Vite, R0 | [x] |
 | GOV-CONT-04 | TEAM_LEAD_SERIAL | Review patches, open PR update | Diff checked and GO/NO-GO | [x] |
 
 ## Evidence / final review
 
 - [x] Planner and agent instructions checked for all required fields.
 - [x] Security and legacy upstream release guidance checked; no claim of independent review.
-- [x] Links checked, governance focused tests 9/9, npm tests 119/119, release tests 31/31, build and R0 PASS on Mac M4.
+- [x] Links checked, governance focused tests 9/9, npm tests 120/120, release tests 31/31, build and R0 PASS on Mac M4.
 - [x] Source diff checked, governance PR #4 already exists; final commit and check references are in PR history.
 - [x] Team Lead source review GO for PR update; NO-GO for protected merge without required CI/reviewer.
 
@@ -35,3 +35,7 @@ npm run test:nexora:r0 PASS; git diff --check PASS.
 or enforce a protected branch rule. Branch protection and human reviewer needed.
 **PR:** https://github.com/TheerasakPing/nexora-code/pull/4
 **Runtime/native E2E:** NOT TESTED (documentation/governance only).
+
+**Guard evidence:** New GH Actions Task Planner Gate checks only structural
+file additions and Team Lead declaration. It cannot prove human review.
+Required-check branch protection and independent reviewer remain PENDING.
