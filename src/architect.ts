@@ -15,6 +15,7 @@ import { teamActive, type TeamConfig, type TeamSnapshot, type TeamWorker, type M
 import { mountTeamProfiles } from './team-profiles';
 import { infoMark } from './tooltip';
 import { workerQueueReason } from './worker-scheduling';
+import { schedulePreviewMarkup, type SchedulePreview } from './schedule-preview';
 import { Subagents } from './subagents';
 import { TeamMessages } from './team-messages';
 import { renderCoordination } from './coordination-message';
@@ -251,6 +252,9 @@ export class ArchitectView {
   private taskId = '';
   private team: TeamSnapshot | null = null;
   private panel?: HTMLElement;
+  private preview?: SchedulePreview;
+  private previewRequest = 0;
+  private previewPainted = '';
   private selected = '';
   private live = new Map<string, WorkerLive>();
   private rows = new Map<string, HTMLButtonElement>();
@@ -335,7 +339,7 @@ export class ArchitectView {
     if (!this.team || this.panel) return;
     this.childAgents?.setTask('', false);
     const panel = document.createElement('section'); panel.className = 'architect-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Workers');
-    panel.innerHTML = `<div class="architect-panel-heading"><button class="icon-button architect-back" aria-label="Back to workers" hidden>${icon('back')}</button><strong class="architect-panel-summary"></strong><small class="architect-panel-count"></small><span class="architect-panel-controls"><button class="icon-button" data-team-control="pause" aria-label="Pause team" title="Pause team">${icon('pause')}</button><button class="icon-button" data-team-control="resume" aria-label="Resume team" title="Resume team">${icon('play')}</button><button class="icon-button" data-team-control="stop" aria-label="Stop team" title="Stop team">${icon('stop')}</button><button class="icon-button architect-configure" aria-label="View team setup" title="Team setup">${icon('settings')}</button></span><button class="icon-button architect-close" aria-label="Close workers" title="Close">${icon('close')}</button></div><p class="architect-panel-error" role="status" hidden></p><div class="architect-panel-scroll"><div class="architect-worker-list"></div><div class="architect-worker-detail" hidden><div class="architect-worker-meta"></div><details class="architect-assignment"><summary>Assignment & file scope</summary><p></p><small></small></details><details class="architect-worker-checkpoint" hidden><summary>Latest checkpoint <time></time></summary><dl><div><dt>Progress</dt><dd data-checkpoint="summary"></dd></div><div><dt>Next</dt><dd data-checkpoint="nextSteps"></dd></div><div class="architect-checkpoint-blocker"><dt>Blocked</dt><dd data-checkpoint="blocker"></dd></div></dl></details><div class="architect-worker-history"></div><div class="architect-worker-live"></div><div class="architect-worker-tools"></div><div class="architect-worker-approvals"></div><div class="architect-worker-inputs"></div><p class="architect-worker-empty" role="status"></p><button class="secondary-button architect-history-retry" hidden>Retry loading worker</button></div></div>`;
+    panel.innerHTML = `<div class="architect-panel-heading"><button class="icon-button architect-back" aria-label="Back to workers" hidden>${icon('back')}</button><strong class="architect-panel-summary"></strong><small class="architect-panel-count"></small><span class="architect-panel-controls"><button class="icon-button" data-team-control="pause" aria-label="Pause team" title="Pause team">${icon('pause')}</button><button class="icon-button" data-team-control="resume" aria-label="Resume team" title="Resume team">${icon('play')}</button><button class="icon-button" data-team-control="stop" aria-label="Stop team" title="Stop team">${icon('stop')}</button><button class="icon-button architect-configure" aria-label="View team setup" title="Team setup">${icon('settings')}</button></span><button class="icon-button architect-close" aria-label="Close workers" title="Close">${icon('close')}</button></div><p class="architect-panel-error" role="status" hidden></p><div class="architect-panel-scroll"><details class="architect-schedule-preview"><summary>Schedule preview · read only</summary><div class="architect-preview-content" role="status">Open to load a proposed schedule. Nothing will be executed.</div><button class="secondary-button architect-preview-refresh" type="button">Refresh preview</button></details><div class="architect-worker-list"></div><div class="architect-worker-detail" hidden><div class="architect-worker-meta"></div><details class="architect-assignment"><summary>Assignment & file scope</summary><p></p><small></small></details><details class="architect-worker-checkpoint" hidden><summary>Latest checkpoint <time></time></summary><dl><div><dt>Progress</dt><dd data-checkpoint="summary"></dd></div><div><dt>Next</dt><dd data-checkpoint="nextSteps"></dd></div><div class="architect-checkpoint-blocker"><dt>Blocked</dt><dd data-checkpoint="blocker"></dd></div></dl></details><div class="architect-worker-history"></div><div class="architect-worker-live"></div><div class="architect-worker-tools"></div><div class="architect-worker-approvals"></div><div class="architect-worker-inputs"></div><p class="architect-worker-empty" role="status"></p><button class="secondary-button architect-history-retry" hidden>Retry loading worker</button></div></div>`;
     this.panel = panel; this.host.append(panel);
     const assist = document.createElement('button'); assist.type = 'button'; assist.className = 'architect-assist';
     assist.addEventListener('click', () => {
@@ -352,6 +356,14 @@ export class ArchitectView {
     panel.querySelector('.architect-configure')!.addEventListener('click', event => this.options.setup(event.currentTarget as HTMLElement));
     panel.querySelectorAll<HTMLButtonElement>('[data-team-control]').forEach(control => control.addEventListener('click', () => { void this.control(control.dataset.teamControl!); }));
     panel.querySelector('.architect-history-retry')!.addEventListener('click', () => { void this.loadMessages(); });
+    const previewDetails = panel.querySelector<HTMLDetailsElement>('.architect-schedule-preview')!;
+    previewDetails.addEventListener('toggle', () => {
+      if (previewDetails.open && !this.preview) void this.refreshSchedulePreview();
+    });
+    panel.querySelector<HTMLButtonElement>('.architect-preview-refresh')!.addEventListener('click', () => {
+      void this.refreshSchedulePreview();
+    });
+
     const scroll = panel.querySelector<HTMLElement>('.architect-panel-scroll')!;
     scroll.addEventListener('scroll', () => { if (scroll.scrollTop < 72) void this.loadMessages(true); }, { passive: true });
     scroll.addEventListener('wheel', event => { if (event.deltaY < 0 && scroll.scrollTop < 72) void this.loadMessages(true); }, { passive: true });
@@ -375,7 +387,7 @@ export class ArchitectView {
     this.panel?.querySelector<HTMLButtonElement>('.architect-back')?.focus();
     await this.loadMessages();
   }
-  close(): void { this.teamMessages?.destroy(); this.teamMessages = undefined; this.childAgents?.setTask('', false); if (this.panel) hidePopover(this.panel); this.panel = undefined; this.selected = ''; this.rows.clear(); this.paintedTools.clear(); this.paintedWorker = ''; this.historyWorker = ''; this.historyMessages.clear(); this.historyHasOlder = false; this.historyLoading = false; this.historyRefreshQueued = false; this.request++; cancelAnimationFrame(this.frame); this.frame = 0; this.trigger.setAttribute('aria-expanded', 'false'); }
+  close(): void { ++this.previewRequest; this.preview = undefined; this.previewPainted = ''; this.teamMessages?.destroy(); this.teamMessages = undefined; this.childAgents?.setTask('', false); if (this.panel) hidePopover(this.panel); this.panel = undefined; this.selected = ''; this.rows.clear(); this.paintedTools.clear(); this.paintedWorker = ''; this.historyWorker = ''; this.historyMessages.clear(); this.historyHasOlder = false; this.historyLoading = false; this.historyRefreshQueued = false; this.request++; cancelAnimationFrame(this.frame); this.frame = 0; this.trigger.setAttribute('aria-expanded', 'false'); }
   private async control(action: string): Promise<void> {
     if (this.busy || !this.team) return;
     this.busy = true; this.paint();
@@ -383,6 +395,41 @@ export class ArchitectView {
     catch (error) { this.options.report(error); }
     finally { this.busy = false; this.paint(); }
   }
+
+  /** Explicit, read-only lookup. A response from a closed or changed task is ignored. */
+  private async refreshSchedulePreview(): Promise<void> {
+    const panel = this.panel, sessionId = this.taskId;
+    if (!panel || !this.team) return;
+    const sequence = ++this.previewRequest;
+    const output = panel.querySelector<HTMLElement>('.architect-preview-content')!;
+    const refresh = panel.querySelector<HTMLButtonElement>('.architect-preview-refresh')!;
+    this.preview = undefined;
+    this.previewPainted = '';
+    refresh.disabled = true;
+    output.textContent = 'Loading proposed waves…';
+    try {
+      const preview = await call<SchedulePreview>('architect_preview_schedule', { sessionId });
+      if (this.panel !== panel || this.taskId !== sessionId || this.previewRequest !== sequence) return;
+      this.preview = preview;
+      this.paintSchedulePreview();
+    } catch (error) {
+      if (this.panel !== panel || this.taskId !== sessionId || this.previewRequest !== sequence) return;
+      output.textContent = `Preview unavailable: ${String(error)}`;
+    } finally {
+      if (this.panel === panel && this.taskId === sessionId && this.previewRequest === sequence) refresh.disabled = false;
+    }
+  }
+  private paintSchedulePreview(): void {
+    if (!this.preview || !this.panel || !this.team) return;
+    const output = this.panel.querySelector<HTMLElement>('.architect-preview-content')!;
+    const markup = schedulePreviewMarkup(this.preview, this.team.workers, this.team.revision);
+    // Avoid repeatedly re-announcing the same forecast on every team event.
+    if (markup !== this.previewPainted) {
+      output.innerHTML = markup;
+      this.previewPainted = markup;
+    }
+  }
+
   private paint(): void {
     const team = this.team; this.host.hidden = !team; if (!team) { this.close(); return; }
     const done = team.workers.filter(w => w.status === 'completed' || w.abandoned).length;
@@ -409,6 +456,8 @@ export class ArchitectView {
     error.classList.toggle('is-notice', team.status === 'paused' && /^Team (paused|stopped)\./.test(team.error ?? ''));
     panel.querySelector<HTMLElement>('.architect-back')!.hidden = !worker;
     panel.querySelector<HTMLElement>('.architect-worker-list')!.hidden = Boolean(worker);
+    panel.querySelector<HTMLDetailsElement>('.architect-schedule-preview')!.hidden = Boolean(worker);
+    this.paintSchedulePreview();
     panel.querySelector<HTMLElement>('.architect-worker-detail')!.hidden = !worker;
     if (this.teamMessages) { this.teamMessages.host.hidden = Boolean(worker); if (!worker) this.teamMessages.update(team); }
     if (worker) {
