@@ -133,8 +133,8 @@ pub fn plan_http_connection(url: &str, resolved: &[IpAddr]) -> Result<PinnedHttp
     if hostname.ends_with(".localhost") {
         return Err(Denial::ForbiddenTarget);
     }
-    if hostname.parse::<IpAddr>().is_ok() && !local {
-        let literal: IpAddr = hostname.parse().map_err(|_| Denial::InvalidEndpoint)?;
+    if let Ok(literal) = hostname.parse::<IpAddr>() {
+        // Even local literal addresses must not resolve to a different IP.
         if resolved.iter().any(|ip| *ip != literal) {
             return Err(Denial::UntrustedDnsAnswer);
         }
@@ -150,6 +150,9 @@ pub fn plan_http_connection(url: &str, resolved: &[IpAddr]) -> Result<PinnedHttp
     let port = parsed
         .port_or_known_default()
         .ok_or(Denial::InvalidEndpoint)?;
+    if port == 0 {
+        return Err(Denial::InvalidEndpoint);
+    }
     let mut peers = Vec::new();
     for ip in resolved {
         let addr = SocketAddr::new(*ip, port);
@@ -394,6 +397,18 @@ mod tests {
         )
         .is_err());
         assert!(plan_http_connection("https://mcp.example.com/mcp", &[]).is_err());
+    }
+
+    #[test]
+    fn local_ip_literals_cannot_change_peer_and_port_zero_is_refused() {
+        assert_eq!(
+            plan_http_connection("http://127.0.0.1:8080/mcp", &[address("127.0.0.2")]).err(),
+            Some(Denial::UntrustedDnsAnswer)
+        );
+        assert_eq!(
+            plan_http_connection("http://localhost:0/mcp", &[address("127.0.0.1")]).err(),
+            Some(Denial::InvalidEndpoint)
+        );
     }
 
     #[test]
