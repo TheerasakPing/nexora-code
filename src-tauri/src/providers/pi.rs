@@ -10,7 +10,11 @@ impl Bridge {
         server: Option<&mcp_host::Server>,
     ) -> Result<Self, String> {
         let directory = std::env::temp_dir().join(format!("pandacode-pi-{}", uuid::Uuid::new_v4()));
-        let mut builder = std::fs::DirBuilder::new();
+        // Unix requires a mutable builder to apply 0700; Windows does not.
+        // Keep the non-Unix binding immutable so -D warnings stays clean.
+        let builder = std::fs::DirBuilder::new();
+        #[cfg(unix)]
+        let mut builder = builder;
         #[cfg(unix)]
         std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
         builder.create(&directory).map_err(|e| e.to_string())?;
