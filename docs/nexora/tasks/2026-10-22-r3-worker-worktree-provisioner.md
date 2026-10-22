@@ -20,7 +20,7 @@
 - [x] Test real Git linked-worktree creation in temporary fixtures, state invariants, duplicate claim and crash fence.
 - [x] Check full tests, Clippy, and source-level behavior with no live app/user Git changes.
 - [x] Record Team Lead GO/NO-GO, constraints, CI and reviewer gates honestly.
-- [ ] Open stacked PR and verify pushed SHA.
+- [x] Open stacked PR and verify pushed SHA.
 - [ ] No protected branch merge without authorized second reviewer and CI.
 
 **Team Lead decision:** GO for an internal-only source PR. NO-GO for live Agent/Renderer integration, protected merge or release until real operator-consent boundary, process fencing, CI and independent reviewer approval.
@@ -35,3 +35,14 @@
 - Frontend Node **139 PASS / 0 FAIL**; release-script tests **31 PASS / 0 FAIL**; TypeScript/Vite production build and R0 fork/updater identity safety **PASS**.
 - Important remaining: durable claim storage migration, native user consent proof, async process/Agent ledger fencing, operator-guided UNKNOWN reconciliation, OS file sandbox and Mac/Windows/Linux real worker E2E.
 - GitHub required checks for this new SHA and independent Reviewer: PENDING at submission. No production feature was activated.
+
+## GitHub handoff evidence
+
+- **PR #16:** https://github.com/TheerasakPing/nexora-code/pull/16
+- **Verified original source commit:** 35faf448857b3a54acc2f7b2629ebf279823175b
+- **Base:** feat/r3-worktree-isolation-audit (PR #15); no develop/main merge.
+- **GitHub CI:** PENDING on this PR at initial publication; passing Mac source
+  tests are not native Windows/Linux GUI/Agent acceptance.
+- **Independent Reviewer:** PENDING, not inferred or fabricated.
+- **Scope exclusions remain:** live IPC, actual Agent processes, arbitrary
+  user's checkout mutations, installer/signing and production release.
