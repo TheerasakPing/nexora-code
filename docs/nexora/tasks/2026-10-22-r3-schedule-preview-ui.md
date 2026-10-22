@@ -24,7 +24,7 @@
 - [x] Team Lead inspects escaping, error paths and asynchronous state/focus.
 - [x] UI tests, npm tests, build and release scripts pass, ignored counts disclosed.
 - [x] Source changes do not trigger real agents or alter backend scheduler.
-- [ ] PR opened and CI evidence recorded without claiming release acceptance.
+- [x] PR opened and CI status recorded as pending (not accepted).
 - [ ] Independent review and cross-platform CI pass before protected merge.
 
 **Team Lead verdict:** GO for scoped source PR submission after self-review, NO-GO for protected-branch merge/release without independent reviewer and native CI.
@@ -43,3 +43,12 @@
 - **Git diff validation:** PASS.
 - **Native Windows/Linux/macOS GUI E2E:** PENDING; neither app installation nor live agent invocation was performed.
 - **Review / merge:** PENDING actual GitHub CI and authorized independent approval. This work is stacked on PR #8 and does not touch develop or main.
+
+## GitHub delivery evidence
+
+- **Stacked PR:** https://github.com/TheerasakPing/nexora-code/pull/10
+- **Original UI source commit:** 5debdad (Mac-local acceptance tested).
+- **Target:** feat/r3-schedule-preview, PR #8. No direct develop/main merge.
+- **GitHub CI:** queued/in progress when PR was opened; passing local source tests are not equivalent to native acceptance.
+- **Concurrent Windows test repair:** PR #9 is owned separately. No code from PR #9 was copied or modified.
+- **Handoff/Review:** TEAM_LEAD_SERIAL source review GO; independent Reviewer PENDING; protected merge/release NO-GO.
