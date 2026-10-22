@@ -2,6 +2,8 @@
 // NC-TEAM-001: evidence-based PR checklist enforcement.
 // Never executes user-authored content or touches application credentials.
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { validatePlanner, validatePullRequestBody } from './governance-pr-gate.mjs';
 
 const die = message => {
   process.stderr.write('NC-TEAM-001 FAIL: ' + message + '\n');
@@ -40,25 +42,21 @@ if (!sha(base) || !sha(head)) {
         const body = execFileSync('git', ['show', head + ':' + path], {
           encoding: 'utf8', maxBuffer: 128 * 1024,
         });
-        const missing = [];
-        const checks = {
-          'request/scope': /\bRequest\b|คำขอ|คำสั่ง/,
-          'actual Team Lead': /Team Lead|หัวหน้าทีม/,
-          'assignment/decomposition': /TEAM_LEAD_SERIAL|worker|agent|Assigned worker|เจ้าของงาน/i,
-          'acceptance criteria': /Acceptance|DoD|เกณฑ์ผ่าน|Test/i,
-          'checklist': /- \[[ xX]\] /,
-          'review decision': /GO.{0,5}NO-GO|Team Lead (?:decision|verdict)|ผลตรวจ/i,
-          'pending status / evidence': /PENDING|GO|NO-GO|PASS|FAIL|blocked/i,
-        };
-        for (const [name, pattern] of Object.entries(checks)) {
-          if (!pattern.test(body)) missing.push(name);
-        }
-        if (body.length < 250) missing.push('substantive planner content');
+        const missing = validatePlanner(path, body);
         if (missing.length) {
           die(path + ' is incomplete: ' + missing.join(', '));
         } else {
           console.log('NC-TEAM-001 CHECKED: ' + path);
         }
+      }
+      // The trusted GitHub PR event supplies the current user-authored PR body.
+      // It is parsed only as data, never sent through a shell or eval.
+      if (process.env.GITHUB_ACTIONS && !process.env.GITHUB_EVENT_PATH) {
+        die('Missing trusted pull_request_target event for handoff verification.');
+      } else if (process.env.GITHUB_EVENT_PATH) {
+        const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+        const failures = validatePullRequestBody(event?.pull_request?.body, added);
+        for (const failure of failures) die(failure);
       }
       if (!process.exitCode) {
         console.log('NC-TEAM-001 PASS: added task planner(s) with ownership, checkboxes and review fields.');

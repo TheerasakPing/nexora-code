@@ -27,6 +27,9 @@ available, mark TEAM_LEAD_SERIAL and do not claim independent review.
 Every PR must link its planner, real worker assignments, scope ownership,
 Team Lead signoff, security review, CI/native test evidence and blockers.
 Release and protected-branch merge permissions remain separate.
+The Nexora Task Planner Gate CI job rejects PRs without a newly added,
+completed planner. This is a structural guard only; independent review and
+required branch protection must still be configured and satisfied.
 Legacy PandaCode shipping notes below are not fork publishing approval.
 
 ## Prerequisites

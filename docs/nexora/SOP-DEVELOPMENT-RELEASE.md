@@ -89,8 +89,8 @@ PR ต้องลิงก์ Planner และบันทึกผลรี�
 ## 3.2 GitHub PR gate — enforcing NC-TEAM-001
 
 - After this workflow is merged into the base branch, GitHub Actions can
-  check new Pull Requests using [Nexora Task Planner Gate]
-  (../../.github/workflows/nexora-task-governance.yml).
+  check new Pull Requests using
+  [Nexora Task Planner Gate](../../.github/workflows/nexora-task-governance.yml).
 - A PR must add a **new** Task Checklist Markdown file with an actual request,
   Team Lead, work assignment, acceptance gate, checkboxes and a review status.
   Reusing an old planner is rejected; merely updating a past planner does not
@@ -107,6 +107,12 @@ PR ต้องลิงก์ Planner และบันทึกผลรี�
 - Project Owner/Integration Lead must configure the new job as a required
   Branch Protection check **after** the workflow is merged and validated.
   Missing required CI is not equivalent to PASS.
+The existing PR policy also requires the PR body to link **all** newly
+added task planners and record the actual Team Lead, handoff, and
+GO for PR submission (separate from GO for protected branch merge).
+The structural rules in scripts/nexora/governance-pr-gate.mjs remain
+authoritative; the secure gate calls them against PR content **as data**.
+
 
 ## 4. Repository / Branch / Worktree Policy
 

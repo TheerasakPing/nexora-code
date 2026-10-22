@@ -12,7 +12,7 @@ gate. The full rule is in [SOP NC-TEAM-001](SOP-DEVELOPMENT-RELEASE.md).
 - The workflow checks new PRs for a newly added Markdown planner at the
   required task path. Merely modifying a previous task does not count.
 - It checks for real request context, Team Lead field, worker assignment,
-  acceptance criteria, checkboxes and GO/NO-GO review status.
+  acceptance criteria, checkboxes and GO/NO-GO review status.\n- The PR body must link each newly added task planner and record real Team Lead\n  assignment/handoff and explicit GO for PR submission.
 - PRs #1–#3 predate NC-TEAM-001 and are explicitly grandfathered from the
   new-plan formatting check only; they still need their original test
   evidence and an authorized review before merge.

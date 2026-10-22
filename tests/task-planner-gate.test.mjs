@@ -13,7 +13,7 @@ const fullPlan = [
   '- Request: implement a scoped fix and document evidence.',
   '- Team Lead: TEAM_LEAD_SERIAL (no real workers delegated)',
   '- Acceptance: focused Node tests pass.',
-  '- Review decision: GO / NO-GO pending until tests.',
+  '**Team Lead verdict:** GO for PR submission. GO/NO-GO for release requires review.',
   '- Status: PENDING, do not claim native release.',
   '- [ ] Make change',
   '- [ ] Team Lead inspect diff',
@@ -110,3 +110,18 @@ test('governance CI uses trusted base code and never executes PR source', () => 
   assert.match(workflow, /refs\/pull\//);
   assert.match(workflow, /node scripts\/nexora\/check-task-planner\.mjs/);
 });
+
+test('PR handoff must cite every new planner and Team Lead GO', () => repository((root, base) => {
+  const planner = 'docs/nexora/tasks/2026-10-22-good-task.md';
+  makePlan(root, '2026-10-22-good-task.md');
+  commit(root);
+  const event = join(root, 'event.json');
+  writeFileSync(event, JSON.stringify({ pull_request: { body: 'No handoff submitted.' } }));
+  let result = run(root, base, '5', { GITHUB_EVENT_PATH: event });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Pull request body/);
+  writeFileSync(event, JSON.stringify({ pull_request: { body:
+    'Task Planner: ' + planner + ' — Team Lead: acting assistant; TEAM_LEAD_SERIAL. GO for PR submission.' } }));
+  result = run(root, base, '5', { GITHUB_EVENT_PATH: event });
+  assert.equal(result.status, 0, result.stderr);
+}));
