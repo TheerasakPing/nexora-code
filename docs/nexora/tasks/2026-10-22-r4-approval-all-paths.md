@@ -22,7 +22,7 @@
 - [x] Reproduction fails before fix and passes after fix.
 - [x] No runtime executor or permission grant added.
 - [x] Full available source CI / strict Clippy evidence recorded, skipped tests disclosed.
-- [ ] PR is reviewed independently and cross-OS CI checks pass before merge.
+- [ ] Exact-head cross-OS CI and real independent reviewer approval required before merge.
 - [ ] Team Lead records GO for PR submission only, NO-GO for production/release.
 
 **Team Lead verdict:** GO for a scoped source PR; NO-GO for protected develop merge / Production Release until genuine independent review and exact-head CI pass.
@@ -37,3 +37,17 @@
 - **Frontend:** Node unit tests 143 PASS / 0 FAIL; Release-script tests 31 PASS; TypeScript/Vite build PASS, R0 identity/updater safety PASS.
 - Reviewed scope: src-tauri/src/workflow_plan.rs only plus documentation, no new permission grant, database migration, API exposure, workflow executor or external side effects.
 - Remaining: GitHub cross-OS CI for this SHA, real human Reviewer, live operator-consent boundary, R4 authorized executor E2E and Production Release safety gates.
+
+## GitHub delivery record
+
+- **PR:** https://github.com/TheerasakPing/nexora-code/pull/23
+- **Base:** integration/r0-r4-consolidated (PR #18); not protected develop or main.
+- **Red/green source commit:** 5037b7d446c8ab4922c8e027926ba6f476795c85.
+- **GitHub status at handoff:** six checks STARTED / IN_PROGRESS; no
+  cross-OS PASS claim for this head SHA yet. Mergeability alone is not approval.
+- **Reviewer:** PENDING; no independent human reviewer completed this check.
+- **Risk:** Runtime operator authorization remains unimplemented. DAG approval
+  nodes are informational and must never grant live execution permissions.
+- **Next integration:** R0–R5 integration PR #21 is concurrently maintained
+  separately; its owner must deliberately include/review this patch, and
+  rerun required checks on the new combined SHA. Do not overwrite its worktree.
