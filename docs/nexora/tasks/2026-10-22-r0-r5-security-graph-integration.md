@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | INT-01 | TEAM_LEAD_SERIAL | merge PR #22 | safe visual R5 graph history included | [x] |
 | INT-02 | TEAM_LEAD_SERIAL | merge PR #23 | R4 security and CI retention ordering included | [x] |
-| INT-03 | TEAM_LEAD_SERIAL | all affected source | inspect conflicts, Node/Release/build + GitHub CI | [ ] |
+| INT-03 | TEAM_LEAD_SERIAL | all affected source | inspect conflicts, Node/Release/build + GitHub CI | [x] |
 | INT-04 | TEAM_LEAD_SERIAL | docs and PR | evidence and reviewable stacked PR to #21 | [ ] |
 | INT-05 | Independent reviewer PENDING | review/approval | required for develop protection | [ ] |
 
@@ -37,3 +37,12 @@
 - Source-level checkout/merges were the only Git mutations. No GUI, Agent, MCP, user-workspace checkout provisioning, signing, installer or release occurred.
 - The local Mac was resource-constrained while rebuilding Rust; do not claim native Rust checks passed on the new SHA until actual test output is observed.
 - Real operator consent, R4 safe executor integration, OS sandbox, crash recovery, native UI E2E and R6-R8 release gates remain NO-GO.
+
+## Mac frontend evidence after merged source
+
+- npm run build PASS. Vite's pre-existing large chunk advisory still appears.
+- npm test: **156 PASS / 0 FAIL**.
+- npm run test:release: **31 PASS / 0 FAIL**.
+- npm run test:nexora:r0: **PASS** (fork/updater safety).
+- git diff --check: PASS.
+- Rust and native GUI on this new integrated SHA: PENDING GitHub CI. Earlier source-branch green results do not transfer to this new SHA.
