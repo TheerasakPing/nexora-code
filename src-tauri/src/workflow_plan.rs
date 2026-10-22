@@ -134,7 +134,9 @@ pub fn validate(plan: &WorkflowPlan) -> Result<WorkflowPreview, String> {
 
     let mut remaining: Vec<_> = (0..plan.nodes.len()).collect();
     let mut finished = HashSet::<usize>::new();
-    let mut approval_reachable = vec![false; plan.nodes.len()];
+    // A tainted path cannot authorize a sibling unapproved path.
+    // Track whether EVERY incoming dependency path passes an approval.
+    let mut all_paths_approved = vec![false; plan.nodes.len()];
     let mut waves = Vec::new();
 
     while !remaining.is_empty() {
@@ -153,16 +155,19 @@ pub fn validate(plan: &WorkflowPlan) -> Result<WorkflowPreview, String> {
 
         for &index in &available {
             let node = &plan.nodes[index];
-            let from_approval = inputs[index]
-                .iter()
-                .any(|parent| approval_reachable[*parent]);
-            if node.kind.requires_approval() && !from_approval {
+            // Empty predecessor sets have no upstream approval. For joins,
+            // EVERY source-to-node path must be gated, not merely one input.
+            let all_from_approval = !inputs[index].is_empty()
+                && inputs[index]
+                    .iter()
+                    .all(|parent| all_paths_approved[*parent]);
+            if node.kind.requires_approval() && !all_from_approval {
                 return Err(format!(
-                    "Node {} requires an upstream manual approval gate.",
+                    "Node {} requires an upstream manual approval gate on every dependency path.",
                     node.id
                 ));
             }
-            approval_reachable[index] = node.kind == NodeKind::Approval || from_approval;
+            all_paths_approved[index] = node.kind == NodeKind::Approval || all_from_approval;
         }
         for index in &available {
             finished.insert(*index);
@@ -280,6 +285,63 @@ mod tests {
             node("effect", NodeKind::McpTool, &["read"]),
         ]);
         assert!(validate(&invalid).unwrap_err().contains("manual approval"));
+    }
+
+    #[test]
+    fn mixed_approval_join_cannot_authorize_an_effectful_node() {
+        // The old ANY-parent reachability accepted approved -> join
+        // <- unapproved, then join -> effect. Every root-to-effect path
+        // must cross an Approval node to be structurally valid.
+        let mixed = plan(vec![
+            node("approval", NodeKind::Approval, &[]),
+            node("unapproved", NodeKind::Condition, &[]),
+            node("join", NodeKind::Review, &["approval", "unapproved"]),
+            node("effect", NodeKind::McpTool, &["join"]),
+        ]);
+        assert!(validate(&mixed).unwrap_err().contains("manual approval"));
+
+        for kind in [
+            NodeKind::Agent,
+            NodeKind::McpTool,
+            NodeKind::Test,
+            NodeKind::Git,
+            NodeKind::Notification,
+            NodeKind::Artifact,
+        ] {
+            let mixed = plan(vec![
+                node("approval", NodeKind::Approval, &[]),
+                node("unapproved", NodeKind::Condition, &[]),
+                node("effect", kind, &["approval", "unapproved"]),
+            ]);
+            assert!(validate(&mixed).unwrap_err().contains("manual approval"));
+        }
+    }
+
+    #[test]
+    fn independent_approved_paths_remain_valid_after_join() {
+        let allowed = plan(vec![
+            node("first_root", NodeKind::Condition, &[]),
+            node("second_root", NodeKind::Review, &[]),
+            node("approve_a", NodeKind::Approval, &["first_root"]),
+            node("approve_b", NodeKind::Approval, &["second_root"]),
+            node("join", NodeKind::Review, &["approve_a", "approve_b"]),
+            node("effect", NodeKind::Git, &["join"]),
+        ]);
+        let preview = validate(&allowed).unwrap();
+        assert_eq!(preview.effectful_nodes, ["effect"]);
+        assert_eq!(preview.waves.last().unwrap().node_ids, ["effect"]);
+    }
+
+    #[test]
+    fn approval_after_join_secures_all_upstream_paths() {
+        let allowed = plan(vec![
+            node("a", NodeKind::Condition, &[]),
+            node("b", NodeKind::Review, &[]),
+            node("merge", NodeKind::Condition, &["a", "b"]),
+            node("approve", NodeKind::Approval, &["merge"]),
+            node("effect", NodeKind::Artifact, &["approve"]),
+        ]);
+        assert!(validate(&allowed).is_ok());
     }
 
     #[test]
