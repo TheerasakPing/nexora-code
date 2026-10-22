@@ -17,3 +17,16 @@
 .workflow-studio-error::before { content:'Validation failed: '; }
 @media (max-width:560px) { .workflow-studio { padding:1rem; } .workflow-studio-editor { min-height:12rem; } }
 @media (prefers-contrast:more) { .workflow-studio-editor,.workflow-studio-results { border-width:2px; } }
+
+/* Accessible dependency graph: wave columns and bounded inert node cards. */
+.workflow-graph { overflow-x:auto; padding-bottom:.3rem; }
+.workflow-graph-waves { display:grid; grid-auto-columns:minmax(12rem,1fr); grid-auto-flow:column; gap:.65rem; list-style:none; padding:0; margin:0; min-width:max-content; }
+.workflow-graph-wave { max-width:22rem; border:1px solid var(--border); border-radius:.65rem; padding:.65rem; }
+.workflow-graph-wave-label { margin:0 0 .5rem; font-size:.84rem; }
+.workflow-graph-nodes { display:grid; gap:.45rem; margin:0; padding:0; list-style:none; }
+.workflow-graph-node { border:1px solid var(--border); border-radius:.5rem; padding:.6rem; display:grid; gap:.2rem; overflow-wrap:anywhere; }
+.workflow-graph-node-title { font-size:.81rem; }
+.workflow-graph-node-kind,.workflow-graph-node-dependencies { color:var(--muted); font-size:.7rem; }
+.workflow-graph-node-caution { font-size:.7rem; border-left:2px solid var(--border); padding-left:.35rem; }
+@media (max-width:620px) { .workflow-graph-waves { grid-auto-columns:minmax(11rem,80vw); } }
+@media (prefers-contrast:more) { .workflow-graph-node,.workflow-graph-wave { border-width:2px; } }
