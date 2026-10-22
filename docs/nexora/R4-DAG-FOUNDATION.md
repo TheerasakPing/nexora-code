@@ -17,9 +17,14 @@ notification, artifact.
 - Require 1–128 unique, safe node IDs (case variants rejected).
 - Limit each node to 16 known, unique, non-self dependencies and 160-byte titles.
 - Reject cycles, malformed references and plans above 128 KiB.
-- Require an upstream explicit approval node for each potentially effectful
-  node (agent, mcp_tool, test, git, notification and artifact). A sibling
-  approval that is not in the dependency ancestry does not qualify.
+- Require an upstream explicit approval node on **every root-to-node
+  dependency path** leading to an effectful node (agent, mcp_tool, test, git,
+  notification and artifact). An unrelated sibling approval does not qualify,
+  nor does a join of an approved branch and an unapproved branch. Two
+  independently approved branches may join safely, and a gate after a join
+  may gate all incoming paths. This structural rule is fail-closed.
+- Approval declarations describe plan structure only; they do not prove
+  human consent, establish tool authority, or grant execution privileges.
 - Return ordered wave IDs that obey dependencies and preserve stable ordering.
 
 ### Example JSON candidate
@@ -70,3 +75,20 @@ No GUI, live MCP, real Agent Worker or external workflow actions were run.
 - Node frontend tests: 110 PASS; release tests: 31 PASS.
 - Vite build and R0 security/identity verification PASS.
 - macOS/Windows/Linux GitHub CI for this exact SHA and native GUI E2E: pending.
+
+## R4 approval-join regression hardening — 2026-10-22
+
+The validator previously used an ANY-input approval-reachability check. A
+non-effectful join could become approval-marked merely because one incoming
+branch passed a declared Approval node; a later effectful descendant would
+then pass even if another branch remained unapproved.
+
+The corrected check propagates approval only when ALL predecessor paths are
+approval-marked, except that the Approval node itself establishes the
+structural gate for all incoming paths. Empty predecessor sets are not approved.
+
+Tests verify rejection of direct and transitive mixed-approval bypasses
+for all six potentially effectful node types, while allowing two independent
+approved branches or one approval following a joined set of prerequisites.
+The R4 native IPC remains read-only; genuine operator consent enforcement
+must still be implemented separately before any workflow execution.
