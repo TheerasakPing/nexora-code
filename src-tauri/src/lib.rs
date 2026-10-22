@@ -29,6 +29,9 @@ mod integrations;
 mod jev;
 mod jev_decisions;
 mod local_servers;
+mod mcp_registry;
+pub mod mcp_security;
+mod mcp_permissions;
 mod message_queue;
 mod moodboards;
 mod prompt_attachments;
@@ -2840,7 +2843,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         // Updates come only from GitHub Releases, verified against the public key in tauri.conf.json.
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        // R0: own signing keys not provisioned; updater disabled
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             if let Ok(cache) = app.path().app_cache_dir() {
@@ -2873,6 +2876,7 @@ pub fn run() {
             app.manage(file_preview::FilePreviews::default());
             app.manage(agent_tools::UiRequests::default());
             app.manage(architect::Runtime::default());
+            app.manage(mcp_registry::Registry::new(&dir));
             architect::watchdog::watch(app.handle().clone());
             bots::start(app.handle());
             let handle = app.handle().clone();
@@ -3150,6 +3154,11 @@ pub fn run() {
                 get_terminal_preferences,
                 get_metrics,
                 list_local_servers,
+                mcp_permissions::mcp_policy_preflight,
+                mcp_registry::mcp_registry_list,
+                mcp_registry::mcp_registry_upsert,
+                mcp_registry::mcp_registry_remove,
+                mcp_registry::mcp_registry_set_enabled,
                 jev::jev_configuration,
                 jev::jev_save_configuration,
                 jev::jev_doctor,

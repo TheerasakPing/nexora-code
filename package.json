@@ -1,16 +1,16 @@
 {
-  "name": "pandacode",
+  "name": "nexora-code",
   "private": true,
-  "version": "0.3.16",
-  "description": "Open-source desktop workspace for coding agents: Claude Code, Codex, Kimi Code, OpenCode and more.",
+  "version": "0.1.0",
+  "description": "Nexora Code — Advanced AI Coding Workspace",
   "license": "SEE LICENSE IN LICENSE",
-  "homepage": "https://github.com/aicodeking/pandacode#readme",
+  "homepage": "https://github.com/TheerasakPing/nexora-code",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aicodeking/pandacode.git"
+    "url": "git+https://github.com/TheerasakPing/nexora-code.git"
   },
   "bugs": {
-    "url": "https://github.com/aicodeking/pandacode/issues"
+    "url": "https://github.com/TheerasakPing/nexora-code/issues"
   },
   "type": "module",
   "scripts": {
@@ -29,7 +29,8 @@
     "release:version": "node scripts/release/set-version.mjs",
     "release:build": "node scripts/release/build.mjs",
     "test:release": "node --test scripts/release/*.test.mjs",
-    "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts"
+    "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts",
+    "test:nexora:r0": "node scripts/nexora/r0-verify.mjs"
   },
   "dependencies": {
     "@pierre/diffs": "1.4.2",

@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::secret_store;
 
-const SERVICE: &str = "app.pandacode.cloud";
+const SERVICE: &str = "app.nexora.code.cloud";
 pub const PROVIDERS: [&str; 4] = ["daytona", "cloudflare", "aws", "agentcore"];
 
 /// A cloud machine as the panel and tools see it.

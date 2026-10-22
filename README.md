@@ -1,3 +1,20 @@
+# Nexora Code
+
+**This is a fork of PandaCode** — https://github.com/aicodeking/pandacode.
+
+Nexora Code is an independent native AI coding workspace based on PandaCode.
+All upstream copyright and license notices are retained in [LICENSE](LICENSE).
+
+**Status: R0 Engineering Foundation — NOT PRODUCTION READY.**
+Targets: macOS M4, Windows 11 x64, Linux x64. The fork has not yet passed native acceptance.
+The upstream auto-updater is disabled until new fork-owned signing keys and verification are configured.
+
+See [Roadmap](docs/nexora/ROADMAP.md) and [R0 Acceptance](docs/nexora/R0-ACCEPTANCE.md).
+
+---
+
+## Original PandaCode documentation (retained)
+
 # PandaCode
 
 A small, native desktop workspace for coding agents. PandaCode runs the coding

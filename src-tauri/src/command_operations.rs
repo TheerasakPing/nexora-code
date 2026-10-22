@@ -103,14 +103,13 @@ fn validate_request(request: &Request) -> Result<(), String> {
                 return Err("This Codex setting cannot be changed here.".into());
             }
         }
-        Request::ImportSelected { ids, .. } => {
+        Request::ImportSelected { ids, .. }
             if ids.is_empty()
                 || ids.len() > MAX_IMPORTS
                 || ids.iter().any(|id| uuid::Uuid::parse_str(id).is_err())
-                || ids.iter().collect::<HashSet<_>>().len() != ids.len()
-            {
-                return Err("Select one or more items from the current import preview.".into());
-            }
+                || ids.iter().collect::<HashSet<_>>().len() != ids.len() =>
+        {
+            return Err("Select one or more items from the current import preview.".into());
         }
         Request::Conversations { cursor, search }
             if cursor

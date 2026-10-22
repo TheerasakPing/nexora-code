@@ -80,7 +80,9 @@ mod tests {
         );
         let mut command = Command::new("sh");
         command.args(["-c", &script]);
-        let catalog = discover_process(command, &std::env::temp_dir(), Duration::from_secs(5))
+        // Keep the protocol fixture bounded but allow heavily loaded CI runners
+        // enough time to schedule and read the child process.
+        let catalog = discover_process(command, &std::env::temp_dir(), Duration::from_secs(15))
             .await
             .unwrap();
         assert_eq!(catalog.commands.len(), 3);

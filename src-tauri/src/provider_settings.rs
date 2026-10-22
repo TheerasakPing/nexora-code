@@ -26,7 +26,7 @@ struct Runtime {
     settings: Settings,
 }
 static CONFIG: OnceLock<Mutex<Runtime>> = OnceLock::new();
-const SERVICE: &str = "app.pandacode.providers";
+const SERVICE: &str = "app.nexora.code.providers";
 
 /// A provider API key in the platform's secure store, with the environment
 /// variable that can supply it instead. Labels appear in user-facing errors only.
