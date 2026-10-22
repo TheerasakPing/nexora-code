@@ -3,6 +3,8 @@
 **This is a fork of PandaCode** — https://github.com/aicodeking/pandacode.
 Pinned PandaCode v0.3.16 source SHA: 30f9c823e3c38f472f89e8f8405575ecfe7173ee.
 
+Development, multi-agent, MCP, quality gates, native acceptance and release operations follow [SOP NC-SOP-001](SOP-DEVELOPMENT-RELEASE.md).
+
 | Phase | Work | Gate |
 |---|---|---|
 | R0 | Fork, identity, attribution, CI, disable upstream updater | original functionality unaffected; native build smoke |
