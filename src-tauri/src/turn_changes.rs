@@ -1548,7 +1548,10 @@ pub fn persist(store: &Store, sid: &str, mut capture: Captured) -> Result<i64> {
         let mut stmt = store
             .db
             .prepare(
-                "SELECT id,diff_bytes FROM turn_changes WHERE diff_bytes>0 ORDER BY created_at,id",
+                // message_id is a unique, monotonic SQLite insertion ID.
+                // created_at is second-resolution and UUID id is random:
+                // their tie ordering could evict a later patch first.
+                "SELECT id,diff_bytes FROM turn_changes WHERE diff_bytes>0 ORDER BY message_id",
             )
             .map_err(|e| e.to_string())?;
         let rows = stmt

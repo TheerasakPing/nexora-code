@@ -385,6 +385,12 @@ fn retained_summary_survives_patch_eviction_and_duplicate_ids_roll_back() {
             params![RETAINED_BYTES, first_id],
         )
         .unwrap();
+    // Simulate an older capture with skewed clock. Durable chronological
+    // order is the auto-increment message_id, not timestamps or UUIDs.
+    store.db.execute(
+        "UPDATE turn_changes SET created_at=?1 WHERE id=?2",
+        params![storage::now() + 3600, first_id],
+    ).unwrap();
     let second = capture(&f, || f.write("a.txt", "latest\n"));
     let second_id = second.summary.id.clone();
     persist(&store, &task.id, second).unwrap();
