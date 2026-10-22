@@ -1,6 +1,7 @@
 //! Persistent, event-driven cross-harness delegation. Worker text stays in its own task.
 mod briefing;
 mod ownership;
+mod isolation;
 mod preview;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
@@ -465,6 +466,26 @@ pub async fn architect_preview_schedule(
     let store = state.store.lock().map_err(|error| error.to_string())?;
     let team = load(&store, &session_id)?.ok_or("Team is unavailable.")?;
     serde_json::to_value(preview::build(&team)).map_err(|error| error.to_string())
+}
+
+/// Read-only audit of the *actual* registered Git checkouts used by Team workers.
+/// Git inspection occurs off the Tokio worker thread and after releasing the DB lock.
+#[tauri::command]
+pub async fn architect_audit_isolation(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<isolation::IsolationAudit> {
+    let store = state.store.clone();
+    tokio::task::spawn_blocking(move || {
+        let facts = {
+            let store = store.lock().map_err(|error| error.to_string())?;
+            let team = load(&store, &session_id)?.ok_or("Team is unavailable.")?;
+            isolation::collect(&store, &team)?
+        };
+        Ok(isolation::evaluate(facts))
+    })
+    .await
+    .map_err(|error| format!("Isolation audit failed to join: {error}"))?
 }
 
 #[tauri::command]

@@ -891,6 +891,28 @@ fn worktree_entry(root: &Path, path: &Path) -> Result<Option<WorktreeEntry>, Str
     Ok(None)
 }
 
+/// Verify a *separately registered* linked Git worktree, rather than
+/// trusting a copied path string or an unrelated folder with a .git file.
+///
+/// This is read-only verification, NOT a filesystem sandbox/permission grant.
+pub(crate) fn is_registered_linked_worktree(main: &Path, candidate: &Path) -> Result<bool, String> {
+    let meta = match fs::symlink_metadata(candidate) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error.to_string()),
+    };
+    if !meta.is_dir() || meta.file_type().is_symlink() || !candidate.join(".git").is_file() {
+        return Ok(false);
+    }
+    let main = main.canonicalize().map_err(|error| error.to_string())?;
+    let candidate = candidate.canonicalize().map_err(|error| error.to_string())?;
+    if candidate == main {
+        return Ok(false);
+    }
+    Ok(worktree_entry(&main, &candidate)?
+        .is_some_and(|entry| !entry.prunable && entry.branch.is_some()))
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorktreeStatus {
@@ -1701,6 +1723,30 @@ mod tests {
         assert_eq!(git_status(&path).unwrap().branch, "pandacode/feature-one");
         assert!(create_worktree(&f.root, "feature-one".into()).is_err());
         assert!(create_worktree(&f.root, "../../escape".into()).is_err());
+    }
+
+    #[test]
+    fn only_registered_and_existing_linked_worktrees_pass_isolation_audit() {
+        let f = Fixture::new(true);
+        let linked = create_worktree(&f.root, "audit-real".into()).unwrap();
+        assert!(is_registered_linked_worktree(&f.root, &linked).unwrap());
+        assert!(!is_registered_linked_worktree(&f.root, &f.root).unwrap());
+
+        // A random folder containing a forged .git file is not listed by the
+        // real repository and must never count as isolated.
+        let spoof = f.base.join("spoof");
+        fs::create_dir(&spoof).unwrap();
+        fs::write(spoof.join(".git"), "gitdir: not-a-real-registration").unwrap();
+        assert!(!is_registered_linked_worktree(&f.root, &spoof).unwrap());
+        assert!(!is_registered_linked_worktree(&f.root, &f.base.join("missing")).unwrap());
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            let link = f.base.join("alias-to-linked");
+            symlink(&linked, &link).unwrap();
+            assert!(!is_registered_linked_worktree(&f.root, &link).unwrap());
+        }
     }
 
     #[test]

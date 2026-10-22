@@ -3022,6 +3022,7 @@ pub fn run() {
                 architect::profiles::architect_delete_profile,
                 architect::architect_get,
                 architect::architect_preview_schedule,
+                architect::architect_audit_isolation,
                 workflow_plan::workflow_validate_plan,
                 architect::architect_configure,
                 architect::architect_start,

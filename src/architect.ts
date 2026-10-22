@@ -16,6 +16,7 @@ import { mountTeamProfiles } from './team-profiles';
 import { infoMark } from './tooltip';
 import { workerQueueReason } from './worker-scheduling';
 import { schedulePreviewMarkup, type SchedulePreview } from './schedule-preview';
+import { isolationAuditMarkup, type IsolationAudit } from './isolation-audit';
 import { Subagents } from './subagents';
 import { TeamMessages } from './team-messages';
 import { renderCoordination } from './coordination-message';
@@ -255,6 +256,9 @@ export class ArchitectView {
   private preview?: SchedulePreview;
   private previewRequest = 0;
   private previewPainted = '';
+  private audit?: IsolationAudit;
+  private auditRequest = 0;
+  private auditPainted = '';
   private selected = '';
   private live = new Map<string, WorkerLive>();
   private rows = new Map<string, HTMLButtonElement>();
@@ -340,6 +344,12 @@ export class ArchitectView {
     this.childAgents?.setTask('', false);
     const panel = document.createElement('section'); panel.className = 'architect-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Workers');
     panel.innerHTML = `<div class="architect-panel-heading"><button class="icon-button architect-back" aria-label="Back to workers" hidden>${icon('back')}</button><strong class="architect-panel-summary"></strong><small class="architect-panel-count"></small><span class="architect-panel-controls"><button class="icon-button" data-team-control="pause" aria-label="Pause team" title="Pause team">${icon('pause')}</button><button class="icon-button" data-team-control="resume" aria-label="Resume team" title="Resume team">${icon('play')}</button><button class="icon-button" data-team-control="stop" aria-label="Stop team" title="Stop team">${icon('stop')}</button><button class="icon-button architect-configure" aria-label="View team setup" title="Team setup">${icon('settings')}</button></span><button class="icon-button architect-close" aria-label="Close workers" title="Close">${icon('close')}</button></div><p class="architect-panel-error" role="status" hidden></p><div class="architect-panel-scroll"><details class="architect-schedule-preview"><summary>Schedule preview · read only</summary><div class="architect-preview-content" role="status">Open to load a proposed schedule. Nothing will be executed.</div><button class="secondary-button architect-preview-refresh" type="button">Refresh preview</button></details><div class="architect-worker-list"></div><div class="architect-worker-detail" hidden><div class="architect-worker-meta"></div><details class="architect-assignment"><summary>Assignment & file scope</summary><p></p><small></small></details><details class="architect-worker-checkpoint" hidden><summary>Latest checkpoint <time></time></summary><dl><div><dt>Progress</dt><dd data-checkpoint="summary"></dd></div><div><dt>Next</dt><dd data-checkpoint="nextSteps"></dd></div><div class="architect-checkpoint-blocker"><dt>Blocked</dt><dd data-checkpoint="blocker"></dd></div></dl></details><div class="architect-worker-history"></div><div class="architect-worker-live"></div><div class="architect-worker-tools"></div><div class="architect-worker-approvals"></div><div class="architect-worker-inputs"></div><p class="architect-worker-empty" role="status"></p><button class="secondary-button architect-history-retry" hidden>Retry loading worker</button></div></div>`;
+    const auditDetails = document.createElement('details');
+    auditDetails.className = 'architect-isolation-audit';
+    auditDetails.innerHTML = '<summary>Git worktree isolation · read only</summary>'
+      + '<div class="architect-audit-content" role="status">Open to inspect real Git checkout registrations. No tasks will be moved.</div>'
+      + '<button class="secondary-button architect-audit-refresh" type="button">Verify worktrees</button>';
+    panel.querySelector('.architect-schedule-preview')!.after(auditDetails);
     this.panel = panel; this.host.append(panel);
     const assist = document.createElement('button'); assist.type = 'button'; assist.className = 'architect-assist';
     assist.addEventListener('click', () => {
@@ -364,6 +374,12 @@ export class ArchitectView {
       void this.refreshSchedulePreview();
     });
 
+    auditDetails.addEventListener('toggle', () => {
+      if (auditDetails.open && !this.audit) void this.refreshIsolationAudit();
+    });
+    auditDetails.querySelector<HTMLButtonElement>('.architect-audit-refresh')!.addEventListener('click', () => {
+      void this.refreshIsolationAudit();
+    });
     const scroll = panel.querySelector<HTMLElement>('.architect-panel-scroll')!;
     scroll.addEventListener('scroll', () => { if (scroll.scrollTop < 72) void this.loadMessages(true); }, { passive: true });
     scroll.addEventListener('wheel', event => { if (event.deltaY < 0 && scroll.scrollTop < 72) void this.loadMessages(true); }, { passive: true });
@@ -387,7 +403,7 @@ export class ArchitectView {
     this.panel?.querySelector<HTMLButtonElement>('.architect-back')?.focus();
     await this.loadMessages();
   }
-  close(): void { ++this.previewRequest; this.preview = undefined; this.previewPainted = ''; this.teamMessages?.destroy(); this.teamMessages = undefined; this.childAgents?.setTask('', false); if (this.panel) hidePopover(this.panel); this.panel = undefined; this.selected = ''; this.rows.clear(); this.paintedTools.clear(); this.paintedWorker = ''; this.historyWorker = ''; this.historyMessages.clear(); this.historyHasOlder = false; this.historyLoading = false; this.historyRefreshQueued = false; this.request++; cancelAnimationFrame(this.frame); this.frame = 0; this.trigger.setAttribute('aria-expanded', 'false'); }
+  close(): void { ++this.auditRequest; this.audit = undefined; this.auditPainted = ''; ++this.previewRequest; this.preview = undefined; this.previewPainted = ''; this.teamMessages?.destroy(); this.teamMessages = undefined; this.childAgents?.setTask('', false); if (this.panel) hidePopover(this.panel); this.panel = undefined; this.selected = ''; this.rows.clear(); this.paintedTools.clear(); this.paintedWorker = ''; this.historyWorker = ''; this.historyMessages.clear(); this.historyHasOlder = false; this.historyLoading = false; this.historyRefreshQueued = false; this.request++; cancelAnimationFrame(this.frame); this.frame = 0; this.trigger.setAttribute('aria-expanded', 'false'); }
   private async control(action: string): Promise<void> {
     if (this.busy || !this.team) return;
     this.busy = true; this.paint();
@@ -430,6 +446,39 @@ export class ArchitectView {
     }
   }
 
+  /** Explicit user request, DB snapshot and read-only Git inspection only. */
+  private async refreshIsolationAudit(): Promise<void> {
+    const panel = this.panel, sessionId = this.taskId;
+    if (!panel || !this.team) return;
+    const sequence = ++this.auditRequest;
+    const output = panel.querySelector<HTMLElement>('.architect-audit-content')!;
+    const refresh = panel.querySelector<HTMLButtonElement>('.architect-audit-refresh')!;
+    this.audit = undefined;
+    this.auditPainted = '';
+    refresh.disabled = true;
+    output.textContent = 'Verifying registered Git worktrees…';
+    try {
+      const audit = await call<IsolationAudit>('architect_audit_isolation', { sessionId });
+      if (this.panel !== panel || this.taskId !== sessionId || this.auditRequest !== sequence) return;
+      this.audit = audit;
+      this.paintIsolationAudit();
+    } catch (error) {
+      if (this.panel !== panel || this.taskId !== sessionId || this.auditRequest !== sequence) return;
+      output.textContent = 'Isolation audit unavailable: ' + String(error);
+    } finally {
+      if (this.panel === panel && this.taskId === sessionId && this.auditRequest === sequence) refresh.disabled = false;
+    }
+  }
+  private paintIsolationAudit(): void {
+    if (!this.audit || !this.panel || !this.team) return;
+    const output = this.panel.querySelector<HTMLElement>('.architect-audit-content')!;
+    const markup = isolationAuditMarkup(this.audit, this.team.revision);
+    if (markup !== this.auditPainted) {
+      output.innerHTML = markup;
+      this.auditPainted = markup;
+    }
+  }
+
   private paint(): void {
     const team = this.team; this.host.hidden = !team; if (!team) { this.close(); return; }
     const done = team.workers.filter(w => w.status === 'completed' || w.abandoned).length;
@@ -457,6 +506,8 @@ export class ArchitectView {
     panel.querySelector<HTMLElement>('.architect-back')!.hidden = !worker;
     panel.querySelector<HTMLElement>('.architect-worker-list')!.hidden = Boolean(worker);
     panel.querySelector<HTMLDetailsElement>('.architect-schedule-preview')!.hidden = Boolean(worker);
+    panel.querySelector<HTMLDetailsElement>('.architect-isolation-audit')!.hidden = Boolean(worker);
+    this.paintIsolationAudit();
     this.paintSchedulePreview();
     panel.querySelector<HTMLElement>('.architect-worker-detail')!.hidden = !worker;
     if (this.teamMessages) { this.teamMessages.host.hidden = Boolean(worker); if (!worker) this.teamMessages.update(team); }
