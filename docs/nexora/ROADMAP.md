@@ -4,7 +4,9 @@
 Pinned PandaCode v0.3.16 source SHA: 30f9c823e3c38f472f89e8f8405575ecfe7173ee.
 
 Development, multi-agent, MCP, quality gates, native acceptance and release operations follow [SOP NC-SOP-001](SOP-DEVELOPMENT-RELEASE.md).
-Local R0–R2 merge evidence: [2026-10-22 integration report](INTEGRATION-R0-R2-2026-10-22.md).\n
+Track actionable tasks and release gates in [Checklist Planner NC-PLAN-001](CHECKLIST-PLANNER.md).
+Local R0–R2 merge evidence: [2026-10-22 integration report](INTEGRATION-R0-R2-2026-10-22.md).
+
 | Phase | Work | Gate |
 |---|---|---|
 | R0 | Fork, provisional identity, attribution, CI, updater isolation and brand inventory | source baseline and identity/legal inventory review |
