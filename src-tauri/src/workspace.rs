@@ -927,6 +927,80 @@ pub(crate) fn is_registered_linked_worktree(main: &Path, candidate: &Path) -> Re
         .is_some_and(|entry| !entry.prunable && entry.branch.is_some()))
 }
 
+/// Read-only inspection of a reserved Agent branch. Does not resolve a
+/// claim or authorize any Git mutation.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum ClaimBranchEvidence {
+    MissingBranch,
+    BranchOnly,
+    VerifiedLinked(PathBuf),
+}
+
+/// Exact local ref plus registered checkout inspection through bounded Git
+/// commands, with hooks and optional locks disabled. Git errors or inconsistent
+/// registrations are UNKNOWN (Err), never evidence of absence.
+pub(crate) fn inspect_claim_branch(main: &Path, branch: &str) -> Result<ClaimBranchEvidence, String> {
+    if !branch.starts_with("pandacode/r3-worker-")
+        || branch.len() > 160
+        || branch.contains("..")
+        || !branch.bytes().all(|ch| ch.is_ascii_alphanumeric() || b"/_-".contains(&ch))
+    {
+        return Err("Invalid reserved worker branch name.".into());
+    }
+    require_repository(main)?;
+    let reference = format!("refs/heads/{branch}");
+    let ref_result = run_git(main, &["show-ref", "--verify", "--quiet", &reference], 8192, false)?;
+    match ref_result.status.code() {
+        Some(0) => {}
+        Some(1) => return Ok(ClaimBranchEvidence::MissingBranch),
+        _ => return Err("Unable to verify worker branch reference.".into()),
+    }
+    let listed = checked(run_git(main, &["worktree", "list", "--porcelain"], 1024 * 1024, false)?)?;
+    if listed.truncated {
+        return Err("Git worktree listing was truncated; cannot verify safely.".into());
+    }
+    let text = std::str::from_utf8(&listed.bytes)
+        .map_err(|_| "Git worktree listing was not UTF-8.".to_owned())?;
+    let mut registered = None;
+    for block in text.split("\n\n") {
+        let mut path = None;
+        let mut on_branch = false;
+        let mut prunable = false;
+        for line in block.lines() {
+            if let Some(value) = line.strip_prefix("worktree ") {
+                path = Some(PathBuf::from(value));
+            } else if let Some(value) = line.strip_prefix("branch ") {
+                on_branch = value == reference;
+            } else if line.starts_with("prunable") {
+                prunable = true;
+            }
+        }
+        if on_branch {
+            if prunable {
+                return Err("Branch references a prunable worktree; manual reconciliation required.".into());
+            }
+            if registered.is_some() {
+                return Err("Worker branch appears in multiple worktree registrations.".into());
+            }
+            registered = path;
+        }
+    }
+    let Some(path) = registered else {
+        return Ok(ClaimBranchEvidence::BranchOnly);
+    };
+    let metadata = fs::symlink_metadata(&path).map_err(|error|
+        format!("Registered checkout cannot be inspected: {error}")
+    )?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return Err("Registered worker checkout is not a safe directory.".into());
+    }
+    let canonical = path.canonicalize().map_err(|error| error.to_string())?;
+    if !is_registered_linked_worktree(main, &path)? {
+        return Err("Registered checkout did not verify as a linked Git worktree.".into());
+    }
+    Ok(ClaimBranchEvidence::VerifiedLinked(canonical))
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorktreeStatus {

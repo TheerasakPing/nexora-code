@@ -5,6 +5,9 @@ mod isolation;
 // Staged internal-only source; no public IPC or agent tool exposure.
 #[allow(dead_code)]
 mod provision;
+// Internal R3 recovery report only; NO public IPC or automatic retry/cleanup.
+#[allow(dead_code)]
+mod reconcile;
 mod preview;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
