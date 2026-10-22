@@ -36,7 +36,7 @@ integration discovery and the original per-run MCP host.
   }
 }
 
-## Upcoming release blockers
+For the configuration editor added in the next source increment, see\n[R2 MCP Center UI](R2-MCP-CENTER-UI.md). It does not start MCP servers.\n\n## Upcoming release blockers
 
 1. MCP Center user interface and import review with explicit confirmation.
 2. OS-native credential vault and non-exportable OAuth tokens.

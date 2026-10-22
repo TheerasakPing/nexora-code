@@ -1,0 +1,25 @@
+.mcp-center { border-block:1px solid var(--border); padding:14px 0 16px; }
+.mcp-center-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.mcp-center-head h3 { margin:0; font-size:1rem; }
+.mcp-center-head > div, .mcp-center-entry-actions, .mcp-center-form-actions { display:flex; gap:7px; flex-wrap:wrap; }
+.mcp-center-status { min-height:1.4em; font-size:.83rem; color:var(--muted); margin:8px 0; }
+.mcp-center-error { color:var(--danger, #d65b59); }
+.mcp-center-entry { display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap; padding:10px 0; border-top:1px solid var(--border); }
+.mcp-center-entry strong, .mcp-center-entry small { display:block; overflow-wrap:anywhere; }
+.mcp-center-entry small { font-size:.8rem; color:var(--muted); margin-top:3px; }
+.mcp-center-entry-actions { align-self:center; }
+.mcp-center-form { display:grid; gap:7px; border-top:1px solid var(--border); margin-top:12px; padding-top:12px; }
+.mcp-center-form[hidden], .mcp-center-form [hidden] { display:none; }
+.mcp-center-form h4 { margin:0 0 4px; }
+.mcp-center-form label { display:block; font-size:.83rem; font-weight:600; }
+.mcp-center-form input, .mcp-center-form textarea, .mcp-center-form select {
+  width:100%; min-width:0; color:var(--text); background:var(--panel, transparent);
+  border:1px solid var(--border); border-radius:7px; padding:8px;
+}
+.mcp-center-form [data-nexora-stdio-fields], .mcp-center-form [data-nexora-http-fields] { display:grid; gap:7px; }
+.mcp-center-form-actions { margin-top:5px; }
+.mcp-center :focus-visible { outline:2px solid var(--focus, var(--accent)); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { .mcp-center * { scroll-behavior:auto; } }
+/* Override transport field grids when hidden (attribute specificity matters). */
+.mcp-center-form [data-nexora-stdio-fields][hidden],
+.mcp-center-form [data-nexora-http-fields][hidden] { display:none; }

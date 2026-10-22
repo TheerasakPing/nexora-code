@@ -1,6 +1,7 @@
 import './integrations.css';
 import { call, preview } from './bridge';
 import { escape, icon } from './dom';
+import { mountMcpCenter } from './mcp-center';
 
 interface Tool { name: string; description: string; }
 interface Entry extends Tool { status: string; }
@@ -12,9 +13,12 @@ export async function showIntegrations(dialog: HTMLDialogElement, context: { pro
   host.className = 'integrations-view';
   host.innerHTML = `<div class="dialog-heading"><h2>Tools & integrations</h2><button data-action="close-dialog" aria-label="Close">${icon('close')}</button></div>
     <p class="dialog-description">Codex uses its own coding tools, your configured MCP servers, and skills for this project.</p>
+    <div class="mcp-center-host"></div>
     <div class="integration-content" role="status">Checking available integrations…</div>
     <div class="dialog-footer"><button class="secondary-button" data-integration-refresh>Refresh</button><button class="primary-button" data-action="close-dialog">Done</button></div>`;
   dialog.className = 'settings-dialog'; dialog.replaceChildren(host); if (!dialog.open) dialog.showModal();
+  const detachMcpCenter = mountMcpCenter(host.querySelector<HTMLElement>('.mcp-center-host')!);
+  dialog.addEventListener('close', detachMcpCenter, { once: true });
   let revision = 0;
   const row = (item: Tool, status?: string) => `<div class="integration-row"><div><strong>${escape(item.name)}</strong>${item.description ? `<small>${escape(item.description)}</small>` : ''}</div>${status ? `<span class="integration-status">${escape(status)}</span>` : ''}</div>`;
   async function refresh(): Promise<void> {
