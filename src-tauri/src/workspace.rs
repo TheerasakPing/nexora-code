@@ -5,6 +5,12 @@ pub use file_search::search_files;
 pub(crate) fn excluded_entry(name: &str, directory: bool) -> bool {
     file_search::excluded(std::ffi::OsStr::new(name), directory)
 }
+
+/// Reject Git internals under any ASCII case. On default macOS/Windows volumes
+/// a case-variant spelling can refer to the real Git metadata directory.
+fn is_git_metadata_component(name: &std::ffi::OsStr) -> bool {
+    name.to_str().is_some_and(|name| name.eq_ignore_ascii_case(".git"))
+}
 use std::{
     collections::BinaryHeap,
     fs::{self, File},
@@ -75,7 +81,7 @@ fn resolve_scoped_path(root: &Path, value: &str) -> Result<PathBuf, PathError> {
     let relative = Path::new(value);
     for part in relative.components() {
         match part {
-            Component::Normal(name) if name != ".git" => {}
+            Component::Normal(name) if !is_git_metadata_component(name) => {}
             Component::CurDir => {}
             _ => return Err(PathError::Rejected("Path must stay inside the project")),
         }
@@ -1231,7 +1237,7 @@ pub fn list_files(root: &Path, path: Option<String>) -> Result<Vec<FileEntry>, S
         let Some(name) = entry.file_name().to_str().map(str::to_string) else {
             continue;
         };
-        if name == ".git" {
+        if is_git_metadata_component(std::ffi::OsStr::new(&name)) {
             continue;
         }
         let relative_path = entry.path();
@@ -1418,6 +1424,33 @@ mod tests {
         fs::write(f.root.join("binary.bin"), [0, 1, 2]).unwrap();
         assert!(read_file(&f.root, "binary.bin".into()).is_err());
         assert!(read_file(&f.root, ".".into()).is_err());
+    }
+
+    #[test]
+    fn git_internal_paths_are_rejected_under_all_ascii_case_variants() {
+        let f = Fixture::new(true);
+        for path in [
+            ".git/config",
+            ".GIT/config",
+            ".Git/config",
+            "nested/.gIt/config",
+            "nested/.GIT",
+        ] {
+            assert!(
+                resolve_scoped_path(&f.root, path).is_err(),
+                "Git internals must not be accessible through {path}"
+            );
+            assert!(
+                read_file(&f.root, path.into()).is_err(),
+                "File preview must not expose {path}"
+            );
+        }
+        assert!(
+            list_files(&f.root, Some(".GIT".into())).is_err(),
+            "Case-variant Git metadata must not be listed"
+        );
+        fs::write(f.root.join("safe-note.txt"), "safe").unwrap();
+        assert_eq!(read_file(&f.root, "safe-note.txt".into()).unwrap(), "safe");
     }
 
     #[cfg(unix)]

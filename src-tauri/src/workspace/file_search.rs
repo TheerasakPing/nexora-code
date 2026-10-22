@@ -155,7 +155,10 @@ fn ranked(
 }
 
 pub(crate) fn excluded(name: &std::ffi::OsStr, directory: bool) -> bool {
-    matches!(name.to_str(), Some(".git" | ".hg" | ".svn"))
+    super::is_git_metadata_component(name)
+        || name.to_str().is_some_and(|name| {
+            name.eq_ignore_ascii_case(".hg") || name.eq_ignore_ascii_case(".svn")
+        })
         || directory
             && matches!(
                 name.to_str(),
@@ -371,6 +374,19 @@ mod tests {
             search_files(&f.0, "author's \"notes\"".into(), None).unwrap()[0].path,
             "docs/author's \"notes\".md"
         );
+    }
+
+    #[test]
+    fn version_control_directories_are_excluded_regardless_of_ascii_case() {
+        for name in [
+            ".git", ".Git", ".GIT", ".gIt",
+            ".hg", ".HG", ".svn", ".SVN",
+        ] {
+            assert!(excluded(std::ffi::OsStr::new(name), true), "{name}");
+            assert!(excluded(std::ffi::OsStr::new(name), false), "{name}");
+        }
+        assert!(!excluded(std::ffi::OsStr::new(".github"), true));
+        assert!(!excluded(std::ffi::OsStr::new(".gitignore"), false));
     }
 
     #[test]
