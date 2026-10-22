@@ -37,7 +37,11 @@ function run(root, base, number = '5', env = {}) {
   return spawnSync(process.execPath, [checker], {
     cwd: root,
     encoding: 'utf8',
-    env: { ...process.env, BASE_SHA: base, HEAD_SHA: git(root, 'rev-parse', 'HEAD'),
+    // Isolation: GitHub Actions sets GITHUB_EVENT_PATH globally. A temp-repo
+    // fixture must not read the real PR body unless a test explicitly supplies
+    // a synthetic event. This is test isolation, not a production bypass.
+    env: { ...process.env, GITHUB_EVENT_PATH: '', GITHUB_ACTIONS: '',
+      BASE_SHA: base, HEAD_SHA: git(root, 'rev-parse', 'HEAD'),
       PR_NUMBER: number, ...env },
   });
 }
