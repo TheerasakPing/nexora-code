@@ -30,6 +30,8 @@ mod jev;
 mod jev_decisions;
 mod local_servers;
 mod mcp_registry;
+pub mod mcp_security;
+mod mcp_permissions;
 mod message_queue;
 mod moodboards;
 mod prompt_attachments;
@@ -3152,6 +3154,7 @@ pub fn run() {
                 get_terminal_preferences,
                 get_metrics,
                 list_local_servers,
+                mcp_permissions::mcp_policy_preflight,
                 mcp_registry::mcp_registry_list,
                 mcp_registry::mcp_registry_upsert,
                 mcp_registry::mcp_registry_remove,
