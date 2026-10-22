@@ -41,6 +41,32 @@ fn running_worker(
 }
 
 #[test]
+fn schedule_preview_does_not_mutate_team_or_session_state() {
+    let (state, parent) = state_fixture();
+    call(
+        &state,
+        &parent,
+        "pandacode_dispatch_workers",
+        json!({"assignments":[assignment("r3-preview","fast","docs")]}),
+    )
+    .unwrap();
+    let before = {
+        let store = state.store.lock().unwrap();
+        load(&store, &parent).unwrap().unwrap()
+    };
+    let original_json = serde_json::to_value(&before).unwrap();
+    let projected = preview::build(&before);
+    assert_eq!(projected.waves.len(), 1);
+    assert_eq!(projected.waves[0].worker_ids.len(), 1);
+    let after = {
+        let store = state.store.lock().unwrap();
+        load(&store, &parent).unwrap().unwrap()
+    };
+    assert_eq!(serde_json::to_value(&after).unwrap(), original_json);
+    assert_eq!(projected.revision, before.revision);
+}
+
+#[test]
 fn task_deletion_waits_for_team_cleanup_and_late_callbacks_cannot_recreate_it() {
     let (state, parent) = state_fixture();
     // Logical team activity continues even between provider processes.

@@ -1,5 +1,6 @@
 //! Persistent, event-driven cross-harness delegation. Worker text stays in its own task.
 mod briefing;
+mod preview;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
 pub(crate) mod profiles;
@@ -452,6 +453,19 @@ pub async fn architect_get(
         load(&store, &session_id)
     }
 }
+/// Read-only Team Lead preview of *proposed* assignment waves.
+///
+/// No scheduling, permission grants, process execution or database writes.
+#[tauri::command]
+pub async fn architect_preview_schedule(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<serde_json::Value> {
+    let store = state.store.lock().map_err(|error| error.to_string())?;
+    let team = load(&store, &session_id)?.ok_or("Team is unavailable.")?;
+    serde_json::to_value(preview::build(&team)).map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 pub async fn architect_configure(
     app: tauri::AppHandle,
