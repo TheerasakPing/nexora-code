@@ -400,14 +400,18 @@ impl Protocol {
 
     fn pi_ui(&mut self, value: Value, step: &mut Step) -> Result<(), String> {
         match field(&value, "method") {
-            "setStatus" if value["statusKey"] == "pandacode-bridge" => {
-                if value["statusText"] == "ready" {
-                    self.pi.ready = true;
-                    if let Some(state) = self.pi.held_state.take() {
-                        self.pi_started(&state, step)?;
-                    }
+            "setStatus"
+                if value["statusKey"] == "pandacode-bridge"
+                    && value["statusText"] == "ready" =>
+            {
+                self.pi.ready = true;
+                if let Some(state) = self.pi.held_state.take() {
+                    self.pi_started(&state, step)?;
                 }
             }
+            // Preserve the original behavior: other bridge statuses are ignored,
+            // not dispatched to the generic visible-status branch below.
+            "setStatus" if value["statusKey"] == "pandacode-bridge" => {}
             "confirm" => self.approval(
                 value.clone(),
                 format!("{}\n{}", field(&value, "title"), field(&value, "message")),

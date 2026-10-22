@@ -1813,12 +1813,10 @@ impl Protocol {
             "item/tool/call" => self.host_tool_request(value, &mut step),
             "item/tool/requestUserInput" | "mcpServer/elicitation/request" => self.input_request(value, &mut step),
             "serverRequest/resolved" => self.resolved_request(&params["requestId"], &mut step),
-            "thread/tokenUsage/updated" => {
-                if field(params,"threadId") == self.remote_id {
-                    let usage=&params["tokenUsage"];
-                    if let Some(used)=usage["last"]["totalTokens"].as_u64() {
-                        self.usage(used,usage["modelContextWindow"].as_u64(),&mut step);
-                    }
+            "thread/tokenUsage/updated" if field(params,"threadId") == self.remote_id => {
+                let usage=&params["tokenUsage"];
+                if let Some(used)=usage["last"]["totalTokens"].as_u64() {
+                    self.usage(used,usage["modelContextWindow"].as_u64(),&mut step);
                 }
             },
             "turn/started" => self.goal_turn_started(string(&params["turn"],"id"), &mut step),
@@ -2194,21 +2192,20 @@ impl Protocol {
                     }
                 }
             }
-            "system" if value["subtype"] == "compact_boundary" => {
-                if value["compact_metadata"].is_object() {
-                    let id = format!(
-                        "compaction:{}",
-                        limited(value["uuid"].as_str().unwrap_or("context"), 240)
-                    );
-                    self.tool_update(
-                        &id,
-                        Some("Compact context"),
-                        Some("completed"),
-                        None,
-                        Some("Conversation context compacted.".into()),
-                        &mut step,
-                    );
-                }
+            "system" if value["subtype"] == "compact_boundary"
+                && value["compact_metadata"].is_object() => {
+                let id = format!(
+                    "compaction:{}",
+                    limited(value["uuid"].as_str().unwrap_or("context"), 240)
+                );
+                self.tool_update(
+                    &id,
+                    Some("Compact context"),
+                    Some("completed"),
+                    None,
+                    Some("Conversation context compacted.".into()),
+                    &mut step,
+                );
             }
             "system" if value["subtype"] == "status" && value["status"] == "compacting" => {
                 step.events
