@@ -2,7 +2,7 @@
 
 > **Standard Operating Procedure (SOP)**
 > โครงการ: **Nexora Code** — Fork ของ [PandaCode](https://github.com/aicodeking/pandacode)
-> รหัสเอกสาร: `NC-SOP-001` · ฉบับ: `1.0` · วันที่: `2026-10-22` · สถานะ: **Engineering / ใช้ควบคุมการพัฒนา**
+> รหัสเอกสาร: `NC-SOP-001` · ฉบับ: `1.1` · วันที่: `2026-10-22` · สถานะ: **Engineering / ใช้ควบคุมการพัฒนา**
 > เจ้าของเอกสาร: Project Owner / Integration Lead · รอบทบทวน: ทุก Release Candidate หรือเมื่อเปลี่ยน Security Policy
 
 **ข้อกำหนดสำคัญ:** *This is a fork of PandaCode* — https://github.com/aicodeking/pandacode. ต้องรักษา LICENSE และเครดิตตามข้อกำหนดต้นฉบับไว้เสมอ เอกสารนี้กำหนดวิธีทำงาน ไม่ใช่หลักฐานว่าโปรแกรมผ่าน Production แล้ว
@@ -172,6 +172,17 @@ State Machine: `PENDING → READY → RUNNING → SUCCEEDED | FAILED | CANCELLED
 - Workflow Template ต้องมี Version, Import Validation และ Permission Diff
 - Release Gate ต้องทดสอบ Force Kill ระหว่าง Tool, DB Crash, Stale Generation, Tool Timeout และ Replay Prevention
 
+## 9.1 Rebranding SOP — Brand, UI, Compatibility, Release
+
+- ใช้ [Rebranding Master Plan](REBRANDING-PLAN.md) เป็น Mandatory Workstream BR-01–BR-07 ตลอด R0–R8; ชื่อ Nexora Code เป็น Working Name จนกว่า Owner อนุมัติ
+- BR-01 ต้องตรวจชื่อ/โลโก้/สัญลักษณ์/Trademark ก่อนประกาศชื่อจริงหรือใช้ Asset แบบ Public
+- BR-02 และ BR-03 สร้าง Logo/Icons/Tokens/Light-Dark/Accessibility โดยไม่ทำให้ UX และความเร็วของ Agent Workbench ถดถอย
+- BR-04 ตรวจ About, User Copy, Bundle/Executable/Installer Metadata, Website และ Support Links; ต้องมีข้อความ Attribution และ LICENSE ต้นฉบับ
+- BR-05 ต้องทำ Data/Keychain/DB/Executable/Tool-Protocol Compatibility Tests และ Backup/Rollback ก่อนย้ายหรือเปลี่ยนชื่อของเดิม; ห้าม Global Replace ชื่อภายในทั้งโปรเจกต์
+- BR-06/BR-07 ต้องมี Native UI และ Installer Evidence บน Mac M4, Windows x64, Linux x64 และ Nexora-owned Signing/Updater Keys ก่อน Stable
+- เปลี่ยน Tauri productName หรือ App ID สำเร็จไม่เท่ากับ Rebranding Complete: ต้องมี Owner Approval, Visual Design, Compatibility, Legal และ 3-OS Gates
+- เมื่อผู้ใช้ไม่อยู่หน้าเครื่อง ทำเฉพาะ Specs/Source/Unit Tests/Docs/Local Commits; ห้าม Install, Launch GUI, Push, Sign หรือ Publish โดยพลการ
+
 ## 10. Cross-Platform Native Acceptance
 
 | รายการ | macOS M4 | Windows 11 x64 | Linux x64 |
@@ -267,6 +278,7 @@ Next owner and next safe action:
 ## 16. References
 
 - [Nexora Code Roadmap](ROADMAP.md)
+- [Rebranding & Product Identity Master Plan](REBRANDING-PLAN.md)
 - [R0 Acceptance](R0-ACCEPTANCE.md)
 - [R1 Workspace Path Hardening](R1-WORKSPACE-PATH-HARDENING.md)
 - [R2 MCP Registry Foundation](R2-MCP-REGISTRY-FOUNDATION.md)
@@ -281,3 +293,4 @@ Next owner and next safe action:
 | Version | วันที่ | การเปลี่ยนแปลง | ผู้อนุมัติ |
 |---|---|---|---|
 | 1.0 | 2026-10-22 | ฉบับเริ่มต้นสำหรับ R0–R8, Multi-Agent, MCP และ Production Gates | *Pending Project Owner review* |
+| 1.1 | 2026-10-22 | เพิ่ม Mandatory Rebranding BR-01–BR-07, Brand Identity Approval และ Migration/Native Release Gates | *Pending Project Owner review* |

@@ -7,15 +7,30 @@ Development, multi-agent, MCP, quality gates, native acceptance and release oper
 
 | Phase | Work | Gate |
 |---|---|---|
-| R0 | Fork, identity, attribution, CI, disable upstream updater | original functionality unaffected; native build smoke |
+| R0 | Fork, provisional identity, attribution, CI, updater isolation and brand inventory | source baseline and identity/legal inventory review |
 | R1 | Rust runtime, process cleanup, session durability, path security | crash, stop/resume and recovery pass |
 | R2 | MCP registry/stdio/HTTP, tool/resource/prompt inspector, vault | secure multi-server transport and approvals |
 | R3 | bounded agent scheduler, worktree isolation, mailbox/review | four agents parallel with no unsafe writes |
 | R4 | typed Workflow DAG, durable journal, no-replay | crash and UNKNOWN block unverified effects |
-| R5 | workflow studio, agent teams and observability UX | real desktop E2E and accessibility |
-| R6 | native macOS M4, Windows 11 x64, Linux x64 | actual clean install and UI/provider/terminal tests |
+| R5 | workflow studio, agent teams, observability UX and full rebrand design system BR-02/03 | brand and accessibility E2E on native desktop |
+| R6 | macOS M4, Windows 11 x64, Linux x64 branded installers BR-04/06 | native install, identity, UI/provider/terminal checks |
 | R7 | security, dependency, 8-agent 2h performance soak | no critical risks, bounded memory and processes |
-| R8 | signed production release, updater, rollback | release evidence / publisher approval |
+| R8 | signed production release, fork-owned updater, rollback and rebrand BR-07 | security, legal, branding, 3-OS evidence and publisher approval |
+
+## Mandatory Rebranding Workstream BR-01 through BR-07
+
+Rebranding is a cross-phase engineering workstream, not optional visual polish.
+Nexora Code is a provisional working name until approved by the Project Owner.
+
+BR-01 Brand identity approval; BR-02 logo and platform icon assets;
+BR-03 design system, light/dark and accessibility; BR-04 user-facing copy,
+About, menus and package metadata; BR-05 safe data/executable/tool migration;
+BR-06 branded macOS/Windows/Linux installers; BR-07 legal, signing and release gate.
+
+These are additional to the 24 planned engineering PRs. Basic source-level Tauri
+renaming does not mean full rebranding, migration or native release acceptance passed.
+See [Rebranding & Product Identity Master Plan](REBRANDING-PLAN.md) for owners,
+dependencies, status inventory, acceptance tests and explicit NO-GO criteria.
 
 ## 24 Engineering PRs
 
