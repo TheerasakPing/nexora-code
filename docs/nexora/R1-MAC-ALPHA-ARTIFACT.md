@@ -33,3 +33,13 @@ Use an audited release pipeline and owned signing identities for v1.0.
 
 The original upstream publishing workflow remains disabled until fork-owned
 signing keys and publishing policies are established.
+
+## Independent artifact verification
+
+The new read-only verification script, scripts/nexora/verify-mac-alpha-dmg.sh,
+checks SHA256, mounts the existing DMG read-only, verifies the ad-hoc code
+seal, fork-specific bundle identifier, app version, Apple arm64 executable,
+Applications shortcut and absence of the literal upstream update URL in the main
+binary. No GitHub upload, signing-key generation or installed-system change occurs.
+Result on Apple M4: PASS, 22 October 2026. This is not a substitute for
+native Finder UI acceptance or Apple Developer ID notarization.
