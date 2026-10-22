@@ -86,6 +86,16 @@ Worker Handoff, Team Lead Review, Evidence และ GO/NO-GO ก่อนส่
 PR ต้องลิงก์ Planner และบันทึกผลรีวิวของ Lead การเขียนกฎไม่ได้หมายความว่า
 ระบบ R3 Multi-Agent Scheduler พัฒนาเสร็จแล้ว
 
+**GitHub CI Gate:** [Nexora Task Planner Gate](../../.github/workflows/nexora-planner-gate.yml)
+เรียก [governance-pr-gate.mjs](../../scripts/nexora/governance-pr-gate.mjs)
+เพื่อตรวจว่า PR มี Planner ใหม่จริง ชื่อไฟล์ถูกต้อง มี Assignment,
+Acceptance Criteria, Evidence และ Team Lead verdict เป็น GO สำหรับการส่ง PR
+(ไม่ใช่อนุมัติ Merge) ถ้าไม่ครบให้ CI Failed แบบปฏิเสธไว้ก่อน
+**ข้อจำกัด:** Automated Check ตรวจโครงสร้างเอกสารเท่านั้น ไม่สามารถพิสูจน์ว่า
+ผู้ตรวจเป็นคนละคน ไม่สามารถแทน Required Reviewer หรือป้องกันการแก้ไข Rule
+ด้วยตัวเอง ต้องเปิด Branch Protection, Required Checks และ Code Owner Review
+แยกก่อนใช้เป็นการบล็อก Merge จริง
+
 ## 4. Repository / Branch / Worktree Policy
 
 Repository เป้าหมาย: `TheerasakPing/nexora-code` · Upstream: `aicodeking/pandacode` · Source ตั้งต้น PandaCode `v0.3.16`, commit `30f9c823e3c38f472f89e8f8405575ecfe7173ee`

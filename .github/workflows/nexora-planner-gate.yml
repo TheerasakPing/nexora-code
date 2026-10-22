@@ -1,0 +1,19 @@
+name: Nexora Task Planner Gate
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  task-planner:
+    name: Task checklist structure (NC-TEAM-001)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Compare synthetic pull_request merge parents, no credentials required.
+      - run: node scripts/nexora/governance-pr-gate.mjs 'HEAD^1' 'HEAD^2'

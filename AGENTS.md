@@ -38,6 +38,8 @@ in the older notes further down. Never infer permission to deploy or update.
 
 These rules are MANDATORY for every assistant/agent entrypoint to this repo.
 No worker action or user delivery may skip the Task Planner and Team Lead gate.
+PR structure is checked by the Nexora Task Planner Gate workflow; this does
+not replace required independent review and branch-protection checks.
 
 ---
 
