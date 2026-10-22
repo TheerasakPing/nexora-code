@@ -698,6 +698,20 @@ pub fn create_worktree(root: &Path, branch: String) -> Result<PathBuf, String> {
     create_worktree_with(root, &branch, None, false).map(|worktree| worktree.path)
 }
 
+/// The immutable Git commit corresponding to a trusted lead checkout.
+pub(crate) fn head_commit(root: &Path) -> Result<String, String> {
+    require_repository(root)?;
+    let output = checked(run_git(root, &["rev-parse", "--verify", "HEAD^{commit}"], 8192, false)?)?;
+    let sha = std::str::from_utf8(&output.bytes)
+        .map_err(|_| "Git commit is not UTF-8.")?
+        .trim()
+        .to_owned();
+    if !matches!(sha.len(), 40 | 64) || !sha.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("Invalid Git HEAD commit hash.".into());
+    }
+    Ok(sha)
+}
+
 /// Create a sibling checkout. `base` chooses the start point for a new branch;
 /// `existing` checks out a branch that already exists instead of creating one.
 pub fn create_worktree_with(

@@ -2,6 +2,9 @@
 mod briefing;
 mod ownership;
 mod isolation;
+// Staged internal-only source; no public IPC or agent tool exposure.
+#[allow(dead_code)]
+mod provision;
 mod preview;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
