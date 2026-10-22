@@ -32,6 +32,25 @@ export function validatePlanner(path, content) {
   return errors;
 }
 
+/** Structural PR handoff check; not proof of real reviewer approval. */
+export function validatePullRequestBody(body, planners) {
+  if (typeof body !== 'string' || !body.trim() || body.length > 128 * 1024) {
+    return ['Pull request body must contain a bounded nonempty task handoff.'];
+  }
+  const failures = [];
+  for (const path of planners) {
+    if (!body.includes(path)) failures.push('Pull request body must link added task planner: ' + path);
+  }
+  if (!/Team Lead/i.test(body)) failures.push('Pull request body must name the Team Lead.');
+  if (!/TEAM_LEAD_SERIAL|Worker(?:s| IDs)?/i.test(body)) {
+    failures.push('Pull request body must describe real worker assignments or TEAM_LEAD_SERIAL.');
+  }
+  if (!/\bGO for PR\b/i.test(body)) {
+    failures.push('Pull request body must record Team Lead GO for PR submission.');
+  }
+  return failures;
+}
+
 export function validateChangedFiles(changes, read = readFileSync) {
   const planners = changes.filter(({ status, path }) => status === 'A' && PLANNER_PATH.test(path));
   const failures = [];
@@ -77,9 +96,15 @@ function main() {
     return { status, path: parts.join('\t') };
   });
   const result = validateChangedFiles(changes);
+  if (!process.env.GITHUB_EVENT_PATH) {
+    throw new Error('GITHUB_EVENT_PATH is required for PR checklist verification.');
+  }
+  const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+  const failures = [...result.failures,
+    ...validatePullRequestBody(event?.pull_request?.body, result.planners)];
   for (const path of result.planners) process.stdout.write('Planner: ' + path + '\n');
-  if (result.failures.length) {
-    for (const failure of result.failures) process.stderr.write('ERROR: ' + failure + '\n');
+  if (failures.length) {
+    for (const failure of failures) process.stderr.write('ERROR: ' + failure + '\n');
     process.exitCode = 1;
     return;
   }

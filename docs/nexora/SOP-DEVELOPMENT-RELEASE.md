@@ -90,7 +90,8 @@ PR ต้องลิงก์ Planner และบันทึกผลรี�
 เรียก [governance-pr-gate.mjs](../../scripts/nexora/governance-pr-gate.mjs)
 เพื่อตรวจว่า PR มี Planner ใหม่จริง ชื่อไฟล์ถูกต้อง มี Assignment,
 Acceptance Criteria, Evidence และ Team Lead verdict เป็น GO สำหรับการส่ง PR
-(ไม่ใช่อนุมัติ Merge) ถ้าไม่ครบให้ CI Failed แบบปฏิเสธไว้ก่อน
+(ไม่ใช่อนุมัติ Merge) รวมทั้ง PR Body ต้องลิงก์ Planner ใหม่ทุกไฟล์
+และระบุ Team Lead/Worker Handoff/GO สำหรับส่ง PR มิฉะนั้น CI Failed
 **ข้อจำกัด:** Automated Check ตรวจโครงสร้างเอกสารเท่านั้น ไม่สามารถพิสูจน์ว่า
 ผู้ตรวจเป็นคนละคน ไม่สามารถแทน Required Reviewer หรือป้องกันการแก้ไข Rule
 ด้วยตัวเอง ต้องเปิด Branch Protection, Required Checks และ Code Owner Review

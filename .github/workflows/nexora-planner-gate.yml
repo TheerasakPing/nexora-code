@@ -15,5 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # The pull_request event body comes from GitHub via GITHUB_EVENT_PATH.
       # Compare synthetic pull_request merge parents, no credentials required.
       - run: node scripts/nexora/governance-pr-gate.mjs 'HEAD^1' 'HEAD^2'

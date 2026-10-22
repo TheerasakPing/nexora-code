@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePlanner, validateChangedFiles } from '../scripts/nexora/governance-pr-gate.mjs';
+import { validatePlanner, validateChangedFiles, validatePullRequestBody } from '../scripts/nexora/governance-pr-gate.mjs';
 
 const path = 'docs/nexora/tasks/2026-10-22-demo-request.md';
 const good = [
@@ -54,4 +54,20 @@ test('rejects unexpectedly large task planner files', () => {
 test('fails closed if a new task plan cannot be read', () => {
   const result = validateChangedFiles([{ status: 'A', path }], () => { throw new Error('ENOENT'); });
   assert.match(result.failures.join('\n'), /unreadable/);
+});
+
+test('PR handoff requires each planner path, Team Lead and assigned workers', () => {
+  const other = 'docs/nexora/tasks/2026-10-22-second-task.md';
+  const valid = [
+    '## Task Planner', path, other,
+    'Team Lead: acting assistant',
+    'Workers: TEAM_LEAD_SERIAL (no separate agent)',
+    'Team Lead GO for PR submission. Independent review pending.',
+  ].join('\\n');
+  assert.deepEqual(validatePullRequestBody(valid, [path, other]), []);
+  assert.match(validatePullRequestBody(valid.replace(other, ''), [path, other]).join(' '), /must link/);
+  assert.match(validatePullRequestBody(valid.replaceAll('Team Lead', 'Coordinator'), [path]).join(' '), /Team Lead/);
+  assert.match(validatePullRequestBody(valid.replace('Workers: TEAM_LEAD_SERIAL', 'Owner: unassigned'), [path]).join(' '), /worker assignments/);
+  assert.match(validatePullRequestBody('', [path]).join(' '), /nonempty/);
+  assert.match(validatePullRequestBody(null, [path]).join(' '), /nonempty/);
 });
