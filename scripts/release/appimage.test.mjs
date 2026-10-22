@@ -16,7 +16,7 @@ function header({ blockSize = 131072, compression = 6, magic = 0x73717368 } = {}
 }
 
 async function fakeAppImage(directory, { wayland = true } = {}) {
-  const path = join(directory, 'PandaCode_1.2.3_amd64.AppImage');
+  const path = join(directory, 'Nexora Code_1.2.3_amd64.AppImage');
   const bytes = Buffer.alloc(200, 1);
   header().copy(bytes, OFFSET);
   await writeFile(path, bytes);

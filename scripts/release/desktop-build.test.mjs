@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPlan, builtArtifact, checksumLine, macosSigning } from './build.mjs';
+import { buildPlan, builtArtifact, checksumLine, macosSigning, macOSAppName } from './build.mjs';
 import { appImageBundleOptions } from './common.mjs';
 
 const env = { PANDACODE_LICENSE_PUBLIC_KEY: 'stale', PANDACODE_UPDATE_PUBLIC_KEY: 'stale', TAURI_SIGNING_PRIVATE_KEY: 'stale', APPLE_ID: 'someone', APPLE_SIGNING_IDENTITY: 'Developer ID Application: Someone', PATH: 'test-path' };
@@ -39,6 +39,13 @@ test('Linux bundles the external-link helper without changing Mac or Windows bun
   assert.equal(config(buildPlan('windows-x86_64', env, 'win32', 'x64')).bundle.linux, undefined);
 });
 
+test('macOS bundle lookup derives the app name from validated Tauri identity', () => {
+  assert.equal(macOSAppName('Nexora Code'), 'Nexora Code.app');
+  for (const name of ['', '../escape', 'foo/bar', 'foo\\bar', '.hidden', 'name.', 'name ', null]) {
+    assert.throws(() => macOSAppName(name), /productName/);
+  }
+});
+
 test('macOS falls back to an ad-hoc signature and drops partial Apple credentials', () => {
   const plan = buildPlan('darwin-aarch64', { APPLE_ID: 'someone', PATH: 'p' }, 'darwin', 'arm64');
   assert.equal(plan.signing.mode, 'adhoc');
@@ -59,13 +66,13 @@ test('Developer ID signing requires a real identity and notarization credentials
 });
 
 test('the build selects the exact versioned bundle Tauri produced', () => {
-  for (const [target, file] of [['windows-x86_64', 'PandaCode_1.2.3_x64-setup.exe'], ['linux-x86_64', 'PandaCode_1.2.3_amd64.AppImage'], ['darwin-aarch64', 'PandaCode_1.2.3_aarch64.dmg']]) {
+  for (const [target, file] of [['windows-x86_64', 'Nexora Code_1.2.3_x64-setup.exe'], ['linux-x86_64', 'Nexora Code_1.2.3_amd64.AppImage'], ['darwin-aarch64', 'Nexora Code_1.2.3_aarch64.dmg']]) {
     assert.equal(builtArtifact([file, file.replace('1.2.3', '1.2.2')], '1.2.3', target), file);
     assert.throws(() => builtArtifact([file], '1.2.4', target), /did not produce/);
   }
 });
 
 test('checksum sidecars use the sha256sum format', () => {
-  assert.equal(checksumLine('a'.repeat(64), 'PandaCode-Linux-x86_64.AppImage'), `${'a'.repeat(64)}  PandaCode-Linux-x86_64.AppImage\n`);
+  assert.equal(checksumLine('a'.repeat(64), 'NexoraCode-Linux-x86_64.AppImage'), `${'a'.repeat(64)}  NexoraCode-Linux-x86_64.AppImage\n`);
   assert.throws(() => checksumLine('nothex', 'x'), /SHA-256/);
 });

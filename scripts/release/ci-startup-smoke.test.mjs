@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile, access } from 'node:fs/promise
 import { assertHostedRunner, bundleDirectory, selectPackage, smokeEnvironment, installArguments, observeProcess, linuxStartupCommand, cleanupSmokeDirectory, validatePackageSize } from './ci-startup-smoke.mjs';
 
 test('Linux starts Xvfb before the bus so portal services inherit the display', () => {
-  assert.deepEqual(linuxStartupCommand('/tmp/build with spaces/PandaCode.AppImage'), { command: 'xvfb-run', args: ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', '/tmp/build with spaces/PandaCode.AppImage'] });
+  assert.deepEqual(linuxStartupCommand('/tmp/build with spaces/NexoraCode.AppImage'), { command: 'xvfb-run', args: ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', '/tmp/build with spaces/NexoraCode.AppImage'] });
 });
 
 test('startup packages obey the same 200 MiB publisher size limit', () => {
@@ -54,10 +54,10 @@ test('startup smoke refuses local, self-hosted, and mismatched systems', () => {
 });
 
 test('only the exact target/version package is launched', () => {
-  assert.equal(selectPackage(['PandaCode_1.2.3_x64-setup.exe', 'PandaCode_1.2.3_x64-setup.exe.sig'], '1.2.3', 'windows-x86_64'), 'PandaCode_1.2.3_x64-setup.exe');
-  assert.equal(selectPackage(['PandaCode_1.2.3_amd64.AppImage'], '1.2.3', 'linux-x86_64'), 'PandaCode_1.2.3_amd64.AppImage');
-  assert.throws(() => selectPackage(['PandaCode_1.2.2_amd64.AppImage'], '1.2.3', 'linux-x86_64'), /exactly one/);
-  assert.throws(() => selectPackage(Array(101).fill('PandaCode_1.2.3_amd64.AppImage'), '1.2.3', 'linux-x86_64'), /exactly one/);
+  assert.equal(selectPackage(['Nexora Code_1.2.3_x64-setup.exe', 'Nexora Code_1.2.3_x64-setup.exe.sig'], '1.2.3', 'windows-x86_64'), 'Nexora Code_1.2.3_x64-setup.exe');
+  assert.equal(selectPackage(['Nexora Code_1.2.3_amd64.AppImage'], '1.2.3', 'linux-x86_64'), 'Nexora Code_1.2.3_amd64.AppImage');
+  assert.throws(() => selectPackage(['Nexora Code_1.2.2_amd64.AppImage'], '1.2.3', 'linux-x86_64'), /exactly one/);
+  assert.throws(() => selectPackage(Array(101).fill('Nexora Code_1.2.3_amd64.AppImage'), '1.2.3', 'linux-x86_64'), /exactly one/);
 });
 
 test('isolated app data and literal NSIS arguments do not inherit credentials', () => {

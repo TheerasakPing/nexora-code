@@ -1,6 +1,6 @@
 // Builds one desktop installer on its native OS and copies it to
 // release/<version>/ under its stable GitHub Release asset name, with a
-// SHA-256 sidecar. Nothing is uploaded; .github/workflows/release.yml does that.
+// SHA-256 sidecar. Nothing is uploaded. A separately approved release workflow must handle publication.
 //
 //   node scripts/release/build.mjs [darwin-aarch64|windows-x86_64|linux-x86_64]
 //
@@ -29,6 +29,16 @@ export function macosSigning(env) {
     throw new Error('Developer ID builds must be notarized: set APPLE_API_KEY, APPLE_API_ISSUER and APPLE_API_KEY_PATH, or APPLE_ID, APPLE_PASSWORD and APPLE_TEAM_ID.');
   }
   return { mode: 'developer-id', identity };
+}
+
+/** Product-facing macOS bundle name, never a path supplied by shell. */
+export function macOSAppName(productName) {
+  if (typeof productName !== 'string'
+      || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$/.test(productName)
+      || productName.endsWith('.') || productName.endsWith(' ')) {
+    throw new Error('Tauri productName must be a safe nonempty bundle name.');
+  }
+  return productName + '.app';
 }
 
 function withoutApple(env) {
@@ -106,9 +116,9 @@ async function verifyMacApp(app, mode) {
   await run('spctl', ['--assess', '--type', 'execute', '--verbose', app]);
 }
 
-async function verifyDmg(path, app, releaseVersion) {
+async function verifyDmg(path, app, releaseVersion, productName) {
   await run('/usr/bin/hdiutil', ['verify', path, '-quiet']);
-  const scratch = await mkdtemp(resolve(tmpdir(), 'pandacode-dmg-verify-'));
+  const scratch = await mkdtemp(resolve(tmpdir(), 'nexora-dmg-verify-'));
   const mount = resolve(scratch, 'volume');
   await mkdir(mount);
   let mounted = false;
@@ -116,7 +126,7 @@ async function verifyDmg(path, app, releaseVersion) {
     await run('/usr/bin/hdiutil', ['attach', path, '-readonly', '-nobrowse', '-noautoopen', '-mountpoint', mount, '-quiet']);
     mounted = true;
     if (await readlink(resolve(mount, 'Applications')) !== '/Applications') throw new Error('The disk image is missing its Applications shortcut.');
-    const installed = resolve(mount, 'PandaCode.app');
+    const installed = resolve(mount, macOSAppName(productName));
     await run('/usr/bin/codesign', ['--verify', '--deep', '--strict', installed]);
     const installedVersion = execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', resolve(installed, 'Contents/Info.plist')], { encoding: 'utf8' }).trim();
     if (installedVersion !== releaseVersion || await digest(resolve(installed, 'Contents/MacOS/pandacode')) !== await digest(resolve(app, 'Contents/MacOS/pandacode'))) throw new Error('The disk image contains a different app build.');
@@ -130,7 +140,10 @@ async function verifyDmg(path, app, releaseVersion) {
 async function main() {
   const releaseTarget = process.argv[2] || process.env.RELEASE_TARGET || hostTarget();
   const config = targetConfig(releaseTarget);
-  const releaseVersion = version((await json(resolve(root, 'src-tauri/tauri.conf.json'))).version);
+  const tauri = await json(resolve(root, 'src-tauri/tauri.conf.json'));
+  const releaseVersion = version(tauri.version);
+  const productName = tauri.productName;
+  macOSAppName(productName);
   await checkVersions(releaseVersion);
   const build = buildPlan(releaseTarget, process.env);
   // Execute Node directly: npm.cmd is not an executable for spawn() on Windows.
@@ -140,9 +153,9 @@ async function main() {
   const bundleDir = resolve(bundleRoot, config.bundleDir);
   const source = resolve(bundleDir, builtArtifact(await readdir(bundleDir), releaseVersion, releaseTarget));
   if (releaseTarget === 'darwin-aarch64') {
-    const app = resolve(bundleRoot, 'macos/PandaCode.app');
+    const app = resolve(bundleRoot, 'macos', macOSAppName(productName));
     await verifyMacApp(app, build.signing.mode);
-    await verifyDmg(source, app, releaseVersion);
+    await verifyDmg(source, app, releaseVersion, productName);
   }
   if (releaseTarget === 'linux-x86_64') {
     // Drop the build host's Wayland libraries (see appimage.mjs) and sign the
