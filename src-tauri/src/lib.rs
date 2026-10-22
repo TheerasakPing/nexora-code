@@ -5,6 +5,9 @@ mod agent_usage_providers;
 mod appearance;
 mod architect;
 mod workflow_plan;
+// Staged internal-only R4 journal; no executor/permission IPC exists yet.
+#[allow(dead_code)]
+mod workflow_journal;
 mod bots;
 mod browser;
 mod command_operations;
