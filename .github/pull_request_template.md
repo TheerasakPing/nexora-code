@@ -1,6 +1,6 @@
 ## Mandatory Nexora Code Team Lead checklist (NC-TEAM-001)
 
-- **Task Planner:** docs/nexora/tasks/YYYY-MM-DD-task-slug.md (link)
+- **Task Planners:** link EVERY newly added docs/nexora/tasks/YYYY-MM-DD-task-slug.md (one for each request)
 - **Team Lead (actual identity):** TBD
 - **Real Agent IDs / ownership / worktrees:** TBD (or TEAM_LEAD_SERIAL)
 - **Subtasks, dependencies, incomplete work:** TBD (link planner)

@@ -27,6 +27,8 @@
 - [x] Recorded existing PR #4; final commit SHA recorded in Git history.
 - [x] Team Lead verdict documented, separate reviewer identified as pending if none.
 
+## GO/NO-GO decision
+
 **Team Lead verdict:** GO for documentation/CI policy PR update. NO-GO for protected merge until required checks and independent review.
 
 
