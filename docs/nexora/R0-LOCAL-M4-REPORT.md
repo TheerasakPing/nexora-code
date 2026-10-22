@@ -12,9 +12,17 @@ Verified on the connected Mac:
 - npm run test:nexora:r0: PASS (fork identity, attribution and updater safety)
 
 Not yet a production sign-off:
-- Rust tests pending completion.
+- Rust test suite: 982 passed, 0 failed, 33 ignored; additional CLI integration target 1/1 passed on Mac M4.
 - Mac native app / Finder launch and native GUI approval not yet verified.
 - Windows 11 x64 and Linux x64 native acceptance not yet run.
 - Fork updater disabled: new signing keys and release verification are required.
 - CI target Node 22, whereas this Mac check used Node 26.8.2.
 - No GitHub PR / remote CI until GitHub CLI is authenticated as the repository owner.
+
+## Mac-specific Provider Discovery regression found and fixed
+
+Initial Rust run: 981 passed, 1 failed, 33 ignored. The test fixture named its dummy executable
+'dsh', but the real Mac also had Homebrew dsh in /opt/homebrew/bin, which correctly took precedence.
+The fixture now uses a UUID-suffixed executable name while production provider lookup stays unchanged.
+Focused test: PASS. Full Rust retest: 982 passed, 0 failed, 33 ignored; CLI target 1 passed.
+These are local tests, not proof of signed desktop installer or cross-platform GUI acceptance.

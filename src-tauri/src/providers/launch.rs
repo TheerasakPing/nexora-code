@@ -456,7 +456,9 @@ mod tests {
         let f = Fixture::new();
         // node installed under its own prefix, reached only through a symlink on PATH.
         let node = executable(&f, "runtime/bin/node");
-        let dsh = executable(&f, "runtime/bin/dsh");
+        // Use a unique command name so a real Homebrew CLI cannot shadow the fixture.
+        let tool = format!("pandacode-fixture-{}", uuid::Uuid::new_v4().simple());
+        let dsh = executable(&f, &format!("runtime/bin/{tool}"));
         fs::create_dir_all(f.0.join("links")).unwrap();
         std::os::unix::fs::symlink(&node, f.0.join("links/node")).unwrap();
         let path = f.0.join("links").into_os_string();
@@ -466,11 +468,11 @@ mod tests {
             "HOME" => Some(home.clone()),
             _ => None,
         };
-        assert_eq!(find_in_directories("dsh", search_directories(false, &env), false), Some(dsh));
+        assert_eq!(find_in_directories(&tool, search_directories(false, &env), false), Some(dsh));
         // A prefix set with `npm config set prefix` wins over node's own.
-        let configured = executable(&f, "home/.npm-packages/bin/dsh");
+        let configured = executable(&f, &format!("home/.npm-packages/bin/{tool}"));
         f.file("home/.npmrc", "fund=false\nprefix = ~/.npm-packages\n");
-        assert_eq!(find_in_directories("dsh", search_directories(false, &env), false), Some(configured));
+        assert_eq!(find_in_directories(&tool, search_directories(false, &env), false), Some(configured));
     }
 
     #[test]
