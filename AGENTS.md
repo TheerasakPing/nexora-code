@@ -39,6 +39,10 @@ in the older notes further down. Never infer permission to deploy or update.
 These rules are MANDATORY for every assistant/agent entrypoint to this repo.
 No worker action or user delivery may skip the Task Planner and Team Lead gate.
 
+The Task Planner PR gate is a necessary format check, not independent
+review. The Team Lead must still inspect actual changes and record GO/NO-GO.
+See SOP NC-TEAM-001 Section 3.2; branch protection activation is separate.
+
 ---
 
 # PandaCode — working notes

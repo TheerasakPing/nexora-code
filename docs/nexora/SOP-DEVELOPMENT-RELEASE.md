@@ -86,6 +86,28 @@ Worker Handoff, Team Lead Review, Evidence และ GO/NO-GO ก่อนส่
 PR ต้องลิงก์ Planner และบันทึกผลรีวิวของ Lead การเขียนกฎไม่ได้หมายความว่า
 ระบบ R3 Multi-Agent Scheduler พัฒนาเสร็จแล้ว
 
+## 3.2 GitHub PR gate — enforcing NC-TEAM-001
+
+- After this workflow is merged into the base branch, GitHub Actions can
+  check new Pull Requests using [Nexora Task Planner Gate]
+  (../../.github/workflows/nexora-task-governance.yml).
+- A PR must add a **new** Task Checklist Markdown file with an actual request,
+  Team Lead, work assignment, acceptance gate, checkboxes and a review status.
+  Reusing an old planner is rejected; merely updating a past planner does not
+  satisfy one new checklist per new user request.
+- The workflow uses **pull_request_target**, read-only contents permission and
+  executes the **trusted base SHA's** checker. PR contents are inspected only
+  as Git data and are never executed as untrusted source code.
+- Older PR #1, #2 and #3 were opened before NC-TEAM-001. They are grandfathered
+  from this **new planner file** formatting check only; functional tests,
+  security checks and real reviewer approval still apply.
+- Automated checks **cannot prove** a claimed Agent Worker really ran, that
+  an independent person reviewed the diff, or that CI/native E2E passed.
+  Team Lead must verify reality and sign the handoff before delivery.
+- Project Owner/Integration Lead must configure the new job as a required
+  Branch Protection check **after** the workflow is merged and validated.
+  Missing required CI is not equivalent to PASS.
+
 ## 4. Repository / Branch / Worktree Policy
 
 Repository เป้าหมาย: `TheerasakPing/nexora-code` · Upstream: `aicodeking/pandacode` · Source ตั้งต้น PandaCode `v0.3.16`, commit `30f9c823e3c38f472f89e8f8405575ecfe7173ee`
