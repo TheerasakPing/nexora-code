@@ -1710,6 +1710,48 @@ fn different_teams_in_same_checkout_serialize_overlapping_scopes() {
     assert!(next.sid != first.config.session_id);
 }
 #[test]
+fn nested_workspace_projects_block_overlapping_writers_at_native_admission() {
+    let (state, parent_sid) = state_fixture();
+    let nested = std::env::temp_dir().join(format!("nexora-nested-team-{}", storage::id()));
+    std::fs::create_dir(&nested).unwrap();
+    let nested_name = nested.file_name().unwrap().to_str().unwrap().to_owned();
+    let child_parent = {
+        let store = state.store.lock().unwrap();
+        let nested_project = store.add_project(&nested).unwrap();
+        let task = store
+            .create_session(&nested_project.id, "kimi", "default", "ask")
+            .unwrap();
+        let mut team = load(&store, &parent_sid).unwrap().unwrap();
+        team.session_id = task.id.clone();
+        save(&store, &mut team).unwrap();
+        task.id
+    };
+    for (sid, scope) in [
+        (&parent_sid, format!("{nested_name}/src")),
+        (&child_parent, "src/file.rs".into()),
+    ] {
+        call(
+            &state,
+            sid,
+            "pandacode_dispatch_workers",
+            json!({"assignments":[assignment("nested-claim","fast",&scope)]}),
+        )
+        .unwrap();
+    }
+    let first = next_action_state(&state, &mut |_| {}).unwrap().unwrap();
+    let (running, _rx) = claim(&state, first);
+    assert!(
+        next_action_state(&state, &mut |_| {}).unwrap().is_none(),
+        "nested project must not bypass physical scoped write ownership"
+    );
+    finish(&state, &running, "First scoped write settled", true);
+    let second = next_action_state(&state, &mut |_| {}).unwrap().unwrap();
+    assert_ne!(second.sid, running.config.session_id);
+    drop(state);
+    let _ = std::fs::remove_dir_all(nested);
+}
+
+#[test]
 fn read_only_scopes_allow_parallel_workers_across_teams_in_the_same_checkout() {
     for (first_read_only, second_read_only) in [(true, true), (true, false), (false, true)] {
         let (state, sid) = state_fixture();

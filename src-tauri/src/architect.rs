@@ -1,5 +1,6 @@
 //! Persistent, event-driven cross-harness delegation. Worker text stays in its own task.
 mod briefing;
+mod ownership;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
 pub(crate) mod profiles;
@@ -1581,16 +1582,25 @@ fn next_action_state(
                         if other.session_id == team.session_id {
                             return false;
                         }
-                        let same_root = store
+                        let other_root = store
                             .session(&other.session_id)
-                            .ok()
-                            .and_then(|p| store.workspace_root(&p.project_id, Some(&p.id)).ok())
-                            .is_some_and(|other_root| other_root == root);
-                        same_root
-                            && other.workers.iter().any(|w| {
-                                (active(&w.status) || agents.contains_key(&w.session_id))
-                                    && conflicts(&team.workers[*i], w)
-                            })
+                            .and_then(|p| store.workspace_root(&p.project_id, Some(&p.id)));
+                        // Errors resolving another team's checkout are not evidence
+                        // of disjoint ownership. Fail closed for concurrent writers.
+                        match other_root {
+                            Ok(other_root) => other.workers.iter().any(|worker| {
+                                (active(&worker.status) || agents.contains_key(&worker.session_id))
+                                    && ownership::conflicts_between(
+                                        &root, &team.workers[*i], &other_root, worker,
+                                    )
+                            }),
+                            Err(_) => !team.workers[*i].read_only
+                                && other.workers.iter().any(|worker| {
+                                    !worker.read_only
+                                        && (active(&worker.status)
+                                            || agents.contains_key(&worker.session_id))
+                                }),
+                        }
                     })
             }) {
                 let worker = &mut team.workers[index];
