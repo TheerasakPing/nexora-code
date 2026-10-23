@@ -9,8 +9,8 @@
 
 | ID | Scope and DoD | Real Worker | Files/Worktree | Depends | State |
 | --- | --- | --- | --- | --- | --- |
-| SEQ-R1-01 | R1 process group bounded cleanup: no grandchild process leak when parent exits normally, with actual OS process regression | TEAM_LEAD_SERIAL | src-tauri/src/workspace.rs; Rust test | Prior R1 preview security | [ ] |
-| SEQ-R1-02 | R1 native PATH/session/provider test audit; validate existing evidence and record missing native gates | TEAM_LEAD_SERIAL | R1 evidence, script/tests as needed | SEQ-R1-01 | [ ] |
+| SEQ-R1-01 | R1 process group bounded cleanup: no grandchild process leak when parent exits normally, with actual OS process regression | TEAM_LEAD_SERIAL | src-tauri/src/workspace.rs; Rust test | Prior R1 preview security | [x] |
+| SEQ-R1-02 | R1 native PATH/session/provider test audit; validate existing evidence and record missing native gates | TEAM_LEAD_SERIAL | R1 evidence, script/tests as needed | SEQ-R1-01 | [x] |
 | SEQ-R1-03 | R1 full Node/Rust/Contract and cross-OS smoke evidence; exact PR CI and Lead review | TEAM_LEAD_SERIAL | PR #26, this planner | SEQ-R1-01/02 | [ ] |
 | SEQ-R2 | R2 MCP vault/approval/connection security — start only once R1 Exit accepted or record blocker | UNASSIGNED_PENDING_R1 | Phase backlog | R1 EXIT | [ ] |
 | SEQ-R3 | R3 real scheduler, worktree owner, team mailbox + review | UNASSIGNED_PENDING_R2 | Phase backlog | R2 EXIT | [ ] |
@@ -24,8 +24,8 @@
 
 | Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
 | --- | --- | --- | --- | --- | --- | --- |
-| SEQ-R1-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Native Rust spawned-shell grandchild kill test pending |
-| SEQ-R1-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Prior Finder PATH and runtime restart coverage audit pending |
+| SEQ-R1-01 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 Rust: real run_process shell + sleep 30 descendant killed, 1068 Rust tests PASS, 33 ignored; Lead reviewed Windows Job Object PID risk |
+| SEQ-R1-02 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 Finder launch unit 14/14, docs/nexora/R1-PHASE-EXIT-AUDIT-2026-10-23.md exit matrix + native limitations; Lead reviewed evidence, no full GUI acceptance claim |
 | SEQ-R1-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Whole package, exact head 3-OS CI pending |
 | SEQ-R2 | UNASSIGNED_PENDING_R1 | PENDING | PENDING | PENDING | PENDING | Phase strictly gated by R1 exit |
 | SEQ-R3 | UNASSIGNED_PENDING_R2 | PENDING | PENDING | PENDING | PENDING | Phase strictly gated by R2 exit |
@@ -38,7 +38,7 @@
 ## C. Ordered acceptance checklist
 
 - [x] New dated planner created before code edits, Team Lead serial fallback explained
-- [ ] R1 process supervision cleanup unit, functional E2E and process smoke PASS
+- [x] R1 process supervision cleanup narrow module-level unit, spawned OS process E2E and process smoke PASS
 - [ ] R1 Finder/Terminal/session/provider, crash-resume and 3-OS acceptance matrix checked
 - [ ] R1 exit GO from genuine reviewer and installed native Mac E2E; no outstanding P0/P1 process/session instability
 - [ ] R2 exit GO, then R3, R4, R5, R6, R7, R8 in sequence with independent evidence
@@ -48,3 +48,11 @@
 
 **Team Lead verdict:** GO limited R1 source/test implementation. NO-GO R1 phase exit, protected develop merge and release absent genuine independent reviewer/native GUI/Provider and crash tests.
 **Cross-cutting acceptance baseline:** 21/24 Engineering packages unchecked, 7/7 Branding epics awaiting final acceptance, 61 R0–R8 detailed checks unchecked; overlapping metrics, not progress percentages.
+
+## 2026-10-23 execution evidence / remaining gates
+
+- New OS process group cleanup tested with an actual macOS POSIX shell and descendant `sleep`; test passes without user project writes.
+- Rust full 1101 cases: **1068 passed, 33 ignored, 0 failed**. Node **178/178**, Release **33/33**, launch/Finder simulation **14/14**. These are local source tests, not installed GUI acceptance.
+- Team Lead reviewed and corrected Windows safety: completed PID must not be passed to `taskkill` because it could have been reused; Windows uses a scoped Job Object and kill-on-close.
+- R1 phase exit **NO-GO**, because native provider session recovery, installed GUI and full workspace TOCTOU remain unaccepted. Thus R2–R8 queue entries are not marked started/done.
+- Protected `develop` merge **NO-GO** pending genuine independent reviewer, current-head CI, and required acceptance. No external agents actually delegated; TEAM_LEAD_SERIAL mode.
