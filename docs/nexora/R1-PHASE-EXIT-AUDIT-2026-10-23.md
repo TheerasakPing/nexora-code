@@ -40,3 +40,16 @@
 5. **Governance:** independent human reviewer before merging PR #26 to `develop`; all current-head CI checks green, and later Production signing/notarization still blocked by Apple credentials.
 
 **Sequential dependency:** R2 starts only after R1 exit GO. R2–R8 phases remain queued, not presumed complete. This audit is not a promise of unsupervised background work.
+
+
+## 2026-10-23 R1 follow-up — Unix directory enumeration
+
+Directory listing anchored file descriptors added in `src-tauri/src/workspace.rs`.
+Native Mac Rust workspace tests 33 PASS with 250-cycle adversarial symlink swap.
+Full native Rust lib 1074 PASS, Node 186 PASS, Release contract 33 PASS;
+Mac binary Cargo check and frontend build PASS. **Windows listing remains
+pathname-based**; `file_search` and Git stage/diff remain separate risks.
+This is a **partial** source-level P0 improvement only; R1 phase exit NO-GO
+pending real Native GUI/provider/resume tests, Windows junction E2E and
+independent review. Test commands/evidence: task planner
+`2026-10-23-r1-workspace-directory-index-hardening.md`.
