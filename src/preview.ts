@@ -233,7 +233,7 @@ const previewSimulator = (() => {
   const poses = new Map<string, 'closed' | 'book' | 'open'>();
   const inners: Record<string, { width: number; height: number }> = { A1B2: { width: 951, height: 669 } };
   const screens: Record<string, { width: number; height: number; scale: number; homeButton: boolean }> = { '5B7E': { width: 820, height: 1180, scale: 2, homeButton: false }, '6C1D': { width: 420, height: 912, scale: 3, homeButton: false }, '7D2E': { width: 402, height: 874, scale: 3, homeButton: false }, 'A1B2': { width: 466, height: 678, scale: 3, homeButton: false }, '8E3F': { width: 1032, height: 1376, scale: 2, homeButton: false }, '9F40': { width: 390, height: 844, scale: 3, homeButton: false }, andr: { width: 412, height: 915, scale: 2.625, homeButton: false } };
-  (window as any).__simSetPose = (udid: string, pose: 'closed' | 'book' | 'open') => { poses.set(udid, pose); seq++; }; // tests: the hinge moved outside PandaCode
+  (window as any).__simSetPose = (udid: string, pose: 'closed' | 'book' | 'open') => { poses.set(udid, pose); seq++; }; // tests: the hinge moved outside Nexora Code
   const screenOf = (udid: string | null) => ({ ...(screens[udid?.slice(0, 4) ?? ''] ?? { width: 402, height: 874, scale: 3, homeButton: false }), inner: inners[udid?.slice(0, 4) ?? ''] ?? null });
   /** The display frames and taps use: the Duo's inner display when it is not closed. */
   const activeOf = (udid: string) => { const screen = screenOf(udid); return screen.inner && (poses.get(udid) ?? 'closed') !== 'closed' ? screen.inner : screen; };
@@ -490,7 +490,7 @@ function slashCatalog(provider: ProviderId) {
     ['new', 'Start a new task in this project', 'new'],
     ['model', 'Choose a harness, model, and reasoning effort', 'model'],
     ['permissions', 'Choose this task’s approval behavior', 'permissions'],
-    ['settings', 'Open PandaCode settings', 'settings'],
+    ['settings', 'Open Nexora Code settings', 'settings'],
     ['theme', 'Switch appearance', 'theme'],
     ['help', 'Browse available slash commands', 'help'],
     ['skills', 'Browse harness skills', 'skills'],
@@ -520,7 +520,7 @@ function slashCatalog(provider: ProviderId) {
     ['stop', 'Choose jobs to stop', 'jobs'], ['clean', 'Choose jobs to stop', 'jobs'],
   ];
   const accepts = new Set(['rename', 'goal', 'usage', 'conversations', 'fork', 'export', 'worktree', 'plan', 'fast', 'mention', 'cd', 'init', 'recap', 'console']);
-  const commands = [...local, ...(provider === 'codex' ? codex : [])].map(([name, description, action]) => ({ id: `pandacode:${name}`, name: `/${name}`, description, kind: 'action', source: 'PandaCode', action, argumentHint: accepts.has(action) ? '[arguments]' : undefined }));
+  const commands = [...local, ...(provider === 'codex' ? codex : [])].map(([name, description, action]) => ({ id: `pandacode:${name}`, name: `/${name}`, description, kind: 'action', source: 'Nexora Code', action, argumentHint: accepts.has(action) ? '[arguments]' : undefined }));
   const native = provider === 'codex' ? ['review', 'compact', 'project-guide'] : provider === 'claude' ? ['compact', 'review', 'project-guide'] : ['compact', 'usage', 'tasks', 'skill:project-guide'];
   const terminal = provider === 'codex' ? ['exit', 'quit', 'keymap', 'vim', 'raw', 'title', 'statusline', 'pets', 'pet', 'clear', 'app', 'ide', 'logout', 'feedback', 'approve'] : provider === 'claude' ? ['exit', 'quit', 'login', 'logout', 'doctor'] : ["yolo", "yes", "auto", "permission", "config", "plan", "swarm", "effort", "thinking", "provider", "providers", "btw", "h", "?", "clear", "sessions", "task", "plugins", "add-dir", "experiments", "experimental", "reload", "reload-tui", "goal", "init", "fork", "title", "feedback", "undo", "editor", "logout", "disconnect", "login", "export-md", "export", "export-debug-zip", "web", "exit", "quit", "q", "version"];
   return { commands: [...commands, ...native.map(name => ({ id: `${provider}:${name}`, name: `/${name}`, description: `Sample ${provider} command`, kind: 'prompt', source: provider, action: undefined, argumentHint: '[arguments]' })), ...terminal.map(name => ({ id: `${provider}:${name}`, name: `/${name}`, description: `Open /${name} in the harness console`, kind: 'action', source: `${provider} console`, action: `console:${name}`, argumentHint: '[arguments]' }))], warnings: [] };
@@ -530,7 +530,7 @@ function resolveSlash(provider: ProviderId, text: string): { action: string | nu
   if (!match) return { action: null, arguments: '' };
   const command = slashCatalog(provider).commands.find(command => command.name === `/${match[1]}`);
   if (!command) throw new Error(`Unknown command /${match[1]}. Type / to browse this harness’s commands, or refresh the list.`);
-  if (command.action && match[2] && !command.argumentHint) throw new Error(`${command.name} opens a PandaCode control and does not accept arguments.`);
+  if (command.action && match[2] && !command.argumentHint) throw new Error(`${command.name} opens a Nexora Code control and does not accept arguments.`);
   return { action: command.action ?? null, arguments: match[2] ?? '' };
 }
 
@@ -555,7 +555,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
   if (command.includes('moodboard')) return (await import('./preview-moodboards')).invokeMoodboards<T>(command, args);
   if (command === 'bots_list' || command.startsWith('bot_')) return invokeBots<T>(command, args, {
     invoke, emit,
-    addProject: name => { const p = { id: crypto.randomUUID(), name, path: `/Users/you/PandaCode Bots/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` }; projects.push(p); return p; },
+    addProject: name => { const p = { id: crypto.randomUUID(), name, path: `/Users/you/Nexora Code Bots/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` }; projects.push(p); return p; },
   });
   let result: unknown;
   switch (command) {
@@ -777,7 +777,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
         const created = await invoke<Session>('create_session', { projectId: project.id, provider: source, model: found.model ?? args.model, mode: 'full' });
         const task = session(created.id);
         Object.assign(task, { resumeId: conversationId, title: found.title, taskStage: 'in_progress', createdAt: found.updatedAt - 600000, updatedAt: found.updatedAt, lastPromptAt: found.updatedAt - 600000, lastResponseAt: found.updatedAt });
-        messages[task.id] = [{ id: ++id, sessionId: task.id, role: 'user', content: `Imported: ${found.title}`, createdAt: found.updatedAt - 600000 }, { id: ++id, sessionId: task.id, role: 'assistant', content: 'This conversation was imported into PandaCode.', createdAt: found.updatedAt }];
+        messages[task.id] = [{ id: ++id, sessionId: task.id, role: 'user', content: `Imported: ${found.title}`, createdAt: found.updatedAt - 600000 }, { id: ++id, sessionId: task.id, role: 'assistant', content: 'This conversation was imported into Nexora Code.', createdAt: found.updatedAt }];
         imported.push(taskSummary(task));
       }
       if (imported.length) emit('sessions-changed', undefined);
@@ -820,7 +820,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
     case 'agent_ui_request_active': result = true; break;
     case 'resolve_agent_ui_action': break;
     case 'open_external_url': { const url = new URL(args.url); if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Use an HTTP or HTTPS URL.'); window.open(url.href, '_blank', 'noopener,noreferrer'); break; }
-    case 'open_support': window.open('https://github.com/aicodeking/pandacode/issues', '_blank', 'noopener,noreferrer'); break;
+    case 'open_support': window.open('https://github.com/TheerasakPing/nexora-code/issues', '_blank', 'noopener,noreferrer'); break;
     case 'support_details': result = { version: 'Preview', platform: 'Browser preview', architecture: 'Not reported' }; break;
     case 'browser_inspect': result = args.action === 'read' ? { url: browserState.url, title: browserState.title, text: 'Browser preview sample page', elements: [] } : { dispatched: true }; break;
     case 'list_provider_models': result = args.provider === 'opencode' ? previewOpenCodeChoices() : catalogs[args.provider as ProviderId] ?? []; break;
@@ -917,7 +917,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
       break;
     }
     case 'send_message': {
-      if (resolveSlash(session(args.sessionId).provider, String(args.text)).action) throw new Error('This command opens a PandaCode control.');
+      if (resolveSlash(session(args.sessionId).provider, String(args.text)).action) throw new Error('This command opens a Nexora Code control.');
       const s = session(args.sessionId); assertIdle(s);
       let moodboardContext = '';
       for (const boardId of args.moodboardIds ?? []) {
@@ -937,7 +937,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
       messages[s.id].push(toolMessage);
       activeTools.set(s.id, { activity: tool, message: toolMessage });
       agent({ sessionId: s.id, kind: 'tool', text: 'Bash', tool: { ...tool } });
-      const output = 'This is the browser preview. Your task and conversation are saved in this preview session, but no agent or shell is running here.\n\nOpen the native PandaCode app to work with your files using Claude Code, Codex, or Kimi Code. The desktop app connects to the CLI tools installed on your machine.';
+      const output = 'This is the browser preview. Your task and conversation are saved in this preview session, but no agent or shell is running here.\n\nOpen the native Nexora Code app to work with your files using Claude Code, Codex, or Kimi Code. The desktop app connects to the CLI tools installed on your machine.';
       let cursor = 0;
       const tick = () => {
         const next = output.slice(cursor, cursor + 13); cursor += 13;
@@ -1205,7 +1205,7 @@ export async function invoke<T>(command: string, args: Record<string, any>): Pro
     case 'start_run_script_terminal':
     case 'start_harness_terminal': case 'start_terminal': {
       const terminalId = 'preview-terminal-' + crypto.randomUUID(); result = terminalId;
-      window.setTimeout(() => emit('terminal-event', { terminalId, data: '\x1b[38;5;108mPandaCode browser preview\x1b[0m\r\nA real PTY is available in the desktop app.\r\n\r\n$ ' }), 100); break;
+      window.setTimeout(() => emit('terminal-event', { terminalId, data: '\x1b[38;5;108mNexora Code browser preview\x1b[0m\r\nA real PTY is available in the desktop app.\r\n\r\n$ ' }), 100); break;
     }
     case 'write_terminal': emit('terminal-event', { terminalId: args.terminalId, data: args.data === '\r' ? '\r\nPreview mode — no commands executed.\r\n$ ' : args.data }); break;
     case 'resize_terminal': case 'close_terminal': break;

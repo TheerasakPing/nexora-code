@@ -291,7 +291,7 @@ export function mountSimulator(root: HTMLElement, host: SimulatorHost) {
       host.notify(error instanceof Error ? error.message : String(error));
     } finally { poseBusy = false; render(); pump(); }
   }
-  /** The Duo's hinge can move outside PandaCode (Xcode's Device Hub), so follow the real pose while it is on screen. */
+  /** The Duo's hinge can move outside Nexora Code (Xcode's Device Hub), so follow the real pose while it is on screen. */
   function watchPose(): void {
     clearInterval(poll); poll = 0;
     if (!visible || disposed) return;

@@ -20,3 +20,8 @@
 .launcher-compose-footer{gap:8px}.launcher-project{max-width:40%;flex-shrink:2}.launcher-agent{min-width:0;max-width:50%;padding:6px 7px;border-radius:3px;color:var(--launcher-text);transition:background-color 100ms}.launcher-agent:hover,.launcher-agent[aria-expanded=true]{background:var(--launcher-soft)}.launcher-agent .launcher-model-name{display:block;min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.launcher-agent .launcher-team-models{flex-shrink:0;white-space:nowrap;color:var(--launcher-muted)}.launcher-agent>.icon{width:11px;height:11px;flex-shrink:0;color:var(--launcher-muted)}.launcher-agent:focus-visible{outline-offset:0}.launcher-start{flex-shrink:0}
 /* Instant, like the main window: no transitions. */
 *,*::before,*::after{transition:none!important}
+
+
+/* Nexora Code quick launcher identity */
+.launcher-heading .launcher-brand-logo{width:22px;height:22px;display:block;object-fit:contain}
+.launcher-heading>span{font-weight:650;color:var(--launcher-text)}

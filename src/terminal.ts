@@ -138,6 +138,6 @@ export async function mountTerminal(container: HTMLElement, context: TerminalCon
 
 function terminalTheme() {
   return currentTheme() === 'dark'
-    ? { background: '#191a18', foreground: '#efefeb', cursor: '#ffd43b', cursorAccent: '#191a18', selectionBackground: '#ffd43b40', black: '#32342f', red: '#f28b82', green: '#96ce9a', yellow: '#e8ca70', blue: '#8eb5f2', magenta: '#cda1dc', cyan: '#88cbd1', white: '#d5d6ce', brightBlack: '#96998f', brightRed: '#ffaba3', brightGreen: '#b0e4b3', brightYellow: '#ffe39b', brightBlue: '#accbff', brightMagenta: '#e4bceF', brightCyan: '#a6e6ec', brightWhite: '#f6f6f1' }
+    ? { background: '#191a18', foreground: '#efefeb', cursor: '#57d6e3', cursorAccent: '#191a18', selectionBackground: '#57d6e340', black: '#32342f', red: '#f28b82', green: '#96ce9a', yellow: '#e8ca70', blue: '#8eb5f2', magenta: '#cda1dc', cyan: '#88cbd1', white: '#d5d6ce', brightBlack: '#96998f', brightRed: '#ffaba3', brightGreen: '#b0e4b3', brightYellow: '#ffe39b', brightBlue: '#accbff', brightMagenta: '#e4bceF', brightCyan: '#a6e6ec', brightWhite: '#f6f6f1' }
     : { background: '#ffffff', foreground: '#242423', cursor: '#8b6c00', cursorAccent: '#ffffff', selectionBackground: '#ffdf7080', black: '#242423', red: '#b03535', green: '#237345', yellow: '#806400', blue: '#305fa2', magenta: '#864788', cyan: '#256e78', white: '#777770', brightBlack: '#656560', brightRed: '#c43b3b', brightGreen: '#27814e', brightYellow: '#907000', brightBlue: '#376db9', brightMagenta: '#98519a', brightCyan: '#297d88', brightWhite: '#999990' };
 }
