@@ -5,7 +5,7 @@
 
 use sha2::{Digest, Sha256};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     time::{Duration, Instant},
 };
@@ -249,16 +249,50 @@ struct PendingApproval {
     approved: bool,
 }
 
+/// Audit records deliberately contain only a random ticket ID and a fixed
+/// outcome kind: no tool arguments, credential refs, remote error messages,
+/// secrets, raw session IDs, config blobs or agent-controlled text.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AuditKind {
+    Requested,
+    Approved,
+    Denied,
+    Consumed,
+    Rejected,
+    Revoked,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AuditEvent {
+    pub ticket_id: Uuid,
+    pub kind: AuditKind,
+}
+
 /// Ephemeral, one-shot permission ledger; defaults to no access, no persisted
 /// blanket approvals, no authorization after restart, bounded outstanding IDs.
 #[derive(Default)]
 pub struct McpPermissionLedger {
     tickets: HashMap<Uuid, PendingApproval>,
+    audit: VecDeque<AuditEvent>,
 }
 
 impl McpPermissionLedger {
     const MAX_PENDING: usize = 128;
     const MAX_TTL: Duration = Duration::from_secs(120);
+    const MAX_AUDIT: usize = 256;
+
+    fn record(&mut self, id: Uuid, kind: AuditKind) {
+        if self.audit.len() >= Self::MAX_AUDIT {
+            self.audit.pop_front();
+        }
+        self.audit.push_back(AuditEvent { ticket_id: id, kind });
+    }
+
+    /// Read-only diagnostic snapshot; internal native code only, never
+    /// rendered or persisted without a separate privacy/security review.
+    pub fn audit(&self) -> Vec<AuditEvent> {
+        self.audit.iter().copied().collect()
+    }
 
     pub fn request(&mut self, intent: ToolIntent, now: Instant) -> Result<Uuid, Denial> {
         self.tickets.retain(|_, ticket| ticket.expires > now);
@@ -274,6 +308,7 @@ impl McpPermissionLedger {
                 approved: false,
             },
         );
+        self.record(id, AuditKind::Requested);
         Ok(id)
     }
 
@@ -283,43 +318,61 @@ impl McpPermissionLedger {
         _operator: VerifiedOperatorConsent,
         now: Instant,
     ) -> Result<(), Denial> {
-        let ticket = self
-            .tickets
-            .get_mut(&id)
-            .ok_or(Denial::ExpiredOrMissingApproval)?;
+        let Some(ticket) = self.tickets.get_mut(&id) else {
+            self.record(id, AuditKind::Rejected);
+            return Err(Denial::ExpiredOrMissingApproval);
+        };
         if ticket.expires <= now {
             self.tickets.remove(&id);
+            self.record(id, AuditKind::Rejected);
             return Err(Denial::ExpiredOrMissingApproval);
         }
         ticket.approved = true;
+        self.record(id, AuditKind::Approved);
         Ok(())
     }
 
     pub fn deny(&mut self, id: Uuid) {
-        self.tickets.remove(&id);
+        if self.tickets.remove(&id).is_some() {
+            self.record(id, AuditKind::Denied);
+        }
     }
 
     /// A ticket is consumed on first attempt regardless of whether it matches,
     /// so wrong session/operation/server cannot be used for repeated probing.
     pub fn take(&mut self, id: Uuid, intent: &ToolIntent, now: Instant) -> Result<(), Denial> {
-        let ticket = self
-            .tickets
-            .remove(&id)
-            .ok_or(Denial::ExpiredOrMissingApproval)?;
+        let Some(ticket) = self.tickets.remove(&id) else {
+            self.record(id, AuditKind::Rejected);
+            return Err(Denial::ExpiredOrMissingApproval);
+        };
         if !ticket.approved || ticket.expires <= now || ticket.intent != *intent {
+            self.record(id, AuditKind::Rejected);
             return Err(Denial::ExpiredOrMissingApproval);
         }
+        self.record(id, AuditKind::Consumed);
         Ok(())
     }
 
     pub fn revoke_session(&mut self, session_id: &str) {
-        self.tickets
-            .retain(|_, ticket| ticket.intent.session_id != session_id);
+        let mut revoked = Vec::new();
+        self.tickets.retain(|id, ticket| {
+            if ticket.intent.session_id == session_id {
+                revoked.push(*id);
+                false
+            } else { true }
+        });
+        for id in revoked { self.record(id, AuditKind::Revoked); }
     }
 
     pub fn revoke_server(&mut self, server_id: &str) {
-        self.tickets
-            .retain(|_, ticket| ticket.intent.server_id != server_id);
+        let mut revoked = Vec::new();
+        self.tickets.retain(|id, ticket| {
+            if ticket.intent.server_id == server_id {
+                revoked.push(*id);
+                false
+            } else { true }
+        });
+        for id in revoked { self.record(id, AuditKind::Revoked); }
     }
 }
 
@@ -336,6 +389,46 @@ mod tests {
     }
     fn intent(session: &str, verb: Capability) -> ToolIntent {
         ToolIntent::from_config(session, "filesystem", b"stdio:npx @mcp/fs", verb).unwrap()
+    }
+
+    #[test]
+    fn audit_is_bounded_and_contains_only_fixed_outcomes() {
+        let mut ledger = McpPermissionLedger::default();
+        let now = Instant::now();
+        let intent = intent("session-a", Capability::ReadOnlyTool("safe/read".into()));
+        let ticket = ledger.request(intent.clone(), now).unwrap();
+        ledger.approve(ticket, consent(), now).unwrap();
+        assert!(ledger.take(ticket, &intent, now).is_ok());
+        assert!(ledger.take(ticket, &intent, now).is_err());
+        assert_eq!(ledger.audit().iter().map(|entry| entry.kind).collect::<Vec<_>>(),
+            [AuditKind::Requested,AuditKind::Approved,AuditKind::Consumed,AuditKind::Rejected]);
+        let output = format!("{:?}", ledger.audit());
+        assert!(!output.contains("session-a"));
+        assert!(!output.contains("safe/read"));
+
+        for i in 0..300 {
+            let pending = ledger.request(intent.clone(), now).unwrap();
+            if i % 2 == 0 { ledger.deny(pending); }
+            else { ledger.revoke_session("session-a"); }
+        }
+        assert_eq!(ledger.audit().len(), McpPermissionLedger::MAX_AUDIT);
+    }
+
+    #[test]
+    fn wrong_config_and_expired_ticket_consume_once_and_are_logged_as_rejected() {
+        let mut ledger = McpPermissionLedger::default();
+        let now = Instant::now();
+        let first = intent("session-a", Capability::Connect);
+        let other = intent("session-b", Capability::Connect);
+        let id = ledger.request(first.clone(), now).unwrap();
+        ledger.approve(id, consent(), now).unwrap();
+        assert!(ledger.take(id, &other, now).is_err());
+        assert!(ledger.take(id, &first, now).is_err());
+        assert_eq!(ledger.audit().last().unwrap().kind, AuditKind::Rejected);
+        let id = ledger.request(first.clone(), now).unwrap();
+        assert!(ledger.approve(id, consent(), now + Duration::from_secs(121)).is_err());
+        assert!(ledger.take(id, &first, now).is_err());
+        assert_eq!(ledger.audit().last().unwrap().kind, AuditKind::Rejected);
     }
 
     #[test]
