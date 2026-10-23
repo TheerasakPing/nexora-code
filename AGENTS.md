@@ -36,6 +36,29 @@ in the older notes further down. Never infer permission to deploy or update.
    tests alone do not prove native acceptance. Read [SOP NC-TEAM-001](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
    for the full process.
 
+## NC-TEAM-002 — MANDATORY remaining-work accounting at every handoff
+
+8. **COUNT AND REPORT.** At the end of EVERY assigned task (including a
+   "continue" request), the Team Lead MUST update the dated Task Planner and
+   issue a concise progress ledger stating: (a) what was actually completed and
+   verified (commit/PR/test evidence), (b) accepted versus pending work counts
+   with an explicit denominator and counting method, (c) blocked items and
+   their required owner/approval, (d) the next highest-priority executable
+   tasks, and (e) final GO/NO-GO for delivery, merge and release SEPARATELY.
+   If fresh evidence is unavailable, mark counts **UNVERIFIED** and reference
+   the last dated snapshot; never report guessed percentages.
+9. **NO FALSE COMPLETION.** A merged PR, passing source unit tests, generated
+   artifact, or closed issue does NOT close an R0–R8 acceptance gate unless
+   its stated DoD and required OS/CI/reviewer evidence passed. Track separately:
+   Engineering acceptance packages (24 baseline), cross-phase branding epics
+   (BR-01–BR-07), R0–R8 detailed checklist items, and GitHub issues/PRs.
+   These sets overlap; NEVER sum them into one fake remaining-task total.
+10. **KEEP SOURCE OF TRUTH CURRENT.** The Task Planner must link the living
+    master checklist and a dated verified snapshot when a task changes a
+    milestone status; note stale source data and any independent review still
+    pending. Every report must disclose the difference between source-complete,
+    integrated, native-accepted and production-released.
+
 These rules are MANDATORY for every assistant/agent entrypoint to this repo.
 No worker action or user delivery may skip the Task Planner and Team Lead gate.
 PR structure is checked by the Nexora Task Planner Gate workflow; this does
