@@ -139,6 +139,46 @@ authoritative; the secure gate calls them against PR content **as data**.
 อ้างอิง [Master Checklist](CHECKLIST-PLANNER.md) และ
 [Dated Snapshot 2026-10-23](PROGRESS-SNAPSHOT-2026-10-23.md).
 
+## 3.4 NC-TEAM-003 — บังคับ E2E, Smoke Test และ Team Lead Review รายงานย่อย
+
+**บังคับทุกครั้ง / ทุก User Request** ให้สร้าง Checklist Planner ใหม่ก่อนแก้โค้ด
+และให้หัวหน้าทีมแบ่งงานย่อย/Dependency/DoD ก่อนเริ่มงาน ตลอดจนตรวจว่า
+Agent ที่จะมอบหมายมีอยู่จริงและมีสิทธิ์ทำงาน ห้ามสร้างชื่อ Agent สมมติ
+หากไม่มีกลไก Delegate ให้ระบุ `TEAM_LEAD_SERIAL` และรายงานข้อจำกัด
+แทนการอ้างว่าหลาย Agent ทำงานพร้อมกันแล้ว
+
+**ทุก Subtask ต้องมี 3 Test Gates + 1 Lead Gate ต่อไปนี้ใน Planner:**
+
+| Gate | หลักฐานขั้นต่ำ | ความหมายเมื่อไม่พร้อม |
+| --- | --- | --- |
+| UNIT/CONTRACT | คำสั่งและผลทดสอบของฟังก์ชัน/สัญญาข้อมูล/กรณีผิดพลาด | PENDING/BLOCKED และผู้แก้ |
+| E2E | Scenario ผู้ใช้→ระบบ→ผลลัพธ์, OS/Environment และ Log/CI URL | PENDING/BLOCKED; Mock Web ไม่เท่ากับ Native |
+| SMOKE | ทดลอง Basic Critical Path หลัง Integrate/Build, สถานะ Launch/Exit/Health | PENDING/BLOCKED; Build Green ไม่แทน |
+| LEAD REVIEW | Team Lead ตรวจ diff/logs/security/compatibility ของ Subtask แล้วลง GO/NO-GO | PENDING/NO-GO ห้ามส่งว่ารับงานครบ |
+
+**ข้อยกเว้น N/A** ใช้ได้เฉพาะมีเหตุผลเฉพาะงานและ Lead อนุมัติในแถวเดียวกัน;
+ห้าม N/A แบบเหมารวมเพื่อเลี่ยง E2E/Smoke. งานเอกสารให้ทดสอบ Link/Render/
+Schema/CLI End-to-End และ Smoke เท่าที่ทำได้; ถ้าการทดสอบเหมาะสมแต่ยังรัน
+ไม่ได้ให้ `BLOCKED` และระบุ OS/เครื่อง/สิทธิ์ที่จำเป็น ไม่ติ๊ก `[x]`
+หรืออ้างว่างานผ่านเกณฑ์. งาน Backend/Native ที่มีผลข้างเคียงต้องมี
+Integration E2E ของเส้นทางที่เปลี่ยนจริง; เทสต์จำลองอย่างเดียวไม่แทน Native.
+
+**Worker deliverable form ต่อหนึ่ง Subtask** ระบุ ID, Worker จริง, Commit/SHA,
+Owned Branch/Worktree, Diff, Unit/Contract, E2E, Smoke, Passed/Failed/Ignored,
+Test command/time/OS, Reproduction Logs, Blockers และ Rollback. Worker
+ไม่มีสิทธิ์เซ็นรับงานเอง. Lead ทบทวนทุกแถว ตรวจหลักฐาน ถ้าล้มเหลวส่งกลับ
+แก้แล้วทำ Test Triad ซ้ำ กรอกวันที่และ `LEAD_REVIEW=GO` เมื่อรับจริงเท่านั้น.
+
+**Final Gate:** ก่อนแจ้งส่งมอบต้องบันทึกการรับงานของ Lead ทุก Subtask,
+จำนวนที่ผ่าน/ค้าง, ผล CI ที่ SHA ปัจจุบัน, Native Acceptance และ
+GO/NO-GO ของ PR, Merge, Production แยกกันตาม NC-TEAM-002. หากผู้ตรวจอิสระ
+จริงยังไม่มา ให้ Source PR อาจ GO ได้ แต่ Protected Merge/Release ต้อง NO-GO.
+ห้ามแปลว่าการยืนยันโครงสร้างใน CI คือการอนุมัติของผู้ตรวจมนุษย์.
+
+**Enforcement:** `scripts/nexora/governance-pr-gate.mjs` ตรวจแถว Matrix
+และการกล่าวถึง Test Triad ใน PR Body. ตัวตรวจนี้พิสูจน์ได้เพียงโครงสร้าง
+หลักฐาน ไม่ใช่ว่าทดสอบบน OS จริงหรือมีตัวแทนตรวจโค้ดจริง.
+
 ## 4. Repository / Branch / Worktree Policy
 
 Repository เป้าหมาย: `TheerasakPing/nexora-code` · Upstream: `aicodeking/pandacode` · Source ตั้งต้น PandaCode `v0.3.16`, commit `30f9c823e3c38f472f89e8f8405575ecfe7173ee`

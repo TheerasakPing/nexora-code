@@ -18,6 +18,10 @@ const fullPlan = [
   '- [ ] Make change',
   '- [ ] Team Lead inspect diff',
   '- [ ] Capture SHA, tests and reviewer.',
+  '## G. NC-TEAM-003 — Subtask Verification Matrix',
+  '| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |',
+  '| --- | --- | --- | --- | --- | --- | --- |',
+  '| T-01 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | macOS 2026-10-23; smoke and E2E command, exact SHA abcdef1 |',
   ''
 ].join('\n');
 function repository(fn) {
@@ -125,7 +129,27 @@ test('PR handoff must cite every new planner and Team Lead GO', () => repository
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Pull request body/);
   writeFileSync(event, JSON.stringify({ pull_request: { body:
-    'Task Planner: ' + planner + ' — Team Lead: acting assistant; TEAM_LEAD_SERIAL. GO for PR submission.' } }));
+    'Task Planner: ' + planner + ' — Team Lead: acting assistant; TEAM_LEAD_SERIAL. GO for PR submission. NC-TEAM-003 E2E Smoke per subtask; Team Lead Review complete.' } }));
   result = run(root, base, '5', { GITHUB_EVENT_PATH: event });
   assert.equal(result.status, 0, result.stderr);
+}));
+
+test('NC-TEAM-003 full PR CLI rejects missing per-subtask Smoke and E2E results', () => repository((root, base) => {
+  const absent = fullPlan.replace(' | PASS | PASS | PASS | GO |',
+    ' | PASS |  |  | PENDING |');
+  makePlan(root, '2026-10-23-qa-missing-e2e.md', absent);
+  commit(root);
+  const result = run(root, base);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /E2E.*Smoke|Smoke.*E2E/);
+}));
+
+test('NC-TEAM-003 full PR CLI enforces Lead review before a subtask can be approved', () => repository((root, base) => {
+  const missing = fullPlan.replace(' | PASS | PASS | PASS | GO |',
+    ' | PASS | BLOCKED | PASS | GO |');
+  makePlan(root, '2026-10-23-blocked-e2e.md', missing);
+  commit(root);
+  const result = run(root, base);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /cannot approve/);
 }));

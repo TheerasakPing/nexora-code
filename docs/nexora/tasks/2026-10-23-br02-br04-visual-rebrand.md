@@ -38,3 +38,38 @@
 - Source diagnostics: only upstream legal attribution and internal legacy token-saver marker intentionally retain user-facing PandaCode; stable `pandacode.*` storage keys and protocol tool IDs unchanged.
 - 165/165 Node source tests pass; frontend TypeScript + Vite build PASS. Need branded Mac .app/DMG native inspection, actual Dock icon and LaunchServices test before R6 acceptance.
 - **Team Lead verdict:** GO for PR source and unsigned preview artifact CI; NO-GO for merge without independent review or production without owner visual approval/notarization.
+
+
+## G. NC-TEAM-003 — Subtask Verification Matrix (retrospective audit, not invented tests)
+
+This planner existed **before NC-TEAM-003**. Historic checked [x] boxes
+record earlier **narrow source-only** milestones and do NOT assert NC-TEAM-003
+E2E/Smoke acceptance. Every historic subtask below is explicitly PENDING
+until the Team Lead rechecks actual test command/OS/SHA/log and signs each.
+Missing or unverified native evidence remains an acceptance NO-GO. The
+retrospective entries are not fabricated executions or agent delegations.
+
+| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| BR02-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| BR02-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| BR04-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| BR06-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| QA-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| QA-02 | INDEPENDENT_REVIEWER_PENDING | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+
+
+**Team Lead GO/NO-GO (retrospective):** SOURCE PR GO for further review only.
+Individual NC-TEAM-003 gates remain **PENDING** (not accepted); the prior
+task's source-level status is not revoked or silently upgraded. Protected
+merge and production NO-GO until genuine independent review / native gates.
+
+
+### NC-TEAM-003 acceptance tracker (not inferred)
+
+- [ ] NC-TEAM-003: Unit/Contract, E2E and Smoke verified per subtask.
+- [ ] NC-TEAM-003: All applicable tests and native acceptance requirements passed.
+- [ ] NC-TEAM-003: Real independent reviewer approved protected merge and release.
+
+**Team Lead verdict:** SOURCE REVIEW GO for PR submission only;
+the new NC-TEAM-003 full E2E/Smoke/native gates remain PENDING.

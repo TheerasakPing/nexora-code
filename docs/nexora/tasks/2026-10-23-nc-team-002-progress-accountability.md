@@ -51,3 +51,35 @@
 
 **Team Lead verdict:** SOURCE REVIEW GO — PR submission only; this is not an independent approval, native acceptance, develop merge or production release.
 **Acceptance checks:** structural Task Planner required headings and counts independently re-parsed against GitHub Master Checklist; no tests/CI claimed PASS on this branch.
+
+
+## G. NC-TEAM-003 — Subtask Verification Matrix (retrospective audit, not invented tests)
+
+This planner existed **before NC-TEAM-003**. Historic checked [x] boxes
+record earlier **narrow source-only** milestones and do NOT assert NC-TEAM-003
+E2E/Smoke acceptance. Every historic subtask below is explicitly PENDING
+until the Team Lead rechecks actual test command/OS/SHA/log and signs each.
+Missing or unverified native evidence remains an acceptance NO-GO. The
+retrospective entries are not fabricated executions or agent delegations.
+
+| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| T-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| T-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| T-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| T-QA | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| T-REVIEW | INDEPENDENT_REVIEWER_PENDING | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+
+
+**Team Lead GO/NO-GO (retrospective):** SOURCE PR GO for further review only.
+Individual NC-TEAM-003 gates remain **PENDING** (not accepted); the prior
+task's source-level status is not revoked or silently upgraded. Protected
+merge and production NO-GO until genuine independent review / native gates.
+
+
+### NC-TEAM-003 acceptance tracker (not inferred)
+
+- [ ] NC-TEAM-003: Unit/Contract, E2E and Smoke verified per subtask.
+- [ ] NC-TEAM-003: All applicable tests and native acceptance requirements passed.
+- [ ] NC-TEAM-003: Real independent reviewer approved protected merge and release.

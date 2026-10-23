@@ -45,3 +45,36 @@
 - **Credentials:** Developer ID Application and approved Apple Notarization account must be provisioned by the project owner. No certificates or signing secrets were available in verified environment.
 - **QA scope:** no live macOS visual UI acceptance or notarized package yet; independent reviewer not assigned. Do not lower product acceptance gates.
 - **Team Lead decision:** GO to deliver user-facing diagnostic/instructions and safe unsigned preview (source-only); NO-GO stable Release / normal Gatekeeper install or protected develop merge without independent reviewer.
+
+
+## G. NC-TEAM-003 — Subtask Verification Matrix (retrospective audit, not invented tests)
+
+This planner existed **before NC-TEAM-003**. Historic checked [x] boxes
+record earlier **narrow source-only** milestones and do NOT assert NC-TEAM-003
+E2E/Smoke acceptance. Every historic subtask below is explicitly PENDING
+until the Team Lead rechecks actual test command/OS/SHA/log and signs each.
+Missing or unverified native evidence remains an acceptance NO-GO. The
+retrospective entries are not fabricated executions or agent delegations.
+
+| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| SEC-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| UX-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| SEC-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| QA-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| INT-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+
+
+**Team Lead GO/NO-GO (retrospective):** SOURCE PR GO for further review only.
+Individual NC-TEAM-003 gates remain **PENDING** (not accepted); the prior
+task's source-level status is not revoked or silently upgraded. Protected
+merge and production NO-GO until genuine independent review / native gates.
+
+
+### NC-TEAM-003 acceptance tracker (not inferred)
+
+- [ ] NC-TEAM-003: Unit/Contract, E2E and Smoke verified per subtask.
+- [ ] NC-TEAM-003: All applicable tests and native acceptance requirements passed.
+- [ ] NC-TEAM-003: Real independent reviewer approved protected merge and release.
+
+**Team Lead verdict:** SOURCE REVIEW GO for PR submission only; NC-TEAM-003 subtask test triads remain PENDING. Independent reviewer has NOT approved protected merge.

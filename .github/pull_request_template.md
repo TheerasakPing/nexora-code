@@ -1,14 +1,17 @@
-## Mandatory Nexora Code Team Lead checklist (NC-TEAM-001)
+## Mandatory Nexora Code Team Lead checklist (NC-TEAM-001 / NC-TEAM-002 / NC-TEAM-003)
 
 - **Task Planners:** link EVERY newly added docs/nexora/tasks/YYYY-MM-DD-task-slug.md (one for each request)
 - **Team Lead (actual identity):** TBD
 - **Real Agent IDs / ownership / worktrees:** TBD (or TEAM_LEAD_SERIAL)
 - **Subtasks, dependencies, incomplete work:** TBD (link planner)
 - **Test evidence:** exact commit SHA / OS / PASS / FAIL / IGNORED / CI URLs
+- **NC-TEAM-003 per-subtask quality:** Unit/Contract, E2E, Smoke (separate per-worker results, commands/OS/logs and documented N/A or BLOCKED)
+- **Team Lead Review PER subtask:** actual review of diff, security and the test triad; GO/NO-GO/PENDING for each row
 - **Review decision:** PENDING / GO / NO-GO, date and actual reviewer
 - [ ] Task planner created before implementation and updated throughout.
 - [ ] Real worker changes and shared contracts inspected by Team Lead.
-- [ ] Tests/CI/security reviewed; non-applicable checks explained.
+- [ ] Each subtask has a real worker ID or TEAM_LEAD_SERIAL, distinct E2E and Smoke evidence, and explicit Lead Review status.
+- [ ] Tests/CI/security reviewed; N/A requires concrete justification and approval; BLOCKED/FAIL is not marked accepted.
 - [ ] Defects sent for rework and reverified; pending native gates disclosed.
 - [ ] Lead GO recorded before delivery; main/release approvals separately granted.
 

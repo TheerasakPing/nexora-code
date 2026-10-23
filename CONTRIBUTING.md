@@ -12,7 +12,7 @@ not in public issues.
 
 ## Nexora Code fork — Mandatory Task Planner & Team Lead Review
 
-For tasks targeting Nexora Code, apply [NC-TEAM-001](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
+For tasks targeting Nexora Code, apply [NC-TEAM-001 / NC-TEAM-003](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
 BEFORE editing any files.
 Every assignment requires a new
 [task checklist](docs/nexora/templates/TASK-CHECKLIST.md) at
@@ -133,3 +133,17 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`.
 - Keep files small and focused, and handle errors explicitly.
 - By contributing, you agree your contributions are licensed under the
   [PandaCode License](LICENSE).
+
+
+### NC-TEAM-003: per-subtask verification is mandatory
+
+Every new request starts with a fresh dated Task Checklist Planner before
+source work. The Team Lead assigns actual agents by skill/branch/worktree or
+documents **TEAM_LEAD_SERIAL** where task delegation is unavailable.
+Each subtask includes separately recorded Unit/Contract, E2E and Smoke test
+results (actual command, platform, logs/CI SHA), followed by **Team Lead
+Review** of the worker diff and test evidence. `N/A` must contain a reason
+approved by the Lead; tests that cannot run are `BLOCKED` / `PENDING`,
+never an invented PASS. Mock/browser E2E cannot satisfy native UI acceptance.
+PR structural checks enforce the planner and handoff matrix, not actual
+human reviewer approvals. See AGENTS.md, SOP 3.4 and the Task Template.

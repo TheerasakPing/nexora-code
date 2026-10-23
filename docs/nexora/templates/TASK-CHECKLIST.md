@@ -16,6 +16,7 @@
 - **Security / resource / OS boundaries:** TBD
 - **Out of scope and required approvals:** TBD
 - **Acceptance criteria:** TBD
+- **Mandatory NC-TEAM-003:** One new planner per request; one verification row per actual subtask; real E2E + Smoke outcomes never implied by build/unit PASS.
 - **Dependencies and blockers:** TBD
 
 ## B. Team Lead task decomposition and assignments
@@ -42,6 +43,26 @@ If the available tools cannot create/delegate agents, record TEAM_LEAD_SERIAL.
 - [ ] Failed tasks sent back for corrections and independently rechecked.
 - [ ] Final Team Lead GO / NO-GO recorded with actual review identity.
 - [ ] PR/delivery linked; protected main merge and release separately approved.
+
+## G. NC-TEAM-003 — Subtask Verification Matrix (REQUIRED in every planner)
+
+> One row per subtask ID from section B (excluding the Team Lead-only
+> final acceptance row). A worker cannot self-approve. Use PASS with exact
+> command/log/OS/SHA evidence, FAIL, PENDING, BLOCKED + owner, or
+> N/A: specific reason + Lead approval. N/A without reason is prohibited.
+> Native E2E / live provider tests must be named separately from mock/browser E2E.
+
+| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Test command/OS/SHA/log and relevant N/A justification |
+| T-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Test command/OS/SHA/log and relevant N/A justification |
+
+**Subtask handoff rule:** do NOT tick section B `[x]` without a
+Team Lead-verified triad. `PENDING` / `BLOCKED` / `FAIL` means NOT ACCEPTED.
+When tests are genuinely inapplicable, write e.g. `N/A: docs-only, accepted
+by Team Lead YYYY-MM-DD` in that test column and describe the document
+link/build/render smoke in Evidence where feasible. The Team Lead must
+verify the claimed CI/OS evidence, request repairs and retest failures.
 
 ## D. Worker handoff ledger
 
