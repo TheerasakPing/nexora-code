@@ -15,8 +15,8 @@
 | ID | Work | Actual owner | Acceptance criteria | Status |
 | --- | --- | --- | --- | --- |
 | MAC-01 | Audit Mac build prerequisites and upstream release identity | TEAM_LEAD_SERIAL | Host/toolchain/product identity inventory | [x] |
-| MAC-02 | Implement a deterministic no-Finder release-mode DMG packager | TEAM_LEAD_SERIAL | Ad-hoc seal, dmg verify/mount, app identity, checksum, no upstream updater | [ ] |
-| MAC-03 | Run source regression and production frontend bundle | TEAM_LEAD_SERIAL | Actual PASS counts and logs | [ ] |
+| MAC-02 | Implement a deterministic no-Finder release-mode DMG packager | TEAM_LEAD_SERIAL | Packager, verifier and static contract tests delivered; real volume result pending | [x] |
+| MAC-03 | Run source regression and production frontend bundle | TEAM_LEAD_SERIAL | Node 156 PASS, release 33 PASS, focused Mac 3 PASS, R0 PASS, Vite/tsc PASS | [x] |
 | MAC-04 | Build optimized macOS ARM64 .app and DMG | TEAM_LEAD_SERIAL | Real filesystem artifact and SHA-256 | [ ] |
 | MAC-05 | Run non-destructive native startup/exit and installer smoke | TEAM_LEAD_SERIAL | Process/log evidence with bounded lifetime, no installed app overwritten | [ ] |
 | MAC-06 | Record final validation, blockers and reviewer gate | TEAM_LEAD_SERIAL | Exact SHA, Mac evidence, detailed remaining-work ledger and GO/NO-GO | [ ] |
@@ -31,4 +31,11 @@
 - GitHub PR #26 is open and CI 6/6 passes; no independent approval. PR #27 closed after its commits entered #26.
 - After this task, update actual evidence and blockers here; do not count a preview DMG as R6/R8 acceptance.
 
-**Team Lead verdict:** PENDING, must be revised after actual tests and final review.
+**Build issue diagnosed:** macOS 27 dyld rejects stripped Rust proc-macro dylibs: `E0463` and `mis-aligned LINKEDIT string pool`. Existing `[profile.release] strip=true` inadvertently applies to host proc macros. Implemented `[profile.release.build-override] strip=false`; app release profile remains stripped. A clean local build is underway; no success claim until completion.
+
+**Source-level evidence:** `npm test` 156/156 PASS, `npm run test:release` 33/33 PASS, `npm run test:nexora:r0` PASS, `node --test tests/mac-preview-build.test.mjs` 3/3 PASS, `bash -n` PASS, `git diff --check` PASS, frontend tsc+Vite production PASS. GitHub R6 workflow now calls Mac-specific no-Finder preview packager.
+
+**Team Lead source review:** reviewed Cargo release override, unsigned installer checks, CI artifact-only policy and no native-key requirement. No stable update channel, no independent reviewer, no shell egress authorization added.
+**Team Lead verdict:** SOURCE REVIEW GO for PR/CI submission only. Protected branch merge NO-GO without independent reviewer, even if all six checks pass. Mac Native acceptance NO-GO until real preview build and GUI/protocol checks. Production release NO-GO, Developer ID certificates unavailable.
+
+**Current risk:** Mac build in-progress; 0 validated Apple Developer ID signing identities; 61 detailed roadmap checks pending by historical checklist (overlap with 21/24 engineering and 7/7 branding).

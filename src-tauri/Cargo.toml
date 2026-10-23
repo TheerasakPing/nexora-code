@@ -69,6 +69,12 @@ opt-level = "s"
 strip = true
 panic = "abort"
 
+# macOS 27 dyld rejects proc-macro dylibs with unaligned LINKEDIT string pools
+# when LLVM strips them (Rust issue #157750). Keep the final release binary
+# stripped, but retain symbols in compile-time build scripts and proc macros.
+[profile.release.build-override]
+strip = false
+
 # Local/test builds (`--profile fast-release`); shipped builds use release.
 [profile.fast-release]
 inherits = "release"

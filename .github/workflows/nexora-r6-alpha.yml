@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/nexora-r6-alpha.yml'
       - 'scripts/release/**'
+      - 'scripts/nexora/build-mac-preview-dmg.sh'
+      - 'scripts/nexora/verify-mac-preview-dmg.sh'
       - 'src-tauri/tauri*.conf.json'
       - 'src-tauri/Cargo.toml'
       - 'package.json'
@@ -55,7 +57,14 @@ jobs:
         run: |
           npm run test:nexora:r0
           npm run test:release
-      - name: Build native unsigned installer and local checksum
+      - name: Build Mac ARM64 optimized preview DMG without Finder/AppleScript
+        if: runner.os == 'macOS'
+        run: bash scripts/nexora/build-mac-preview-dmg.sh
+      - name: Verify Mac preview volume and checksum
+        if: runner.os == 'macOS'
+        run: bash scripts/nexora/verify-mac-preview-dmg.sh
+      - name: Build other native unsigned installers and local checksums
+        if: runner.os != 'macOS'
         run: node scripts/release/build.mjs ${{ matrix.target }}
       - name: Install and test startup on disposable Windows/Linux runner
         if: runner.os != 'macOS'
