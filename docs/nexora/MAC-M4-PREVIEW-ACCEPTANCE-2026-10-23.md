@@ -24,12 +24,30 @@ unstripped while the actual shipped Rust binary still uses the optimized
 ## Current evidence / gate
 
 - TypeScript/Vite production bundle: **PASS**.
-- Local Node unit tests: **156 PASS / 0 FAIL**.
+- Local Node unit tests: **159 PASS / 0 FAIL** (includes 3 Mac packaging checks).
 - Release-script contract tests: **33 PASS / 0 FAIL**.
 - R0 identity/updater isolation check: **PASS**.
-- Mac preview build and volume verification: **PENDING**, must be filled only from actual output.
-- Native 8-second isolated HOME startup smoke: **PENDING**.
-- Native Mac UI/terminal/provider/agent/MCP functional E2E: **PENDING**.
+- GitHub-hosted macOS ARM64 **optimized release-mode preview bundle: PASS**,
+  [R6 artifact run 39890157346](https://github.com/TheerasakPing/nexora-code/actions/runs/39890157346).
+- Exact artifact: `Nexora-Code-0.1.0-macOS-arm64-PREVIEW-UNNOTARIZED.dmg`.
+  SHA-256: `7574c3ff42c6de06e303f2d0bda3a343bb09c72675e91ec2b71b5825520a74a8`.
+- Downloaded artifact to the actual Mac mini M4 and **independently verified**
+  SHA-256, `hdiutil verify`, read-only mount, app bundle ID, version, ARM64
+  executable, `codesign --verify --deep --strict`, and updater isolation: **PASS**.
+- Static bundle copied to a temporary folder and launched with isolated `HOME`:
+  native process stayed alive 8 seconds, memory RSS ~85 MB: **PASS for bounded
+  process startup only**.
+- **Warning in native log:** macOS WebKit reported
+  `sandbox_extension_issue_file_to_process ... Operation not permitted`
+  when launched from temporary paths; actual WKWebView GUI functionality remains
+  unverified. This is NOT a passing visual E2E result.
+- Local optimized release build on macOS 27 was stopped after the independently
+  built and validated GitHub bundle was available, to avoid redundant prolonged
+  compilation. Do not claim a complete second local release build.
+- Browser-preview UI regression (Settings, Terminal, Architect teams): **58 PASS**
+  using Playwright Chromium on the Mac; this does NOT validate Tauri's native WKWebView.
+- Native isolated HOME process startup smoke: **PASS (bounded process only)**.
+- Native Mac WKWebView/terminal/provider/agent/MCP functional E2E: **PENDING** (sandbox warning requires investigation).
 - Apple Developer ID, notarization, Gatekeeper distribution: **BLOCKED** (no signing identity).
 - Independent GitHub code review: **PENDING**.
 - R0–R8 production acceptance: **NO-GO**.
@@ -58,5 +76,5 @@ short-retention download in GitHub Actions, with no GitHub Release created.
 - Final brand/logo and migration/coexistence policy, signed/notarized release and fork-owned updater.
 - Actual release/rollback/telemetry-free deployment approval from Project Owner.
 
-**GO:** source implementation, isolated build/verification, CI test artifacts.
+**GO:** source implementation, hosted optimized Mac preview, verified DMG and bounded Mac M4 process startup.
 **NO-GO:** production label, trusted signed installer, protected develop merge without independent reviewer.

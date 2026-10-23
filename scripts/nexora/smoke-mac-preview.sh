@@ -22,6 +22,7 @@ cleanup() {
     /bin/sleep 1
     /bin/kill -KILL "$pid" 2>/dev/null || true
   fi
+  if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
   /bin/rm -rf "$TEST_HOME"
 }
 trap cleanup EXIT
@@ -29,7 +30,7 @@ trap cleanup EXIT
 # No -n/open LaunchServices: the executable is started directly with its own bundle.
 (
   cd "$TEST_HOME"
-  /usr/bin/env -i HOME="$TEST_HOME" TMPDIR="$TEST_HOME" PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" \
+  exec /usr/bin/env -i HOME="$TEST_HOME" TMPDIR="$TEST_HOME" PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" \
     "$BINARY"
 ) >"$LOG" 2>&1 &
 pid=$!
@@ -42,4 +43,7 @@ if ! /bin/kill -0 "$pid" 2>/dev/null; then
 fi
 ps -o pid=,etime=,rss=,comm= -p "$pid" | tee -a "$LOG"
 echo "PASS: app stayed running for 8 seconds in isolated HOME (bounded startup smoke only)"
+if grep -q 'sandbox_extension_issue_file_to_process' "$LOG"; then
+  echo "WARNING: WKWebView sandbox-extension error detected; native GUI E2E remains PENDING"
+fi
 echo "NOTE: successful GUI interactions, provider login and real MCP remain unverified"
