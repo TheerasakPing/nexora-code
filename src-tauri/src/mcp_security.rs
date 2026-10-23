@@ -235,6 +235,14 @@ pub struct VerifiedOperatorConsent {
     _private: (),
 }
 
+// Only deterministic native test fixtures can issue simulated operator
+// consent; production has no renderer/agent-accessible constructor.
+#[cfg(test)]
+pub(crate) fn fixture_operator_consent() -> VerifiedOperatorConsent {
+    VerifiedOperatorConsent { _private: () }
+}
+
+
 struct PendingApproval {
     intent: ToolIntent,
     expires: Instant,

@@ -22,6 +22,10 @@ pub struct McpServer {
     pub description: String,
     pub enabled: bool,
     pub transport: Transport,
+    // Reference to a separate OS secure-store item, not a credential or
+    // authorization grant. The renderer never receives the secret value.
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "credentialRef")]
+    pub credential_ref: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -206,8 +210,21 @@ fn printable(value: &str, max: usize) -> bool {
     value.len() <= max && !value.chars().any(char::is_control)
 }
 
+pub(crate) fn valid_credential_ref(server: &str, reference: &str) -> bool {
+    let prefix = format!("vault:v1:{server}:");
+    reference.strip_prefix(&prefix).is_some_and(|id| {
+        id.len() == 36
+            && uuid::Uuid::parse_str(id).ok().is_some_and(|uuid| uuid.get_version_num() == 4)
+    })
+}
+
 fn validate(server: &McpServer) -> Result<(), String> {
     validate_name(&server.name)?;
+    if server.credential_ref.as_deref().is_some_and(|reference| {
+        !valid_credential_ref(&server.name, reference)
+    }) {
+        return Err("MCP credential reference must be a server-bound vault:v1 UUID; never store raw secrets.".into());
+    }
     if !printable(&server.description, 500) {
         return Err("MCP server description is invalid.".into());
     }
@@ -251,10 +268,25 @@ fn validate(server: &McpServer) -> Result<(), String> {
                 [
                     "--token",
                     "--api-key",
+                    "--apikey",
                     "--password",
                     "--secret",
+                    "--access-token",
+                    "--auth",
+                    "--header",
+                    "--env",
+                    "--proxy-authorization",
                     "authorization:",
+                    "proxy-authorization:",
                     "bearer ",
+                    "basic ",
+                    "x-api-key:",
+                    "api_key=",
+                    "apikey=",
+                    "token=",
+                    "password=",
+                    "secret=",
+                    "client_secret=",
                 ]
                 .iter()
                 .any(|pattern| lowered.contains(pattern))
@@ -363,6 +395,7 @@ mod tests {
             name: name.into(),
             description: "Example MCP server".into(),
             enabled: false,
+            credential_ref: None,
             transport: Transport::Stdio {
                 command: "npx".into(),
                 args: vec![
@@ -413,6 +446,13 @@ mod tests {
             "Authorization: Bearer secret",
             "--password",
             "--token",
+            "--header",
+            "--env",
+            "x-api-key: top-secret",
+            "api_key=top-secret",
+            "client_secret=top-secret",
+            "Bearer secret",
+            "--access-token",
         ] {
             item.transport = Transport::Stdio {
                 command: "npx".into(),
@@ -502,6 +542,40 @@ mod tests {
         assert!(reg.upsert(bad).is_err());
         assert_eq!(fs::read(&reg.file).unwrap(), before);
         fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn credential_references_are_scoped_and_never_inline_secrets() {
+        let folder = temp();
+        let reg = Registry::new(&folder);
+        let mut item = stdio("filesystem");
+        let reference = format!("vault:v1:filesystem:{}", uuid::Uuid::new_v4());
+        item.credential_ref = Some(reference.clone());
+        assert!(reg.upsert(item.clone()).is_ok());
+        assert_eq!(reg.list().unwrap()[0].credential_ref.as_deref(), Some(reference.as_str()));
+        let stored = fs::read_to_string(&reg.file).unwrap();
+        assert!(stored.contains("credentialRef"));
+        assert!(!stored.contains("api-key"));
+
+        for bad in [
+            "password=abc".to_owned(),
+            "vault:v1:other:".to_owned() + &uuid::Uuid::new_v4().to_string(),
+            "vault:v1:filesystem:not-a-uuid".into(),
+            "vault:v1:filesystem:12345678-1234-1234-1234-123456789abc".into(),
+        ] {
+            item.credential_ref = Some(bad);
+            assert!(reg.upsert(item.clone()).is_err());
+            assert_eq!(fs::read_to_string(&reg.file).unwrap(), stored);
+        }
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn v1_inventory_without_credential_reference_still_reads_and_serializes() {
+        let encoded = serde_json::to_string(&stdio("legacy")).unwrap();
+        assert!(!encoded.contains("credentialRef"));
+        let decoded: McpServer = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded.credential_ref, None);
     }
 
     #[test]

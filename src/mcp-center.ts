@@ -178,6 +178,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
         command: field<HTMLInputElement>('command').value,
         argsJson: field<HTMLTextAreaElement>('argsJson').value,
         url: field<HTMLInputElement>('url').value,
+        credentialRef: records.find(server => server.name === editingName)?.credentialRef,
       };
       const existing = records.find(server => server.name === editingName);
       const server = parseMcpDraft(draft, existing?.enabled ?? false);
