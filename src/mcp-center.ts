@@ -11,6 +11,11 @@ interface McpCatalogItem {
   name: string;
   label: string;
 }
+interface McpVaultChangeResult {
+  server: string;
+  hasCredential: boolean;
+  cleanupWarning: boolean;
+}
 interface McpToolExecutionResult {
   server: string;
   tool: string;
@@ -32,6 +37,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   let loading = false;
   let records: McpServer[] = [];
   let editingName: string | null = null;
+  let vaultServerName: string | null = null;
   let inspected: { server: string; protocolVersion: string; tools: Set<string> } | null = null;
 
   host.innerHTML = [
@@ -43,6 +49,13 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     ' Manual <strong>Run Once</strong> tool calls are available only after a fresh native approval with full JSON arguments. No automatic agent tool access.</p>',
     '<p class="mcp-center-status" role="status" aria-live="polite"></p>',
     '<div class="mcp-center-list" data-nexora-mcp-list></div>',
+    '<form class="mcp-center-vault" data-nexora-mcp-vault hidden>',
+    '<h4>OS Vault — Store / Rotate MCP HTTP Bearer Token</h4>',
+    '<p class="integration-note">Token passes through local Tauri IPC once and is stored in the OS secure store after native approval. It is never displayed again.</p>',
+    '<label for="nexora-mcp-token">HTTP Bearer token for <span data-nexora-vault-server></span></label>',
+    '<input id="nexora-mcp-token" name="secret" type="password" minlength="1" maxlength="4096" autocomplete="new-password" required>',
+    '<div><button type="submit" class="primary-button">Request Approval &amp; Store</button>',
+    '<button type="button" class="secondary-button" data-nexora-mcp="cancel-vault">Cancel</button></div></form>',
     '<section class="mcp-center-inspector" data-nexora-mcp-inspector hidden aria-live="polite"></section>',
     '<form class="mcp-center-form" data-nexora-mcp-form hidden>',
     '<h4 data-nexora-mcp-form-title>Add MCP server configuration</h4>',
@@ -64,7 +77,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     '<label for="nexora-mcp-url">Server URL (HTTPS or local loopback)</label>',
     '<input id="nexora-mcp-url" name="url" type="url" maxlength="2048" autocomplete="off"',
     ' placeholder="https://example.org/mcp"></div>',
-    '<p class="integration-note">Do not enter API keys or passwords. Secure credential support is pending.</p>',
+    '<p class="integration-note">Do not enter tokens in server URLs or command arguments. Use the separate OS Vault Manager after saving HTTP configuration.</p>',
     '<div class="mcp-center-form-actions"><button type="submit" class="primary-button">Save configuration</button>',
     '<button type="button" class="secondary-button" data-nexora-mcp="cancel">Cancel</button></div>',
     '</form></section>',
@@ -74,6 +87,8 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   const list = root.querySelector<HTMLElement>('[data-nexora-mcp-list]')!;
   const status = root.querySelector<HTMLElement>('.mcp-center-status')!;
   const inspectorPanel = root.querySelector<HTMLElement>('[data-nexora-mcp-inspector]')!;
+  const vaultForm = root.querySelector<HTMLFormElement>('[data-nexora-mcp-vault]')!;
+  const vaultSecret = vaultForm.querySelector<HTMLInputElement>('[name="secret"]')!;
   const form = root.querySelector<HTMLFormElement>('[data-nexora-mcp-form]')!;
   const kind = form.querySelector<HTMLSelectElement>('[name="kind"]')!;
   const field = <T extends HTMLInputElement | HTMLTextAreaElement>(name: string): T =>
@@ -100,10 +115,16 @@ export function mountMcpCenter(host: HTMLElement): () => void {
         '">' + action + '</button>' +
         '<button type="button" class="secondary-button" data-nexora-mcp="edit" data-name="' + name +
         '">Edit</button>' +
+        (server.transport.kind === 'streamable_http' ?
+          '<button type="button" class="secondary-button" data-nexora-mcp="vault-store" data-name="' + name +
+          '">' + (server.credentialRef ? 'Rotate token' : 'Store token') + '</button>' +
+          (server.credentialRef ?
+            '<button type="button" class="secondary-button" data-nexora-mcp="vault-revoke" data-name="' + name +
+            '">Revoke token</button>' : '') : '') +
         '<button type="button" class="secondary-button" data-nexora-mcp="inspect" data-name="' + name +
-        '"' + (!server.enabled || server.credentialRef ? ' disabled' : '') + '>Inspect catalogs</button>' +
+        '"' + (!server.enabled ? ' disabled' : '') + '>Inspect catalogs</button>' +
         (server.transport.kind === 'stdio' ? '<button type="button" class="secondary-button" data-nexora-mcp="inspect-legacy" data-name="' + name +
-        '"' + (!server.enabled || server.credentialRef ? ' disabled' : '') + '>Inspect legacy</button>' : '') +
+        '"' + (!server.enabled ? ' disabled' : '') + '>Inspect legacy</button>' : '') +
         '<button type="button" class="secondary-button" data-nexora-mcp="remove" data-name="' +
         name + '">Remove</button></div></div>';
     }).join('') : '<p class="integration-note">No Nexora MCP servers configured. Codex-managed servers above are separate.</p>';
@@ -159,7 +180,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   }
 
   async function inspect(server: McpServer, protocolVersion: string): Promise<void> {
-    if (loading || preview || !server.enabled || server.credentialRef) return;
+    if (loading || preview || !server.enabled) return;
     loading = true;
     root.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = true; });
     inspectorPanel.hidden = true;
@@ -215,7 +236,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
           button.disabled = preview || button.disabled && (button.dataset.nexoraMcp === 'inspect' ||
             button.dataset.nexoraMcp === 'inspect-legacy') &&
             !!records.find(item => item.name === button.dataset.name &&
-              (!item.enabled || item.credentialRef));
+              !item.enabled);
         });
       }
     }
@@ -225,7 +246,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     if (loading || preview || !inspected) return;
     const toolName = button.dataset.tool ?? '';
     const target = records.find(item => item.name === inspected?.server);
-    if (!inspected.tools.has(toolName) || !target || !target.enabled || target.credentialRef) {
+    if (!inspected.tools.has(toolName) || !target || !target.enabled) {
       showStatus('Tool execution blocked: inspect an enabled uncredentialed server first.', true);
       return;
     }
@@ -280,10 +301,56 @@ export function mountMcpCenter(host: HTMLElement): () => void {
           item.disabled = preview || (item.dataset.nexoraMcp === 'inspect' ||
             item.dataset.nexoraMcp === 'inspect-legacy') &&
             !!records.find(entry => entry.name === item.dataset.name &&
-              (!entry.enabled || entry.credentialRef));
+              !entry.enabled);
         });
       }
     }
+  }
+
+  async function vaultChange(server: McpServer, operation: 'store' | 'revoke', secret?: string): Promise<void> {
+    if (loading || preview) return;
+    loading = true;
+    vaultSecret.value = '';
+    vaultForm.hidden = true;
+    vaultServerName = null;
+    showStatus('Waiting for OS Vault native approval…');
+    try {
+      const response = await call<McpVaultChangeResult>('mcp_vault_change', {
+        serverName: server.name, operation,
+        ...(secret === undefined ? {} : { secret }),
+      });
+      const next = await call<McpServer[]>('mcp_registry_list');
+      if (!alive()) return;
+      records = next;
+      inspectorPanel.hidden = true;
+      inspectorPanel.replaceChildren();
+      inspected = null;
+      render();
+      showStatus('MCP token ' + (response.hasCredential ? 'stored / rotated' : 'revoked') +
+        (response.cleanupWarning ? '; old OS vault entry cleanup failed — inspect OS credential manager.' : '.'),
+        response.cleanupWarning);
+    } catch (error) {
+      if (alive()) showStatus('MCP vault change denied or failed: ' + errorMessage(error), true);
+    } finally {
+      loading = false;
+      if (alive()) render();
+    }
+  }
+
+  function submitVault(event: Event): void {
+    event.preventDefault();
+    const server = records.find(entry => entry.name === vaultServerName);
+    const secret = vaultSecret.value;
+    vaultSecret.value = '';
+    if (!server || server.transport.kind !== 'streamable_http') {
+      showStatus('Select a saved HTTP server first.', true);
+      return;
+    }
+    if (secret.length < 1 || secret.length > 4096) {
+      showStatus('Bearer token length must be 1-4096 characters.', true);
+      return;
+    }
+    void vaultChange(server, 'store', secret);
   }
 
   async function refresh(): Promise<void> {
@@ -308,6 +375,12 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     if (!button || !root.contains(button) || loading) return;
     const action = button.dataset.nexoraMcp;
     if (action === 'run-tool') { void runTool(button); return; }
+    if (action === 'cancel-vault') {
+      vaultSecret.value = '';
+      vaultServerName = null;
+      vaultForm.hidden = true;
+      return;
+    }
     if (action === 'refresh') { void refresh(); return; }
     if (action === 'new') { edit(); return; }
     if (action === 'cancel') { form.hidden = true; editingName = null; return; }
@@ -315,6 +388,18 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     if (!server) return;
     if (action === 'inspect' || action === 'inspect-legacy') {
       void inspect(server, action === 'inspect-legacy' ? '2025-11-25' : '2026-07-28');
+      return;
+    }
+    if (action === 'vault-store' && server.transport.kind === 'streamable_http') {
+      vaultServerName = server.name;
+      vaultSecret.value = '';
+      vaultForm.querySelector<HTMLElement>('[data-nexora-vault-server]')!.textContent = server.name;
+      vaultForm.hidden = false;
+      vaultSecret.focus();
+      return;
+    }
+    if (action === 'vault-revoke' && server.credentialRef) {
+      void vaultChange(server, 'revoke');
       return;
     }
     if (action === 'edit') { edit(server); return; }
@@ -358,6 +443,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   root.addEventListener('click', click);
   kind.addEventListener('change', switchTransport);
   form.addEventListener('submit', submit);
+  vaultForm.addEventListener('submit', submitVault);
   if (preview) {
     showStatus('Browser preview: native MCP inventory is unavailable; no server changes can be saved.');
     root.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = true; });
@@ -369,5 +455,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     root.removeEventListener('click', click);
     kind.removeEventListener('change', switchTransport);
     form.removeEventListener('submit', submit);
+    vaultForm.removeEventListener('submit', submitVault);
+    vaultSecret.value = '';
   };
 }

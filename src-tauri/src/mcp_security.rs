@@ -267,6 +267,30 @@ pub(crate) async fn confirm_catalog_inspection(
     }
 }
 
+/// A native OS modal, separate from tool execution, approves one bounded
+/// OS-secure-store update. Never displays or returns the actual secret.
+pub(crate) async fn confirm_vault_change(
+    app: tauri::AppHandle, server: String, endpoint: String,
+    config_hash: String, revoke: bool,
+) -> Result<VerifiedOperatorConsent, String> {
+    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+    let operation = if revoke { "REVOKE" } else { "STORE / ROTATE" };
+    let confirmed = tokio::task::spawn_blocking(move || app.dialog()
+        .message(format!(
+            "Authorize ONE MCP credential {operation} in OS secure storage?\n\nServer: {server}\nEndpoint: {endpoint}\nConfig SHA-256: {config_hash}\n\nCredentials are never written to the MCP registry. Only approved HTTP MCP requests will receive an Authorization header.\n\nContinue?"
+        ))
+        .title("Nexora Code — MCP OS Vault")
+        .kind(MessageDialogKind::Warning)
+        .buttons(MessageDialogButtons::OkCancelCustom("Approve Once".into(), "Deny".into()))
+        .blocking_show()
+    ).await.map_err(|_| "Native vault approval dialog unavailable".to_owned())?;
+    if confirmed {
+        Ok(VerifiedOperatorConsent { _private: () })
+    } else {
+        Err("Operator denied MCP vault change".into())
+    }
+}
+
 /// Native consent for ONE specific tool invocation, not for all tools on the
 /// server. The exact arguments must fit the dialog in full; no truncation.
 pub(crate) async fn confirm_tool_execution(

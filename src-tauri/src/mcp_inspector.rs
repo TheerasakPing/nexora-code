@@ -4,6 +4,7 @@
 //! One native modal, one config snapshot, one bounded discovery session.
 use crate::{
     mcp_http::ReadOnlyHttp,
+    mcp_vault,
     mcp_protocol::{Catalog, Era, Inspector, ProtocolFailure},
     mcp_registry::{McpServer, Registry, Transport},
     mcp_security::{self, Capability, McpPermissionLedger, ToolIntent, VerifiedOperatorConsent},
@@ -21,7 +22,7 @@ use tauri::{Manager, State, WebviewWindow};
 use tokio::sync::Mutex;
 
 #[derive(Default)]
-pub struct InspectionGate(Arc<Mutex<()>>);
+pub struct InspectionGate(pub(crate) Arc<Mutex<()>>);
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all="camelCase")]
@@ -136,7 +137,11 @@ async fn inspect_http(
         .take(17).map(|value| value.ip()).collect();
     let approved_target = mcp_security::plan_http_connection(url, &addresses)
         .map_err(|_| "MCP network endpoint failed SSRF/peer policy")?;
-    let client = ReadOnlyHttp::new(approved_target, consent).map_err(str::to_owned)?;
+    let bearer = server.credential_ref.as_deref()
+        .map(|reference| mcp_vault::resolve(&server.name, reference, &consent))
+        .transpose()?;
+    let client = ReadOnlyHttp::with_bearer(approved_target, bearer, consent)
+        .map_err(str::to_owned)?;
     let reply = client.request_catalog(inspector.discover_request()).await.map_err(str::to_owned)?;
     inspector.accept_discovery(&reply).map_err(error)?;
     for category in [Catalog::Tools, Catalog::Resources, Catalog::Prompts] {
@@ -158,7 +163,7 @@ async fn inspect_http(
 /// Discard a native approval whenever the persisted server differs from
 /// what the operator reviewed. This is a byte-structured configuration check,
 /// not a comparison of a renderer-supplied name or display label.
-fn approved_config_unchanged(registry: &Registry, approved: &McpServer) -> Result<bool, String> {
+pub(crate) fn approved_config_unchanged(registry: &Registry, approved: &McpServer) -> Result<bool, String> {
     let matching = registry.list()?
         .into_iter().find(|entry| entry.name == approved.name);
     Ok(matching.as_ref() == Some(approved))
@@ -173,8 +178,9 @@ async fn read_catalog(
     if !server.enabled {
         return Err("MCP server is disabled".into());
     }
-    if server.credential_ref.is_some() {
-        return Err("Authenticated MCP discovery requires reviewed OS-vault integration".into());
+    if server.credential_ref.is_some() &&
+       !matches!(server.transport, Transport::StreamableHttp { .. }) {
+        return Err("Credentialed MCP stdio is not supported".into());
     }
     let mut inspector = Inspector::new(era);
     match server.transport {
@@ -257,7 +263,11 @@ async fn perform_approved_tool(
                 .take(17).map(|peer| peer.ip()).collect();
             let approved_target = mcp_security::plan_http_connection(url, &addresses)
                 .map_err(|_| "MCP target denied by network security policy")?;
-            let connection = ReadOnlyHttp::new(approved_target, consent).map_err(str::to_owned)?;
+            let bearer = server.credential_ref.as_deref()
+                .map(|reference| mcp_vault::resolve(&server.name, reference, &consent))
+                .transpose()?;
+            let connection = ReadOnlyHttp::with_bearer(approved_target, bearer, consent)
+                .map_err(str::to_owned)?;
             let response = connection.request_catalog(inspector.discover_request())
                 .await.map_err(str::to_owned)?;
             inspector.accept_discovery(&response).map_err(error)?;
@@ -301,8 +311,8 @@ pub async fn mcp_execute_tool_once(
         .await.map_err(|_| "MCP registry unavailable")??
         .into_iter().find(|entry| entry.name == lookup_name)
         .ok_or("MCP server not found")?;
-    if !server.enabled || server.credential_ref.is_some() {
-        return Err("Only enabled, non-credentialed MCP servers can execute manually".into());
+    if !server.enabled {
+        return Err("Only enabled MCP servers can execute manually".into());
     }
     let bytes = serde_json::to_vec(&server).map_err(|_| "MCP config is invalid")?;
     let hash = format!("{:x}", Sha256::digest(&bytes));
@@ -373,8 +383,8 @@ pub async fn mcp_inspect_catalog(
         .await.map_err(|_| "MCP Registry unavailable")??
         .into_iter().find(|server| server.name == server_name_copy)
         .ok_or("MCP server not found")?;
-    if !server.enabled || server.credential_ref.is_some() {
-        return Err("MCP inspection requires an enabled, unauthenticated server".into());
+    if !server.enabled {
+        return Err("MCP inspection requires an enabled server".into());
     }
     let config_bytes = serde_json::to_vec(&server).map_err(|_| "MCP config not serializable")?;
     let fingerprint = format!("{:x}", Sha256::digest(&config_bytes));
@@ -605,6 +615,46 @@ echo '{"jsonrpc":"2.0","id":4,"result":{"prompts":[{"name":"summarize"}]}}'
         assert_eq!(output.items[1].name, "resource://test/1");
         assert_eq!(output.items[2].name, "summarize");
         fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[tokio::test]
+    async fn approved_http_catalog_uses_only_server_bound_os_vault_bearer() {
+        use tokio::{io::{AsyncReadExt,AsyncWriteExt},net::TcpListener};
+        let listener=TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port=listener.local_addr().unwrap().port();
+        let task=tokio::spawn(async move {
+            for (id,payload) in [
+                (1,serde_json::json!({"capabilities":{"tools":{}}})),
+                (2,serde_json::json!({"tools":[{"name":"safe_echo","inputSchema":{"type":"object"}}]})),
+            ] {
+                let (mut socket,_)=listener.accept().await.unwrap();
+                let mut buf=[0u8;8192];
+                let len=socket.read(&mut buf).await.unwrap();
+                let request=String::from_utf8_lossy(&buf[..len]);
+                assert!(request.to_ascii_lowercase().contains("authorization: bearer test-server-secret"));
+                let body=serde_json::json!({"jsonrpc":"2.0","id":id,"result":payload}).to_string();
+                socket.write_all(format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                ).as_bytes()).await.unwrap();
+            }
+        });
+        let server_name=format!("fixture{}",uuid::Uuid::new_v4().simple());
+        let reference=mcp_vault::create(&server_name,"test-server-secret",&fixture_operator_consent()).unwrap();
+        let server=McpServer {
+            name:server_name.clone(),description:"".into(),enabled:true,
+            credential_ref:Some(reference.clone()),
+            transport:Transport::StreamableHttp{url:format!("http://127.0.0.1:{port}/mcp")},
+        };
+        let result=tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            read_catalog(&server,Era::Modern20260728,fixture_operator_consent())
+        ).await.unwrap().unwrap();
+        assert_eq!(result.items.len(),1);
+        assert_eq!(result.items[0].name,"safe_echo");
+        task.await.unwrap();
+        mcp_vault::delete(&server_name,&reference,&fixture_operator_consent()).unwrap();
+        assert!(mcp_vault::resolve(&server_name,&reference,&fixture_operator_consent()).is_err());
     }
 
     #[tokio::test]

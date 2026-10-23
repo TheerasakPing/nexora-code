@@ -5,18 +5,32 @@
 <script>
 window.__mcpCalls = [];
 window.__mcpInjected = false;
+window.__mcpRegistry = [
+  { name: 'approved_mock', description: '<img src=x onerror=window.__mcpInjected=true>',
+    enabled: true, transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
+  { name: 'unapproved_mock', description: 'not approved', enabled: false,
+    transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
+  { name: 'credential_mock', description: 'vault protected', enabled: true,
+    credentialRef:'vault:v1:credential_mock:123e4567-e89b-42d3-a456-426614174000',
+    transport: {kind:'streamable_http',url:'https://example.test/mcp'} },
+];
 window.__TAURI_INTERNALS__ = {
   invoke: async (command, args = {}) => {
-    window.__mcpCalls.push({ command, args });
-    if (command === 'mcp_registry_list') return [
-      { name: 'approved_mock', description: '<img src=x onerror=window.__mcpInjected=true>',
-        enabled: true, transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
-      { name: 'unapproved_mock', description: 'not approved', enabled: false,
-        transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
-      { name: 'credential_mock', description: 'vault protected', enabled: true,
-        credentialRef:'vault:v1:credential_mock:123e4567-e89b-42d3-a456-426614174000',
-        transport: {kind:'streamable_http',url:'https://example.test/mcp'} },
-    ];
+    window.__mcpCalls.push({ command,
+      args: command === 'mcp_vault_change' ? {...args, secret: args.secret ? '[REDACTED]' : undefined} : args });
+    if (command === 'mcp_registry_list') return window.__mcpRegistry.map(server => ({...server}));
+    if (command === 'mcp_vault_change') {
+      const server = window.__mcpRegistry.find(item => item.name === args.serverName);
+      if (!server || server.transport.kind !== 'streamable_http') throw new Error('Unknown server');
+      if (args.operation === 'store') {
+        if (!args.secret || args.secret.length > 4096) throw new Error('Invalid token');
+        server.credentialRef = 'vault:v1:credential_mock:123e4567-e89b-42d3-a456-426614174001';
+      } else if (args.operation === 'revoke') {
+        if (!server.credentialRef) throw new Error('No credential');
+        delete server.credentialRef;
+      } else throw new Error('Invalid vault operation');
+      return {server: server.name, hasCredential: !!server.credentialRef, cleanupWarning:false};
+    }
     if (command === 'mcp_inspect_catalog') return {
       server: args.serverName, protocol: args.protocolVersion, status:'inspected_disconnect',
       items:[

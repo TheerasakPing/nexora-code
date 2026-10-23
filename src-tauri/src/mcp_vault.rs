@@ -1,7 +1,8 @@
 //! OS credential-store-backed references for Nexora-owned MCP servers.
 //! Internal only. No Tauri IPC and no automatic credential injection.
-//! Creating/resolving/deleting a vault credential requires verified native
-//! operator consent, currently NOT exposed by the renderer/agent surface.
+//! Creating/resolving/deleting a credential requires verified native consent.
+ //! Only mcp_vault_commands can invoke these privileged routines; no raw
+ //! secret is returned to the webview or an agent.
 #![allow(dead_code)]
 
 use crate::{
@@ -24,7 +25,7 @@ fn account(server: &str, reference: &str) -> Result<String, &'static str> {
 /// Store only in OS secure storage, never in MCP Registry JSON, model context
 /// or command-line arguments. The returned reference is NOT authorization.
 pub(crate) fn create(
-    server: &str, secret: &str, _consent: VerifiedOperatorConsent,
+    server: &str, secret: &str, _consent: &VerifiedOperatorConsent,
 ) -> Result<String, String> {
     if server.is_empty() || server.len() > 64 ||
         !server.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'_' || c == b'-') {
@@ -37,9 +38,10 @@ pub(crate) fn create(
 }
 
 /// Reference possession by itself is never a read permission. Only trusted
-/// native consent can use this entry point; no Tauri commands call it.
+/// native consent can use this entry point; the main-window vault/HTTP
+/// command path enforces that consent before resolving the secret.
 pub(crate) fn resolve(
-    server: &str, reference: &str, _consent: VerifiedOperatorConsent,
+    server: &str, reference: &str, _consent: &VerifiedOperatorConsent,
 ) -> Result<String, String> {
     let account = account(server, reference).map_err(str::to_owned)?;
     secret_store::get(SERVICE, &account)
@@ -47,11 +49,10 @@ pub(crate) fn resolve(
 }
 
 pub(crate) fn delete(
-    server: &str, reference: &str, _consent: VerifiedOperatorConsent,
+    server: &str, reference: &str, _consent: &VerifiedOperatorConsent,
 ) -> Result<(), String> {
     let account = account(server, reference).map_err(str::to_owned)?;
-    secret_store::remove(SERVICE, &account);
-    Ok(())
+    secret_store::remove_checked(SERVICE, &account)
 }
 
 #[cfg(test)]
@@ -61,21 +62,21 @@ mod tests {
 
     #[test]
     fn secure_store_reference_is_server_bound_and_revoke_is_irreversible() {
-        let reference = create("filesystem", "example-test-secret", consent()).unwrap();
+        let reference = create("filesystem", "example-test-secret", &consent()).unwrap();
         assert!(reference.starts_with("vault:v1:filesystem:"));
         assert!(!reference.contains("example-test-secret"));
-        assert!(resolve("other", &reference, consent()).is_err());
-        assert_eq!(resolve("filesystem", &reference, consent()).unwrap(), "example-test-secret");
-        delete("filesystem", &reference, consent()).unwrap();
-        assert!(resolve("filesystem", &reference, consent()).is_err());
+        assert!(resolve("other", &reference, &consent()).is_err());
+        assert_eq!(resolve("filesystem", &reference, &consent()).unwrap(), "example-test-secret");
+        delete("filesystem", &reference, &consent()).unwrap();
+        assert!(resolve("filesystem", &reference, &consent()).is_err());
     }
 
     #[test]
     fn invalid_secret_inputs_never_create_references() {
-        assert!(create("server", "", consent()).is_err());
-        assert!(create("server", "hello\nworld", consent()).is_err());
-        assert!(create("server", &"x".repeat(4097), consent()).is_err());
-        assert!(create("../escape", "test", consent()).is_err());
-        assert!(resolve("server", "api-key=do-not-echo", consent()).is_err());
+        assert!(create("server", "", &consent()).is_err());
+        assert!(create("server", "hello\nworld", &consent()).is_err());
+        assert!(create("server", &"x".repeat(4097), &consent()).is_err());
+        assert!(create("../escape", "test", &consent()).is_err());
+        assert!(resolve("server", "api-key=do-not-echo", &consent()).is_err());
     }
 }

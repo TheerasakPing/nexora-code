@@ -35,6 +35,7 @@ mod jev_decisions;
 mod local_servers;
 mod mcp_registry;
 mod mcp_vault;
+mod mcp_vault_commands;
 mod mcp_http;
 mod mcp_inspector;
 mod mcp_stdio;
@@ -3170,6 +3171,7 @@ pub fn run() {
                 mcp_permissions::mcp_policy_preflight,
                 mcp_inspector::mcp_inspect_catalog,
                 mcp_inspector::mcp_execute_tool_once,
+                mcp_vault_commands::mcp_vault_change,
                 mcp_registry::mcp_registry_list,
                 mcp_registry::mcp_registry_upsert,
                 mcp_registry::mcp_registry_remove,

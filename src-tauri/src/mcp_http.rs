@@ -14,13 +14,32 @@ use std::time::Duration;
 pub struct ReadOnlyHttp {
     target: PinnedHttpTarget,
     client: Client,
+    // HeaderValue is marked sensitive so reqwest's Debug formatting never
+    // prints Bearer credentials; it is never serialized or returned to JS.
+    authorization: Option<header::HeaderValue>,
 }
 
 impl ReadOnlyHttp {
     /// Only a trusted native consent can instantiate a transport. A registered
     /// or enabled MCP server is not sufficient. DNS peers are already validated
     /// by the restrictive R2 policy and explicitly pinned into reqwest.
-    pub fn new(target: PinnedHttpTarget, _consent: VerifiedOperatorConsent) -> Result<Self, &'static str> {
+    pub fn new(target: PinnedHttpTarget, consent: VerifiedOperatorConsent) -> Result<Self, &'static str> {
+        Self::with_bearer(target, None, consent)
+    }
+
+    /// The Bearer token is fetched from OS secure storage by an explicit
+    /// native-approved Rust call, never from MCP Registry JSON or renderer
+    /// fields. It must not be sent to stdio or unapproved target peers.
+    pub fn with_bearer(
+        target: PinnedHttpTarget, bearer: Option<String>,
+        _consent: VerifiedOperatorConsent,
+    ) -> Result<Self, &'static str> {
+        let authorization = bearer.map(|token| {
+            let mut value = header::HeaderValue::from_str(&format!("Bearer {token}"))
+                .map_err(|_| "Invalid OS vault bearer token")?;
+            value.set_sensitive(true);
+            Ok::<_, &'static str>(value)
+        }).transpose()?;
         if target.peers().is_empty() {
             return Err("No approved MCP peers");
         }
@@ -38,7 +57,7 @@ impl ReadOnlyHttp {
             .pool_max_idle_per_host(0)
             .build()
             .map_err(|_| "Could not initialize secure MCP HTTP client")?;
-        Ok(Self { target, client })
+        Ok(Self { target, client, authorization })
     }
 
     /// One native-approved tool invocation. Caller must first verify exact
@@ -56,13 +75,16 @@ impl ReadOnlyHttp {
         if bytes.len() > MAX_RPC_FRAME {
             return Err("MCP tool request too large");
         }
-        let response = self.client
+        let mut request = self.client
             .post(self.target.original_url().clone())
             .header(header::CONTENT_TYPE, "application/json")
             .header(header::ACCEPT, "application/json, text/event-stream")
             .header("MCP-Protocol-Version", "2026-07-28")
-            .body(bytes)
-            .send().await.map_err(|_| "Approved tool HTTP request failed")?;
+            .body(bytes);
+        if let Some(auth) = &self.authorization {
+            request = request.header(header::AUTHORIZATION, auth.clone());
+        }
+        let response = request.send().await.map_err(|_| "Approved tool HTTP request failed")?;
         let peer = response.remote_addr().ok_or("MCP tool peer unavailable")?;
         self.target.verify_connected_peer(peer)
             .map_err(|_| "MCP tool peer is outside approved IP set")?;
@@ -113,7 +135,7 @@ impl ReadOnlyHttp {
         if bytes.len() > MAX_RPC_FRAME {
             return Err("MCP request is too large");
         }
-        let response = self.client
+        let mut request = self.client
             .post(self.target.original_url().clone())
             .header(header::CONTENT_TYPE, "application/json")
             .header(header::ACCEPT, "application/json, text/event-stream")
@@ -121,8 +143,11 @@ impl ReadOnlyHttp {
             .header("MCP-Protocol-Version",
                 if frame["params"]["_meta"]["io.modelcontextprotocol/protocolVersion"] == "2026-07-28"
                 { "2026-07-28" } else { "2025-11-25" })
-            .body(bytes)
-            .send().await.map_err(|_| "MCP HTTP request failed")?;
+            .body(bytes);
+        if let Some(auth) = &self.authorization {
+            request = request.header(header::AUTHORIZATION, auth.clone());
+        }
+        let response = request.send().await.map_err(|_| "MCP HTTP request failed")?;
         let peer = response.remote_addr().ok_or("MCP HTTP connected peer unavailable")?;
         self.target.verify_connected_peer(peer)
             .map_err(|_| "MCP HTTP peer is outside approved IP set")?;
@@ -252,6 +277,39 @@ mod tests {
         });
         (port, task)
     }
+    #[tokio::test]
+    async fn native_approved_bearer_header_is_sent_only_to_pinned_loopback() {
+        let listener=TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port=listener.local_addr().unwrap().port();
+        let fixture=tokio::spawn(async move {
+            let (mut socket,_)=listener.accept().await.unwrap();
+            let mut buf=[0u8;4096];
+            let n=socket.read(&mut buf).await.unwrap();
+            let request=String::from_utf8_lossy(&buf[..n]);
+            assert!(request.starts_with("POST /mcp HTTP/1.1"));
+            assert!(request.to_ascii_lowercase().contains("authorization: bearer test-fixture-token"));
+            let body=r#"{"jsonrpc":"2.0","id":1,"result":{"capabilities":{}}}"#;
+            let response=format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len(),
+            );
+            socket.write_all(response.as_bytes()).await.unwrap();
+        });
+        let url=format!("http://127.0.0.1:{port}/mcp");
+        let pinned=plan_http_connection(&url,&[IpAddr::V4(Ipv4Addr::LOCALHOST)]).unwrap();
+        let client=ReadOnlyHttp::with_bearer(pinned,Some("test-fixture-token".into()),
+            fixture_operator_consent()).unwrap();
+        assert!(client.authorization.as_ref().unwrap().is_sensitive());
+        let data=client.request_catalog(serde_json::json!({
+            "jsonrpc":"2.0","id":1,"method":"server/discover","params":{}
+        })).await.unwrap();
+        assert_eq!(serde_json::from_slice::<Value>(&data).unwrap()["result"]["capabilities"],
+            serde_json::json!({}));
+        fixture.await.unwrap();
+        assert!(!format!("{:?}",client.authorization.as_ref().unwrap()).contains("test-fixture-token"),
+            "Bearer token must be redacted in debug formatting");
+    }
+
     #[tokio::test]
     async fn pinned_loopback_http_catalog_returns_bounded_json_without_redirects() {
         let response=r#"{"jsonrpc":"2.0","id":1,"result":{"capabilities":{"tools":{}}}}"#;

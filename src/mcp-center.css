@@ -39,3 +39,7 @@
 .mcp-center-manual-tool textarea { width:100%; background:var(--panel, transparent); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:8px; margin:5px 0; font:inherit; font-family:monospace; }
 .mcp-center-manual-tool pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:7px; padding:8px; }
 .mcp-center-manual-tool pre[hidden] { display:none; }
+
+.mcp-center-vault { border:1px solid var(--border); border-radius:10px; padding:12px; margin:12px 0; }
+.mcp-center-vault[hidden] { display:none; }
+.mcp-center-vault input[type=password] { width:100%; margin:7px 0; padding:8px; border:1px solid var(--border); border-radius:7px; }

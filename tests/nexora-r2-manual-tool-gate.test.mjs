@@ -42,7 +42,7 @@ test('MCP transports cannot dispatch generic arbitrary method or an unbounded re
   assert.ok(http.includes('Policy::none()'));
 });
 
-test('MCP UI keeps disabled and vault-backed servers uncallable, renders returned text inert',()=>{
+test('MCP UI keeps disabled servers uncallable; vault-backed calls still need native approval',()=>{
   const ui=read('src/mcp-center.ts');
   for (const marker of [
     "action === 'run-tool'",
@@ -52,6 +52,6 @@ test('MCP UI keeps disabled and vault-backed servers uncallable, renders returne
     'JSON.parse(json)',
     'output.textContent',
     'inspected.tools.has(toolName)',
-    'target.credentialRef'
+    'mcp_vault_change'
   ]) assert.ok(ui.includes(marker),marker);
 });

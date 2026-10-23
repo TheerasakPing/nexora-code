@@ -8,7 +8,7 @@ test('Nexora MCP inspector renders inert remote names and disconnects after insp
   const buttons=root.getByRole('button', {name:'Inspect catalogs'});
   await expect(buttons.nth(0)).toBeEnabled();
   await expect(buttons.nth(1)).toBeDisabled();
-  await expect(buttons.nth(2)).toBeDisabled();
+  await expect(buttons.nth(2)).toBeEnabled();
   await buttons.nth(0).click();
   await expect(root.locator('.mcp-center-inspector li')).toHaveCount(4);
   await expect(root.getByText('Inspection ended; server disconnected')).toBeVisible();
@@ -21,7 +21,7 @@ test('Nexora MCP inspector renders inert remote names and disconnects after insp
   }]);
 });
 
-test('legacy inspection requests explicit compatibility version; disabled and vault-backed configs remain non-inspectable', async ({page}) => {
+test('legacy inspection requests explicit compatibility version; disabled configs remain non-inspectable', async ({page}) => {
   await page.goto('/tests/fixtures/nexora-mcp-inspector.html');
   const root=page.locator('.mcp-center');
   const legacy=root.getByRole('button',{name:'Inspect legacy'});
@@ -69,4 +69,23 @@ test('manual MCP tool rejects malformed JSON before invoking native command', as
   await expect(root.getByText('Invalid tool arguments')).toBeVisible();
   const called=await page.evaluate(()=> (window as any).__mcpCalls);
   expect(called.some((value:any)=>value.command==='mcp_execute_tool_once')).toBe(false);
+});
+
+
+test('OS Vault UI rotates and revokes a token without rendering the secret', async ({page}) => {
+  await page.goto('/tests/fixtures/nexora-mcp-inspector.html');
+  const root = page.locator('.mcp-center');
+  await root.getByRole('button', {name:'Rotate token'}).click();
+  await expect(root.locator('.mcp-center-vault')).toBeVisible();
+  await root.locator('[name="secret"]').fill('browser-test-secret-DO-NOT-LOG');
+  await root.getByRole('button', {name:'Request Approval & Store'}).click();
+  await expect(root.getByText('MCP token stored / rotated')).toBeVisible();
+  expect(await root.textContent()).not.toContain('browser-test-secret-DO-NOT-LOG');
+  await expect(root.locator('[name="secret"]')).toHaveValue('');
+  const calls = await page.evaluate(() => (window as any).__mcpCalls);
+  expect(calls.filter((call:any) => call.command === 'mcp_vault_change')[0].args.secret).toBe('[REDACTED]');
+  await root.getByRole('button', {name:'Revoke token'}).click();
+  await expect(root.getByText('MCP token revoked')).toBeVisible();
+  await expect(root.getByRole('button', {name:'Store token'})).toBeVisible();
+  await expect(root.getByRole('button', {name:'Revoke token'})).toHaveCount(0);
 });
