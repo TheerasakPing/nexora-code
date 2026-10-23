@@ -114,6 +114,31 @@ The structural rules in scripts/nexora/governance-pr-gate.mjs remain
 authoritative; the secure gate calls them against PR content **as data**.
 
 
+## 3.3 NC-TEAM-002 — รายงานงานคงเหลือและหลักฐานหลังทุกคำสั่ง
+
+ทุก Task และทุกคำสั่ง "ทำต่อ" ให้ Team Lead รายงานผลแบบตรวจสอบย้อนกลับได้
+โดยอัปเดต Task Checklist Planner **ก่อนสรุปส่งมอบ** และระบุอย่างน้อย:
+
+1. **Completed / Accepted:** งานที่ผ่าน DoD จริง พร้อม Commit SHA, PR,
+   คำสั่งทดสอบ, ผลและ OS; Source Complete ไม่เท่ากับ Native Accepted.
+2. **Remaining:** จำนวนคงเหลือตามฐานข้อมูลที่ระบุชัดเจน (ตัวตั้ง/ตัวหาร,
+   วันที่ Snapshot, นิยาม Done, Link หลักฐาน). รายงานแยกตัวเลข 24 Engineering
+   Acceptance Packages, BR-01–BR-07, R0–R8 checklist และ GitHub PR/Issues
+   ห้ามบวกข้ามกลุ่มเพราะรายการซ้ำซ้อนกัน.
+3. **Blocked / Owner:** ระบุ P0/CI/Independent Review/Native OS/สิทธิ์ของ
+   Project Owner พร้อมเจ้าของจริงและเงื่อนไขปลดล็อก. ไม่มี Reviewer จริงให้
+   ระบุ PENDING ห้ามประเมินว่าผ่าน.
+4. **Next Action:** จัดลำดับ Top 1–3 ที่ทำต่อได้จริง แยกงานที่ทำ Source/CI
+   ได้ออกจากงานที่ต้องเครื่องจริงหรือการอนุมัติ.
+5. **Final decision:** แยก GO สำหรับการส่ง Patch/PR เพื่อ Review ออกจาก
+   GO เพื่อ Merge, Native Acceptance และ Production Release.
+
+ถ้า Evidence สดไม่มีให้ใช้ **UNVERIFIED — as of YYYY-MM-DD** ไม่เดาเปอร์เซ็นต์
+หรือเปลี่ยนรายการ Checklist เป็น [x] ด้วยการคาดคะเน; ถ้าสถานะของ Roadmap
+ไม่ทันกับ GitHub ให้จัดทำ Dated Snapshot โดยไม่ลบประวัติ.
+อ้างอิง [Master Checklist](CHECKLIST-PLANNER.md) และ
+[Dated Snapshot 2026-10-23](PROGRESS-SNAPSHOT-2026-10-23.md).
+
 ## 4. Repository / Branch / Worktree Policy
 
 Repository เป้าหมาย: `TheerasakPing/nexora-code` · Upstream: `aicodeking/pandacode` · Source ตั้งต้น PandaCode `v0.3.16`, commit `30f9c823e3c38f472f89e8f8405575ecfe7173ee`
