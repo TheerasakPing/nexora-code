@@ -298,6 +298,14 @@ fn run_bounded(
             stop_process_group(process_id);
             format!("{tool} error stream did not close")
         })??;
+    // Unix: the top-level command can exit 0 after spawning grandchildren
+    // whose pipes were redirected. The command owns a distinct process group,
+    // so killing that group also cleans up the descendants left behind.
+    // Windows uses the scoped Job Object with KILL_ON_JOB_CLOSE instead.
+    // Never call Windows' PID-based taskkill after the top-level PID exits:
+    // an unrelated process might have inherited/reused that identifier.
+    #[cfg(unix)]
+    stop_process_group(process_id);
     Ok(GitOutput {
         status,
         stdout,
@@ -1585,6 +1593,46 @@ mod tests {
         sleeper.args(["-c", "sleep 30"]);
         let err = run_process_with_input(sleeper, "sh", 1024, Duration::from_millis(200), None).err().unwrap();
         assert!(err.contains("timed out"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn successful_bounded_process_reaps_background_process_group() {
+        use std::time::Instant;
+        // A shell can exit 0 with a child still running after redirecting
+        // stdout/stderr. This must not leak children into later sessions.
+        let mut shell = Command::new("sh");
+        shell.args(["-c", r#"sleep 30 >/dev/null 2>&1 & printf '%s\n' "$!""#]);
+        let started = Instant::now();
+        let result = run_process(shell, "isolated smoke", 1024, Duration::from_secs(5)).unwrap();
+        assert!(result.status.success());
+        assert!(started.elapsed() < Duration::from_secs(3));
+        let pid = String::from_utf8(result.stdout.bytes)
+            .unwrap()
+            .trim()
+            .parse::<i32>()
+            .unwrap();
+        assert!(pid > 1);
+        // A child exited by SIGKILL may temporarily be a zombie until its
+        // system reaper collects it. Zombies are not running processes.
+        let mut active = true;
+        for _ in 0..40 {
+            let output = Command::new("ps")
+                .args(["-o", "state=", "-p", &pid.to_string()])
+                .output()
+                .unwrap();
+            let state = String::from_utf8_lossy(&output.stdout);
+            active = !state.trim().is_empty() && !state.trim_start().starts_with('Z');
+            if !active {
+                break;
+            }
+            thread::sleep(Duration::from_millis(20));
+        }
+        if active {
+            // Avoid leaving a test-owned orphan if the regression recurs.
+            unsafe { libc::kill(pid, libc::SIGKILL); }
+        }
+        assert!(!active, "bounded command leaked a background descendant");
     }
 
     struct Fixture {
