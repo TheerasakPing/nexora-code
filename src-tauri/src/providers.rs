@@ -2884,6 +2884,13 @@ async fn run_process_with_tools(
     let mut stopped = false;
     let mut input_open = true;
     let mut deadline = tokio::time::Instant::now() + Duration::from_secs(90);
+    // A provider can exit while a detached helper still holds a copy of its
+    // stdout pipe. stdout.read() then never gets EOF and a session looks
+    // permanently busy. Inspect the owned leader's status on a bounded timer,
+    // allowing already-buffered final JSON frames a short time to drain.
+    let mut exit_probe = tokio::time::interval(Duration::from_millis(200));
+    exit_probe.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut leader_exited_at: Option<tokio::time::Instant> = None;
     let result=async {
         write_json(&mut stdin,&protocol.initial()).await?;
         if protocol.config.provider == "antigravity" {
@@ -2891,6 +2898,15 @@ async fn run_process_with_tools(
         }
         loop {
             tokio::select! {
+                _=exit_probe.tick()=>{
+                    if child.try_wait().map_err(|e| format!("Agent process inspection failed: {e}"))?.is_some() {
+                        let since = leader_exited_at.get_or_insert_with(tokio::time::Instant::now);
+                        if since.elapsed() >= Duration::from_secs(1) {
+                            if stopped { break Ok(()); }
+                            break Err("Agent process exited while a background child kept its output stream open; stopping the owned process group".into());
+                        }
+                    }
+                },
                 action=input.recv(),if input_open && !stopped=>{
                     match action {
                         Some(RunInput::Goal{request,reply})=>{let step=protocol.goal_control(request,reply);if apply_step(&mut protocol,step,&sink,&mut stdin,&mut jobs,&mut queued).await? {return Ok(());}},
@@ -4222,6 +4238,67 @@ mod tests {
             .unwrap()
             .contains(&group.0.unwrap()));
         drop(group);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn exited_provider_with_inherited_stdout_does_not_hang_and_reaps_descendant() {
+        let _serial = concurrent_process_tests::process_test_lock().lock().await;
+        let root = std::env::temp_dir().join(format!(
+            "nexora-provider-exit-{}",
+            uuid::Uuid::new_v4()
+        ));
+        std::fs::create_dir(&root).unwrap();
+        let pid_path = root.join("descendant.pid");
+        // Child inherits stdout/stderr from the provider, keeping the IPC
+        // pipes open after its parent exits successfully. No real CLI, API
+        // token, network request or user project is involved.
+        let mut command = Command::new("sh");
+        command
+            .arg("-c")
+            .arg("sleep 30 & echo $! > \"$1\"")
+            .arg("nexora-test")
+            .arg(&pid_path);
+        let (_sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+        let sink: Sink = Arc::new(|_| {});
+        let started = tokio::time::Instant::now();
+        let outcome = tokio::time::timeout(
+            Duration::from_secs(5),
+            run_process(config("kimi"), sink, receiver, command, Vec::new()),
+        )
+        .await
+        .expect("provider cleanup exceeded five seconds")
+        .expect_err("unexpected successful provider protocol");
+        assert!(
+            outcome.contains("background child kept its output stream open"),
+            "unexpected error: {outcome}"
+        );
+        assert!(started.elapsed() < Duration::from_secs(5));
+        let descendant: i32 = std::fs::read_to_string(&pid_path)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        assert!(descendant > 1);
+        let mut active = true;
+        for _ in 0..60 {
+            let state = std::process::Command::new("ps")
+                .args(["-o", "state=", "-p", &descendant.to_string()])
+                .output()
+                .unwrap();
+            let state = String::from_utf8_lossy(&state.stdout);
+            active = !state.trim().is_empty() && !state.trim_start().starts_with('Z');
+            if !active {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        if active {
+            // Do not leak the test-owned orphan on failure.
+            unsafe { libc::kill(descendant, libc::SIGKILL); }
+        }
+        assert!(!active, "exited provider leaked an active descendant");
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     /// Explicitly opt in: this runs two small billable/subscription requests.
