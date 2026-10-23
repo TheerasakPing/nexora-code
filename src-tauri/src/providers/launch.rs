@@ -544,16 +544,26 @@ mod tests {
         // The maximum permitted config size must be accepted, while
         // exactly one more byte must be rejected (including if the file
         // changed size after its handle metadata was fetched).
-        let exact = format!("prefix=/safe\n{}", "#".repeat(
-            MAX_NPMRC_BYTES as usize - "prefix=/safe\n".len()
-        ));
+        // An OS-absolute temp directory works on both Windows (drive
+        // prefix) and Unix. A POSIX-only /safe path is *not* absolute
+        // under Windows Path::is_absolute().
+        let safe_prefix = f.0.join("safe-npm-prefix");
+        assert!(safe_prefix.is_absolute());
+        let prefix_line = format!("prefix={}\n", safe_prefix.display());
+        assert!(prefix_line.len() < MAX_NPMRC_BYTES as usize);
+        let exact = format!(
+            "{}{}",
+            prefix_line,
+            "#".repeat(MAX_NPMRC_BYTES as usize - prefix_line.len())
+        );
         assert_eq!(exact.len(), MAX_NPMRC_BYTES as usize);
         f.file("home/.npmrc", &exact);
         assert_eq!(read_bounded_npmrc(&home).as_deref(), Some(exact.as_str()));
         let dirs = vec![f.0.join("no-tools")];
         assert_eq!(
             npm_global_bin(false, &|_| None, Some(&home), &dirs),
-            Some(PathBuf::from("/safe/bin"))
+            Some(safe_prefix.join("bin")),
+            "an absolute npm prefix is accepted on the host OS"
         );
         f.file("home/.npmrc", &"x".repeat(MAX_NPMRC_BYTES as usize + 1));
         assert!(read_bounded_npmrc(&home).is_none(), "oversize config must be skipped");
