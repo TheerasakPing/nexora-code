@@ -235,6 +235,38 @@ pub struct VerifiedOperatorConsent {
     _private: (),
 }
 
+/// Only the native desktop dialog may mint production discovery consent.
+/// The renderer cannot pass/deserialize this token or approve itself.
+/// This is one confirmation for read-only catalog discovery of ONE persisted,
+/// snapshot-bound MCP configuration (never a tool/resource execution grant).
+pub(crate) async fn confirm_catalog_inspection(
+    app: tauri::AppHandle,
+    server_name: String,
+    transport_description: String,
+    config_fingerprint: String,
+) -> Result<VerifiedOperatorConsent, String> {
+    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+    let approved = tokio::task::spawn_blocking(move || {
+        app.dialog()
+            .message(format!(
+                "Allow Nexora Code to connect for READ-ONLY MCP discovery?\n\nServer: {server_name}\nTransport: {transport_description}\nConfiguration SHA-256: {config_fingerprint}\n\nOnly tools/list, resources/list and prompts/list may be requested. No tools will run. Connections may expose your computer IP to the server.\n\nContinue?"
+            ))
+            .title("Nexora Code — Approve MCP Catalog Inspection")
+            .kind(MessageDialogKind::Warning)
+            .buttons(MessageDialogButtons::OkCancelCustom(
+                "Approve Once".into(), "Deny".into(),
+            ))
+            .blocking_show()
+    })
+    .await
+    .map_err(|_| "Native MCP approval dialog unavailable".to_owned())?;
+    if approved {
+        Ok(VerifiedOperatorConsent { _private: () })
+    } else {
+        Err("MCP catalog inspection was not approved by the operator".into())
+    }
+}
+
 // Only deterministic native test fixtures can issue simulated operator
 // consent; production has no renderer/agent-accessible constructor.
 #[cfg(test)]

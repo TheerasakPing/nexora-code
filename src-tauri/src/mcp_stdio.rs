@@ -82,6 +82,15 @@ impl ReadOnlyStdio {
         self.read_bounded_frame().await
     }
 
+    /// Legacy MCP handshake requires the initialized notification before
+    /// requesting any catalogs. Never allow arbitrary notifications here.
+    pub async fn notify_initialized(&mut self) -> Result<(), &'static str> {
+        let data = b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n";
+        time::timeout(Duration::from_secs(5), self.stdin.write_all(data))
+            .await.map_err(|_| "MCP initialized notification timed out")?
+            .map_err(|_| "MCP initialized notification failed")
+    }
+
     async fn read_bounded_frame(&mut self) -> Result<Vec<u8>, &'static str> {
         time::timeout(Duration::from_secs(5), async {
             let mut result = Vec::new();

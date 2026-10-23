@@ -6,6 +6,18 @@ import {
   asDraft, parseMcpDraft, transportSummary, type McpDraft, type McpServer,
 } from './mcp-center-model';
 
+interface McpCatalogItem {
+  kind: 'tool' | 'resource' | 'prompt';
+  name: string;
+  label: string;
+}
+interface McpCatalogSnapshot {
+  server: string;
+  protocol: string;
+  status: 'inspected_disconnect';
+  items: McpCatalogItem[];
+}
+
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
@@ -20,10 +32,11 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     '<div class="mcp-center-head"><h3>Nexora MCP Registry</h3>',
     '<div><button type="button" class="secondary-button" data-nexora-mcp="refresh">Refresh</button>',
     '<button type="button" class="secondary-button" data-nexora-mcp="new">Add server</button></div></div>',
-    '<p class="integration-note">Saved configuration only. Turning a server on does <strong>not</strong> start it,',
-    'connect to it, or give any agent permission to use its tools. MCP execution is not available yet.</p>',
+    '<p class="integration-note">Enabling a server only saves configuration. Inspect catalogs requires a separate native approval each time.',
+    ' Tool execution and resource reads remain unavailable. No persistent connection is kept.</p>',
     '<p class="mcp-center-status" role="status" aria-live="polite"></p>',
     '<div class="mcp-center-list" data-nexora-mcp-list></div>',
+    '<section class="mcp-center-inspector" data-nexora-mcp-inspector hidden aria-live="polite"></section>',
     '<form class="mcp-center-form" data-nexora-mcp-form hidden>',
     '<h4 data-nexora-mcp-form-title>Add MCP server configuration</h4>',
     '<label for="nexora-mcp-name">Name</label>',
@@ -53,6 +66,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   const root = host.querySelector<HTMLElement>('.mcp-center')!;
   const list = root.querySelector<HTMLElement>('[data-nexora-mcp-list]')!;
   const status = root.querySelector<HTMLElement>('.mcp-center-status')!;
+  const inspectorPanel = root.querySelector<HTMLElement>('[data-nexora-mcp-inspector]')!;
   const form = root.querySelector<HTMLFormElement>('[data-nexora-mcp-form]')!;
   const kind = form.querySelector<HTMLSelectElement>('[name="kind"]')!;
   const field = <T extends HTMLInputElement | HTMLTextAreaElement>(name: string): T =>
@@ -78,7 +92,12 @@ export function mountMcpCenter(host: HTMLElement): () => void {
         '<button type="button" class="secondary-button" data-nexora-mcp="toggle" data-name="' + name +
         '">' + action + '</button>' +
         '<button type="button" class="secondary-button" data-nexora-mcp="edit" data-name="' + name +
-        '">Edit</button><button type="button" class="secondary-button" data-nexora-mcp="remove" data-name="' +
+        '">Edit</button>' +
+        '<button type="button" class="secondary-button" data-nexora-mcp="inspect" data-name="' + name +
+        '"' + (!server.enabled || server.credentialRef ? ' disabled' : '') + '>Inspect catalogs</button>' +
+        (server.transport.kind === 'stdio' ? '<button type="button" class="secondary-button" data-nexora-mcp="inspect-legacy" data-name="' + name +
+        '"' + (!server.enabled || server.credentialRef ? ' disabled' : '') + '>Inspect legacy</button>' : '') +
+        '<button type="button" class="secondary-button" data-nexora-mcp="remove" data-name="' +
         name + '">Remove</button></div></div>';
     }).join('') : '<p class="integration-note">No Nexora MCP servers configured. Codex-managed servers above are separate.</p>';
   }
@@ -118,6 +137,8 @@ export function mountMcpCenter(host: HTMLElement): () => void {
       if (!alive()) return;
       records = next;
       render();
+      inspectorPanel.hidden = true;
+      inspectorPanel.replaceChildren();
       form.hidden = true;
       editingName = null;
       showStatus(onSuccess);
@@ -126,6 +147,55 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     } finally {
       loading = false;
       if (alive()) root.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = false; });
+    }
+  }
+
+  async function inspect(server: McpServer, protocolVersion: string): Promise<void> {
+    if (loading || preview || !server.enabled || server.credentialRef) return;
+    loading = true;
+    root.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = true; });
+    inspectorPanel.hidden = true;
+    inspectorPanel.replaceChildren();
+    showStatus('Requesting one-time native approval for ' + server.name + '…');
+    try {
+      const result = await call<McpCatalogSnapshot>('mcp_inspect_catalog', {
+        serverName: server.name,
+        protocolVersion,
+      });
+      if (!alive()) return;
+      if (result.server !== server.name || result.status !== 'inspected_disconnect' ||
+          !Array.isArray(result.items) || result.items.length > 768) {
+        throw new Error('Invalid MCP inspector response');
+      }
+      // No remote-controlled HTML or scripts; all text is escaped and shown
+      // as inert labels only. The catalog never creates executable buttons.
+      const grouped = (['tool', 'resource', 'prompt'] as const).map(kind => {
+        const entries = result.items.filter(item => item.kind === kind);
+        return '<div><strong>' + ({ tool: 'Tools', resource: 'Resources', prompt: 'Prompts' })[kind] +
+          ' (' + entries.length + ')</strong>' +
+          (entries.length ? '<ul>' + entries.map(item => '<li><span>' + escape(item.label) +
+            '</span> <small>' + escape(item.name) + '</small></li>').join('') + '</ul>'
+            : '<p class="integration-note">None advertised</p>') + '</div>';
+      });
+      inspectorPanel.innerHTML = '<h4>Read-only catalog — ' + escape(server.name) +
+        ' <small>' + escape(result.protocol) + '</small></h4>' +
+        '<p class="integration-note">Inspection ended; server disconnected. No tools were executed.</p>' +
+        grouped.join('');
+      inspectorPanel.hidden = false;
+      showStatus('Inspected ' + result.items.length + ' catalog item(s); connection closed.');
+    } catch (error) {
+      if (alive()) showStatus('MCP inspection denied or failed: ' + errorMessage(error), true);
+    } finally {
+      loading = false;
+      if (alive()) {
+        render();
+        root.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
+          button.disabled = preview || button.disabled && (button.dataset.nexoraMcp === 'inspect' ||
+            button.dataset.nexoraMcp === 'inspect-legacy') &&
+            !!records.find(item => item.name === button.dataset.name &&
+              (!item.enabled || item.credentialRef));
+        });
+      }
     }
   }
 
@@ -155,6 +225,10 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     if (action === 'cancel') { form.hidden = true; editingName = null; return; }
     const server = records.find(record => record.name === button.dataset.name);
     if (!server) return;
+    if (action === 'inspect' || action === 'inspect-legacy') {
+      void inspect(server, action === 'inspect-legacy' ? '2025-11-25' : '2026-07-28');
+      return;
+    }
     if (action === 'edit') { edit(server); return; }
     if (action === 'toggle') {
       void mutate(() => call<McpServer[]>('mcp_registry_set_enabled', {

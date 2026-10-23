@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>MCP Inspector Browser Fixture</title></head>
+<body><div id="mcp-host"></div>
+<script>
+window.__mcpCalls = [];
+window.__mcpInjected = false;
+window.__TAURI_INTERNALS__ = {
+  invoke: async (command, args = {}) => {
+    window.__mcpCalls.push({ command, args });
+    if (command === 'mcp_registry_list') return [
+      { name: 'approved_mock', description: '<img src=x onerror=window.__mcpInjected=true>',
+        enabled: true, transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
+      { name: 'unapproved_mock', description: 'not approved', enabled: false,
+        transport: {kind:'stdio', command:'/usr/bin/true', args:[]} },
+      { name: 'credential_mock', description: 'vault protected', enabled: true,
+        credentialRef:'vault:v1:credential_mock:123e4567-e89b-42d3-a456-426614174000',
+        transport: {kind:'streamable_http',url:'https://example.test/mcp'} },
+    ];
+    if (command === 'mcp_inspect_catalog') return {
+      server: args.serverName, protocol: args.protocolVersion, status:'inspected_disconnect',
+      items:[
+        {kind:'tool',name:'<img src=x onerror=window.__mcpInjected=true>',label:'Safe lookup'},
+        {kind:'resource',name:'resource://mock/1',label:'Test Resource'},
+        {kind:'prompt',name:'safe',label:'<svg onload=window.__mcpInjected=true>'}
+      ]
+    };
+    throw new Error('Unexpected IPC in fixture: ' + command);
+  }
+};
+</script>
+<script type="module">
+import { mountMcpCenter } from '/src/mcp-center.ts';
+mountMcpCenter(document.querySelector('#mcp-host'));
+</script>
+</body>
+</html>
