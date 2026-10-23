@@ -34,6 +34,7 @@ mod jev;
 mod jev_decisions;
 mod local_servers;
 mod mcp_registry;
+mod mcp_protocol;
 pub mod mcp_security;
 mod mcp_permissions;
 mod message_queue;
