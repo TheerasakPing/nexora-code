@@ -331,9 +331,9 @@ fn read_bounded_npmrc(home: &Path) -> Option<String> {
         }
         let mut bytes = Vec::with_capacity(meta.len() as usize);
         file.take(MAX_NPMRC_BYTES + 1).read_to_end(&mut bytes).ok()?;
-        return (bytes.len() as u64 <= MAX_NPMRC_BYTES)
+        (bytes.len() as u64 <= MAX_NPMRC_BYTES)
             .then(|| String::from_utf8(bytes).ok())
-            .flatten();
+            .flatten()
     }
     #[cfg(not(windows))]
     {
@@ -540,6 +540,20 @@ mod tests {
         assert_eq!(
             npm_global_bin(false, &env, Some(&home), &dirs),
             Some(f.0.join("env-prefix/bin"))
+        );
+        // The maximum permitted config size must be accepted, while
+        // exactly one more byte must be rejected (including if the file
+        // changed size after its handle metadata was fetched).
+        let exact = format!("prefix=/safe\n{}", "#".repeat(
+            MAX_NPMRC_BYTES as usize - "prefix=/safe\n".len()
+        ));
+        assert_eq!(exact.len(), MAX_NPMRC_BYTES as usize);
+        f.file("home/.npmrc", &exact);
+        assert_eq!(read_bounded_npmrc(&home).as_deref(), Some(exact.as_str()));
+        let dirs = vec![f.0.join("no-tools")];
+        assert_eq!(
+            npm_global_bin(false, &|_| None, Some(&home), &dirs),
+            Some(PathBuf::from("/safe/bin"))
         );
         f.file("home/.npmrc", &"x".repeat(MAX_NPMRC_BYTES as usize + 1));
         assert!(read_bounded_npmrc(&home).is_none(), "oversize config must be skipped");
