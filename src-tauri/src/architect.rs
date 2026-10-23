@@ -1,5 +1,14 @@
 //! Persistent, event-driven cross-harness delegation. Worker text stays in its own task.
 mod briefing;
+mod ownership;
+mod isolation;
+// Staged internal-only source; no public IPC or agent tool exposure.
+#[allow(dead_code)]
+mod provision;
+// Internal R3 recovery report only; NO public IPC or automatic retry/cleanup.
+#[allow(dead_code)]
+mod reconcile;
+mod preview;
 pub(crate) mod coordination;
 pub(crate) mod internal_turns;
 pub(crate) mod profiles;
@@ -452,6 +461,39 @@ pub async fn architect_get(
         load(&store, &session_id)
     }
 }
+/// Read-only Team Lead preview of *proposed* assignment waves.
+///
+/// No scheduling, permission grants, process execution or database writes.
+#[tauri::command]
+pub async fn architect_preview_schedule(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<serde_json::Value> {
+    let store = state.store.lock().map_err(|error| error.to_string())?;
+    let team = load(&store, &session_id)?.ok_or("Team is unavailable.")?;
+    serde_json::to_value(preview::build(&team)).map_err(|error| error.to_string())
+}
+
+/// Read-only audit of the *actual* registered Git checkouts used by Team workers.
+/// Git inspection occurs off the Tokio worker thread and after releasing the DB lock.
+#[tauri::command]
+pub async fn architect_audit_isolation(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<isolation::IsolationAudit> {
+    let store = state.store.clone();
+    tokio::task::spawn_blocking(move || {
+        let facts = {
+            let store = store.lock().map_err(|error| error.to_string())?;
+            let team = load(&store, &session_id)?.ok_or("Team is unavailable.")?;
+            isolation::collect(&store, &team)?
+        };
+        Ok(isolation::evaluate(facts))
+    })
+    .await
+    .map_err(|error| format!("Isolation audit failed to join: {error}"))?
+}
+
 #[tauri::command]
 pub async fn architect_configure(
     app: tauri::AppHandle,
@@ -1581,16 +1623,25 @@ fn next_action_state(
                         if other.session_id == team.session_id {
                             return false;
                         }
-                        let same_root = store
+                        let other_root = store
                             .session(&other.session_id)
-                            .ok()
-                            .and_then(|p| store.workspace_root(&p.project_id, Some(&p.id)).ok())
-                            .is_some_and(|other_root| other_root == root);
-                        same_root
-                            && other.workers.iter().any(|w| {
-                                (active(&w.status) || agents.contains_key(&w.session_id))
-                                    && conflicts(&team.workers[*i], w)
-                            })
+                            .and_then(|p| store.workspace_root(&p.project_id, Some(&p.id)));
+                        // Errors resolving another team's checkout are not evidence
+                        // of disjoint ownership. Fail closed for concurrent writers.
+                        match other_root {
+                            Ok(other_root) => other.workers.iter().any(|worker| {
+                                (active(&worker.status) || agents.contains_key(&worker.session_id))
+                                    && ownership::conflicts_between(
+                                        &root, &team.workers[*i], &other_root, worker,
+                                    )
+                            }),
+                            Err(_) => !team.workers[*i].read_only
+                                && other.workers.iter().any(|worker| {
+                                    !worker.read_only
+                                        && (active(&worker.status)
+                                            || agents.contains_key(&worker.session_id))
+                                }),
+                        }
                     })
             }) {
                 let worker = &mut team.workers[index];

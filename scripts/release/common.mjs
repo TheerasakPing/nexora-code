@@ -8,13 +8,13 @@ import { resolve } from 'node:path';
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 
 // One entry per published desktop build. `asset` is the stable file name on a
-// GitHub Release, so https://github.com/aicodeking/pandacode/releases/latest/download/<asset>
+// GitHub Release, so https://github.com/TheerasakPing/nexora-code/releases/latest/download/<asset>
 // always points at the newest build for that platform. `updater` is the signed file the
 // in-app updater installs (relative to the bundle directory), published as `updaterAsset`.
 export const targets = Object.freeze({
-  'darwin-aarch64': { platform: 'darwin', arch: 'arm64', triple: 'aarch64-apple-darwin', bundles: 'app,dmg', bundleDir: 'dmg', built: v => `PandaCode_${v}_aarch64.dmg`, asset: 'PandaCode-macOS-arm64.dmg', updater: () => 'macos/PandaCode.app.tar.gz', updaterAsset: 'PandaCode-macOS-arm64.app.tar.gz' },
-  'windows-x86_64': { platform: 'win32', arch: 'x64', triple: 'x86_64-pc-windows-msvc', bundles: 'nsis', bundleDir: 'nsis', built: v => `PandaCode_${v}_x64-setup.exe`, asset: 'PandaCode-Windows-x64-setup.exe', updater: v => `nsis/PandaCode_${v}_x64-setup.exe`, updaterAsset: 'PandaCode-Windows-x64-setup.exe' },
-  'linux-x86_64': { platform: 'linux', arch: 'x64', triple: 'x86_64-unknown-linux-gnu', bundles: 'appimage', bundleDir: 'appimage', built: v => `PandaCode_${v}_amd64.AppImage`, asset: 'PandaCode-Linux-x86_64.AppImage', updater: v => `appimage/PandaCode_${v}_amd64.AppImage`, updaterAsset: 'PandaCode-Linux-x86_64.AppImage' },
+  'darwin-aarch64': { platform: 'darwin', arch: 'arm64', triple: 'aarch64-apple-darwin', bundles: 'app,dmg', bundleDir: 'dmg', built: v => `Nexora Code_${v}_aarch64.dmg`, asset: 'NexoraCode-macOS-arm64.dmg', updater: () => 'macos/Nexora Code.app.tar.gz', updaterAsset: 'NexoraCode-macOS-arm64.app.tar.gz' },
+  'windows-x86_64': { platform: 'win32', arch: 'x64', triple: 'x86_64-pc-windows-msvc', bundles: 'nsis', bundleDir: 'nsis', built: v => `Nexora Code_${v}_x64-setup.exe`, asset: 'NexoraCode-Windows-x64-setup.exe', updater: v => `nsis/Nexora Code_${v}_x64-setup.exe`, updaterAsset: 'NexoraCode-Windows-x64-setup.exe' },
+  'linux-x86_64': { platform: 'linux', arch: 'x64', triple: 'x86_64-unknown-linux-gnu', bundles: 'appimage', bundleDir: 'appimage', built: v => `Nexora Code_${v}_amd64.AppImage`, asset: 'NexoraCode-Linux-x86_64.AppImage', updater: v => `appimage/Nexora Code_${v}_amd64.AppImage`, updaterAsset: 'NexoraCode-Linux-x86_64.AppImage' },
 });
 
 export function targetConfig(value) {
@@ -80,7 +80,7 @@ export function releaseDirectory(releaseVersion) {
  * its signature. `signatures` maps release targets to the contents of their `.sig` files.
  * Files are on the repository that publishes the release (GITHUB_REPOSITORY in Actions),
  * so a fork's release points at its own assets. */
-export function updaterManifest(releaseVersion, notes, signatures, pubDate = new Date().toISOString(), repository = process.env.GITHUB_REPOSITORY || 'aicodeking/pandacode') {
+export function updaterManifest(releaseVersion, notes, signatures, pubDate = new Date().toISOString(), repository = process.env.GITHUB_REPOSITORY || 'TheerasakPing/nexora-code') {
   const v = version(releaseVersion);
   if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(repository)) throw new Error(`Not a GitHub repository: ${repository}`);
   const platforms = {};

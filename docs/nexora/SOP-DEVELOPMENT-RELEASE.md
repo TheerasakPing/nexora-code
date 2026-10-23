@@ -43,6 +43,77 @@ SOP ครอบคลุมงานตั้งแต่รับ Requirement 
 
 **One-writer rule:** แต่ละ Task/Agent ต้องใช้ Branch และ Worktree แยกกัน; Shared Contracts เช่น Tauri IPC, Database Schema, Event IDs และ Tool Policy ต้องให้ Integration Lead ประสานลำดับการเปลี่ยน
 
+## 3.1 กฎบังคับ NC-TEAM-001 — ทุกงานต้องมี Checklist Planner และ Team Lead Review
+
+**MUST / ทุกคำสั่งให้ทำงาน:** ไม่ว่างานเล็กหรือใหญ่, Code, Documentation,
+Tests, Bugfix หรือคำสั่งว่า "ทำต่อ" ก่อนเริ่มลงมือแก้ไขไฟล์ต้องสร้าง
+**Task Checklist Planner ใหม่หนึ่งไฟล์ต่อหนึ่งคำสั่งงาน** ที่
+docs/nexora/tasks/YYYY-MM-DD-task-slug.md โดยใช้
+[แม่แบบ Checklist Planner](templates/TASK-CHECKLIST.md) งานเล็กให้ทำแผนสั้น
+ได้ แต่ห้ามข้ามขั้นตอน ห้ามเอา Planner เก่ามาเปลี่ยนสถานะหลอกว่าเป็นงานใหม่
+
+**Team Lead / Integration Lead เป็นผู้รับผิดชอบการส่งมอบสุดท้าย** และต้อง
+ทำตามลำดับต่อไปนี้:
+
+1. **Intake:** รับโจทย์, ยืนยัน Scope/Expected Outputs, Priority, Risk,
+   OS, Dependencies, Acceptance Criteria และ Approval Boundaries ลง Planner
+2. **Decompose:** แบ่งเป็นงานย่อย ID ชัดเจน, ระบุ Input/Output/DoD, กำหนด
+   Critical Path และเลือก Worker ตามความถนัด (Rust, MCP, UI, Tests,
+   Security, Docs) โดย Team Lead เป็นคนจัดสรรงานและตรวจความพร้อม
+3. **Assign:** จัด Agent ตัวจริงให้แต่ละงาน พร้อมบันทึก Worker ID,
+   Worktree/Branch, ไฟล์ที่รับผิดชอบ, Dependencies, Test Gate และ Deadline
+   ถ้ามี ห้าม Agent สองตัวแก้ Shared Files พร้อมกันโดยไม่มี Lead ประสาน
+4. **Implement & Handoff:** Workers ทำงานเฉพาะขอบเขต ส่ง Diff/Commit,
+   Test Logs, ความเสี่ยง, Known Issues และ Checklist สถานะจริงให้ Lead
+   Worker ไม่มีสิทธิ์ประกาศว่าผ่าน Review หรือส่งมอบแทน Lead
+5. **Lead Review:** หัวหน้าทีมต้องตรวจ Diff จริงของ **ทุกงานย่อย**
+   รวมถึง Functional Logic, Security, Side Effects, Cleanup, Compatibility,
+   Tests, Ignored Tests, CI และ Native E2E; หากพบข้อผิดพลาดให้ส่งกลับแก้,
+   ตรวจซ้ำก่อนรับงาน ห้ามเชื่อคำว่า "Done" โดยไม่มีหลักฐาน
+6. **GO/NO-GO & Delivery:** บันทึก Identity ของผู้ตรวจ, Test SHA, OS,
+   PASS/FAIL/IGNORED, CI URL, Pending Gates, Final Decision และอนุมัติ
+   GO ก่อนแจ้งส่งมอบ หรือ NO-GO พร้อมงานที่ค้าง; Merge main/Deploy/Sign/
+   Release/ติดตั้ง/สั่งรัน External MCP ต้องได้รับสิทธิ์แยกตาม SOP
+
+**กรณีไม่มีเครื่องมือสร้างหรือมอบหมาย Agent จริง:** ใช้
+TEAM_LEAD_SERIAL เป็น Worker ใน Planner, ทำงานตามลำดับ, รีวิวจริงด้วยตนเอง,
+และรายงานตรงไปตรงมาว่าไม่มี Independent Reviewer อย่าประดิษฐ์ Agent หรือ
+ปลอมผลรีวิว ถ้าต้องการ Reviewer อิสระเป็น Release Gate ให้ใช้ NO-GO/BLOCKED
+จนกว่ามีผู้ตรวจจริง
+
+**Definition of Done:** งานทุกชิ้นมี Planner, Decomposition, Assignment,
+Worker Handoff, Team Lead Review, Evidence และ GO/NO-GO ก่อนส่งมอบ
+PR ต้องลิงก์ Planner และบันทึกผลรีวิวของ Lead การเขียนกฎไม่ได้หมายความว่า
+ระบบ R3 Multi-Agent Scheduler พัฒนาเสร็จแล้ว
+
+## 3.2 GitHub PR gate — enforcing NC-TEAM-001
+
+- After this workflow is merged into the base branch, GitHub Actions can
+  check new Pull Requests using
+  [Nexora Task Planner Gate](../../.github/workflows/nexora-task-governance.yml).
+- A PR must add a **new** Task Checklist Markdown file with an actual request,
+  Team Lead, work assignment, acceptance gate, checkboxes and a review status.
+  Reusing an old planner is rejected; merely updating a past planner does not
+  satisfy one new checklist per new user request.
+- The workflow uses **pull_request_target**, read-only contents permission and
+  executes the **trusted base SHA's** checker. PR contents are inspected only
+  as Git data and are never executed as untrusted source code.
+- Older PR #1, #2 and #3 were opened before NC-TEAM-001. They are grandfathered
+  from this **new planner file** formatting check only; functional tests,
+  security checks and real reviewer approval still apply.
+- Automated checks **cannot prove** a claimed Agent Worker really ran, that
+  an independent person reviewed the diff, or that CI/native E2E passed.
+  Team Lead must verify reality and sign the handoff before delivery.
+- Project Owner/Integration Lead must configure the new job as a required
+  Branch Protection check **after** the workflow is merged and validated.
+  Missing required CI is not equivalent to PASS.
+The existing PR policy also requires the PR body to link **all** newly
+added task planners and record the actual Team Lead, handoff, and
+GO for PR submission (separate from GO for protected branch merge).
+The structural rules in scripts/nexora/governance-pr-gate.mjs remain
+authoritative; the secure gate calls them against PR content **as data**.
+
+
 ## 4. Repository / Branch / Worktree Policy
 
 Repository เป้าหมาย: `TheerasakPing/nexora-code` · Upstream: `aicodeking/pandacode` · Source ตั้งต้น PandaCode `v0.3.16`, commit `30f9c823e3c38f472f89e8f8405575ecfe7173ee`

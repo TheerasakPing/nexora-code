@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { version, required, targetConfig, targets, hostTarget, releaseDirectory, cargoLockVersion } from './common.mjs';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { version, required, targetConfig, targets, hostTarget, releaseDirectory, cargoLockVersion, root } from './common.mjs';
 
 test('release versions cannot become paths, prereleases, or shell commands', () => {
   for (const input of ['../secret', '1.0.0;echo x', 'v1.0.0', '01.0.0', '1.0.0-beta', undefined]) assert.throws(() => version(input));
@@ -17,6 +19,22 @@ test('release asset names are stable across versions', () => {
   const assets = Object.values(targets).map(config => config.asset);
   assert.equal(new Set(assets).size, 3);
   for (const asset of assets) assert.doesNotMatch(asset, /\d+\.\d+\.\d+/);
+});
+
+test('native bundle filenames and stable Nexora Code asset names agree with Tauri productName', () => {
+  const tauri = JSON.parse(readFileSync(resolve(root, 'src-tauri/tauri.conf.json'), 'utf8'));
+  assert.equal(tauri.productName, 'Nexora Code');
+  assert.equal(tauri.identifier, 'com.theerasakping.nexoracode');
+  const macos = JSON.parse(readFileSync(resolve(root, 'src-tauri/tauri.macos.conf.json'), 'utf8'));
+  assert.equal(macos.app.windows[0].title, tauri.productName,
+    'macOS window title must match the branded bundle productName');
+  for (const config of Object.values(targets)) {
+    assert.ok(config.built('1.2.3').startsWith(tauri.productName + '_'));
+    assert.match(config.asset, /^NexoraCode-/);
+    assert.match(config.updaterAsset, /^NexoraCode-/);
+  }
+  assert.equal(targets['darwin-aarch64'].updater('1.2.3'),
+    'macos/' + tauri.productName + '.app.tar.gz');
 });
 
 test('the host maps to its native target', () => {
@@ -45,13 +63,13 @@ test('the updater manifest points every signed platform at its release asset', a
   assert.deepEqual(manifest, {
     version: '0.3.1', notes: 'Notes', pub_date: '2026-10-18T00:00:00Z',
     platforms: {
-      'darwin-aarch64': { signature: 'sig-mac', url: 'https://github.com/aicodeking/pandacode/releases/download/v0.3.1/PandaCode-macOS-arm64.app.tar.gz' },
-      'linux-x86_64': { signature: 'sig-linux', url: 'https://github.com/aicodeking/pandacode/releases/download/v0.3.1/PandaCode-Linux-x86_64.AppImage' },
+      'darwin-aarch64': { signature: 'sig-mac', url: 'https://github.com/aicodeking/pandacode/releases/download/v0.3.1/NexoraCode-macOS-arm64.app.tar.gz' },
+      'linux-x86_64': { signature: 'sig-linux', url: 'https://github.com/aicodeking/pandacode/releases/download/v0.3.1/NexoraCode-Linux-x86_64.AppImage' },
     },
   });
   assert.throws(() => updaterManifest('0.3.1', '', {}), /No signed updater files/);
   assert.throws(() => updaterManifest('0.3.1', '', { 'windows-x86_64': ' ' }), /Missing updater signature/);
   const fork = updaterManifest('0.3.1', '', { 'windows-x86_64': 'sig-win' }, '2026-10-18T00:00:00Z', 'someone/pandacode');
-  assert.equal(fork.platforms['windows-x86_64'].url, 'https://github.com/someone/pandacode/releases/download/v0.3.1/PandaCode-Windows-x64-setup.exe');
+  assert.equal(fork.platforms['windows-x86_64'].url, 'https://github.com/someone/pandacode/releases/download/v0.3.1/NexoraCode-Windows-x64-setup.exe');
   assert.throws(() => updaterManifest('0.3.1', '', { 'windows-x86_64': 'sig' }, undefined, 'evil.example/x?y'), /Not a GitHub repository/);
 });

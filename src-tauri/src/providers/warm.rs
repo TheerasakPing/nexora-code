@@ -63,9 +63,43 @@ pub(super) fn take(session_id: &str, key: &str) -> Option<Spare> {
     (alive && spare.key == key && spare.born.elapsed() < IDLE).then_some(spare)
 }
 
-/// Drop a task's warm agent (its settings changed, or it was deleted).
+/// Invalidate a task's current launch generation and discard any cached agent.
+/// Otherwise an in-flight prewarm can finish *after* discard (for example,
+/// after task deletion) and silently reinsert a process for the removed task.
+/// Lock order throughout this module: LAUNCHES, then SPARES.
 pub fn discard(session_id: &str) {
+    let mut launches = LAUNCHES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let generation = launches.entry(session_id.to_owned()).or_default();
+    *generation = generation.saturating_add(1);
     spares().remove(session_id);
+}
+
+/// Atomically compare the launch generation and cache a prewarmed agent.
+/// Checking the generation outside the SPARES insert would allow discard
+/// to race with the insertion and leave an unowned child running.
+fn cache(session_id: &str, launch: u64, spare: Spare) -> bool {
+    let launches = LAUNCHES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if launches.get(session_id).copied().unwrap_or(0) != launch {
+        return false; // Drop the child and process group: it belongs to a stale generation.
+    }
+    let mut spares = spares();
+    spares.insert(session_id.to_owned(), spare);
+    // Keep only the newest few; evicted spares drop their owned child processes.
+    while spares.len() > LIMIT {
+        let Some(oldest) = spares
+            .iter()
+            .min_by_key(|(_, item)| item.born)
+            .map(|(id, _)| id.clone())
+        else {
+            break;
+        };
+        spares.remove(&oldest);
+    }
+    true
 }
 
 /// Start the next turn's agent for a task. `tools` is the catalog its last turn used; the
@@ -104,19 +138,8 @@ pub async fn prewarm(mut config: RunConfig, tools: Vec<Value>, approval_tools: H
     let group = ProcessGroup::register(child.id());
     let born = std::time::Instant::now();
     let session_id = config.session_id.clone();
-    {
-        let mut spares = spares();
-        // The next turn already started (a team review, a queued message): this spare would
-        // carry an outdated conversation. Dropping it kills its process.
-        if epoch(&session_id) != launch {
-            return Ok(());
-        }
-        spares.insert(session_id.clone(), Spare { key, child, group, server, born });
-        // Keep only the newest few; dropping a spare kills its process.
-        while spares.len() > LIMIT {
-            let Some(oldest) = spares.iter().min_by_key(|(_, spare)| spare.born).map(|(id, _)| id.clone()) else { break };
-            spares.remove(&oldest);
-        }
+    if !cache(&session_id, launch, Spare { key, child, group, server, born }) {
+        return Ok(());
     }
     tokio::spawn(async move {
         tokio::time::sleep(IDLE).await;
@@ -128,7 +151,9 @@ pub async fn prewarm(mut config: RunConfig, tools: Vec<Value>, approval_tools: H
     Ok(())
 }
 
-#[cfg(test)]
+// Only Unix tests call this helper; defining it on Windows triggers
+// dead_code under all-target Clippy with -D warnings.
+#[cfg(all(test, unix))]
 pub(super) fn waiting(session_id: &str) -> bool {
     spares().contains_key(session_id)
 }
@@ -158,6 +183,44 @@ mod tests {
         assert!(supported(&base));
         assert!(!supported(&crate::providers::tests::config("glm")));
         assert!(!supported(&RunConfig { skill: Some(("review".into(), PathBuf::from("/skills/review"))), ..base.clone() }));
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn discard_fences_inflight_prewarms_and_clears_cached_children() {
+        let session_id = format!("discard-race-{}", uuid::Uuid::new_v4());
+        let old_generation = epoch(&session_id);
+        discard(&session_id);
+        assert_ne!(epoch(&session_id), old_generation);
+        let make_spare = || {
+            let mut command = Command::new("sleep");
+            command.arg("30").kill_on_drop(true);
+            let child = command.spawn().unwrap();
+            Spare {
+                key: "same-launch".into(),
+                child,
+                group: ProcessGroup::register(None),
+                server: None,
+                born: std::time::Instant::now(),
+            }
+        };
+        assert!(!cache(&session_id, old_generation, make_spare()));
+        assert!(
+            !waiting(&session_id),
+            "late child must not be cached after discard"
+        );
+
+        let current_generation = epoch(&session_id);
+        assert!(cache(&session_id, current_generation, make_spare()));
+        assert!(waiting(&session_id));
+        discard(&session_id);
+        assert!(
+            !waiting(&session_id),
+            "discard must clear an existing cached process"
+        );
+        assert_ne!(epoch(&session_id), current_generation);
+        assert!(!cache(&session_id, current_generation, make_spare()));
+        assert!(!waiting(&session_id));
     }
 
     #[cfg(unix)]

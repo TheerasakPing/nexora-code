@@ -161,3 +161,37 @@ html[data-theme="dark"] .architect-worker-glyph[data-glyph=running] { color: var
 /* Pausing or stopping is the user's choice: say so quietly, not in red. */
 .architect-panel-error.is-notice { color: var(--muted); }
 .architect-worker-error { display: block; color: var(--danger); white-space: normal; }
+
+/* Opt-in Schedule Preview: a read-only forecast, never an action surface. */
+.architect-schedule-preview { border: 1px solid var(--border); border-radius: 8px; margin: 8px 4px 12px; padding: 8px 10px; font-size: .77rem; line-height: 1.55; }
+.architect-schedule-preview > summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.architect-schedule-preview[hidden] { display: none; }
+.architect-preview-content { margin-top: 8px; overflow-wrap: anywhere; }
+.architect-preview-content p { margin: 6px 0; }
+.architect-preview-lede, .architect-preview-note { color: var(--muted); font-size: .7rem; }
+.architect-preview-stale { color: var(--accent-ink); font-weight: 550; }
+.architect-preview-waves { margin: 8px 0; padding-left: 23px; }
+.architect-preview-waves li { padding: 5px 0; border-bottom: 1px solid var(--border); }
+.architect-preview-waves li strong { display: block; color: var(--text); }
+.architect-preview-waves li span { display: block; overflow-wrap: anywhere; }
+.architect-preview-result ul { margin: 5px 0; padding-left: 18px; }
+.architect-preview-result li { margin: 5px 0; }
+.architect-preview-result li small { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.architect-preview-refresh { margin-top: 8px; font-size: .72rem; padding: 6px 10px; min-height: 32px; }
+.architect-schedule-preview:focus-within { border-color: var(--accent); }
+@media (prefers-contrast: more) { .architect-schedule-preview { border-width: 2px; } }
+
+/* R3 checkout isolation is an explicit audit, not an execution/permission control. */
+.architect-isolation-audit { border: 1px solid var(--border); border-radius: 8px; margin: 8px 4px 12px; padding: 8px 10px; font-size: .77rem; line-height: 1.55; }
+.architect-isolation-audit[hidden] { display: none; }
+.architect-isolation-audit > summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.architect-audit-content { margin-top: 8px; overflow-wrap: anywhere; }
+.architect-isolation-workers { margin: 8px 0; padding-left: 19px; }
+.architect-isolation-workers li { margin: 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+.architect-isolation-workers li strong { display: block; color: var(--text); }
+.architect-isolation-workers li span, .architect-isolation-workers li small, .architect-isolation-workers li code { display: block; font-size: .72rem; overflow-wrap: anywhere; }
+.architect-isolation-workers li small { color: var(--muted); }
+.architect-isolation-workers li code { user-select: text; font-size: .68rem; }
+.architect-audit-refresh { margin-top: 8px; min-height: 32px; font-size: .72rem; padding: 6px 10px; }
+.architect-isolation-audit:focus-within { border-color: var(--accent); }
+@media (prefers-contrast: more) { .architect-isolation-audit { border-width: 2px; } }

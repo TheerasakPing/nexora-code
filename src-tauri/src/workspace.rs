@@ -313,6 +313,19 @@ pub(crate) fn turn_snapshot_paths(
     root: &Path,
     deadline: Instant,
 ) -> Result<Option<TurnSnapshotPaths>, String> {
+    // Non-Git test fixtures intentionally live under temp directories. Avoid
+    // launching Git for each fixture snapshot: process startup can exhaust the
+    // 500 ms capture budget under heavily parallelized Windows CI, leaving
+    // valid edits uncaptured. Git's own subprocess launcher clears GIT_* env
+    // variables, so a visible .git file/directory in an ancestor is the only
+    // supported repository discovery anchor for these test snapshots.
+    //
+    // Walk *all* ancestors: a checkout subdirectory and linked worktree have
+    // metadata above this path. For actual repositories keep the existing
+    // safe, bounded Git inventory/ignore enumeration unchanged.
+    if !root.ancestors().any(|directory| directory.join(".git").exists()) {
+        return Ok(None);
+    }
     let remaining = || {
         deadline
             .checked_duration_since(Instant::now())
@@ -685,6 +698,20 @@ pub fn create_worktree(root: &Path, branch: String) -> Result<PathBuf, String> {
     create_worktree_with(root, &branch, None, false).map(|worktree| worktree.path)
 }
 
+/// The immutable Git commit corresponding to a trusted lead checkout.
+pub(crate) fn head_commit(root: &Path) -> Result<String, String> {
+    require_repository(root)?;
+    let output = checked(run_git(root, &["rev-parse", "--verify", "HEAD^{commit}"], 8192, false)?)?;
+    let sha = std::str::from_utf8(&output.bytes)
+        .map_err(|_| "Git commit is not UTF-8.")?
+        .trim()
+        .to_owned();
+    if !matches!(sha.len(), 40 | 64) || !sha.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("Invalid Git HEAD commit hash.".into());
+    }
+    Ok(sha)
+}
+
 /// Create a sibling checkout. `base` chooses the start point for a new branch;
 /// `existing` checks out a branch that already exists instead of creating one.
 pub fn create_worktree_with(
@@ -876,6 +903,102 @@ fn worktree_entry(root: &Path, path: &Path) -> Result<Option<WorktreeEntry>, Str
         }
     }
     Ok(None)
+}
+
+/// Verify a *separately registered* linked Git worktree, rather than
+/// trusting a copied path string or an unrelated folder with a .git file.
+///
+/// This is read-only verification, NOT a filesystem sandbox/permission grant.
+pub(crate) fn is_registered_linked_worktree(main: &Path, candidate: &Path) -> Result<bool, String> {
+    let meta = match fs::symlink_metadata(candidate) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error.to_string()),
+    };
+    if !meta.is_dir() || meta.file_type().is_symlink() || !candidate.join(".git").is_file() {
+        return Ok(false);
+    }
+    let main = main.canonicalize().map_err(|error| error.to_string())?;
+    let candidate = candidate.canonicalize().map_err(|error| error.to_string())?;
+    if candidate == main {
+        return Ok(false);
+    }
+    Ok(worktree_entry(&main, &candidate)?
+        .is_some_and(|entry| !entry.prunable && entry.branch.is_some()))
+}
+
+/// Read-only inspection of a reserved Agent branch. Does not resolve a
+/// claim or authorize any Git mutation.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum ClaimBranchEvidence {
+    MissingBranch,
+    BranchOnly,
+    VerifiedLinked(PathBuf),
+}
+
+/// Exact local ref plus registered checkout inspection through bounded Git
+/// commands, with hooks and optional locks disabled. Git errors or inconsistent
+/// registrations are UNKNOWN (Err), never evidence of absence.
+pub(crate) fn inspect_claim_branch(main: &Path, branch: &str) -> Result<ClaimBranchEvidence, String> {
+    if !branch.starts_with("pandacode/r3-worker-")
+        || branch.len() > 160
+        || branch.contains("..")
+        || !branch.bytes().all(|ch| ch.is_ascii_alphanumeric() || b"/_-".contains(&ch))
+    {
+        return Err("Invalid reserved worker branch name.".into());
+    }
+    require_repository(main)?;
+    let reference = format!("refs/heads/{branch}");
+    let ref_result = run_git(main, &["show-ref", "--verify", "--quiet", &reference], 8192, false)?;
+    match ref_result.status.code() {
+        Some(0) => {}
+        Some(1) => return Ok(ClaimBranchEvidence::MissingBranch),
+        _ => return Err("Unable to verify worker branch reference.".into()),
+    }
+    let listed = checked(run_git(main, &["worktree", "list", "--porcelain"], 1024 * 1024, false)?)?;
+    if listed.truncated {
+        return Err("Git worktree listing was truncated; cannot verify safely.".into());
+    }
+    let text = std::str::from_utf8(&listed.bytes)
+        .map_err(|_| "Git worktree listing was not UTF-8.".to_owned())?;
+    let mut registered = None;
+    for block in text.split("\n\n") {
+        let mut path = None;
+        let mut on_branch = false;
+        let mut prunable = false;
+        for line in block.lines() {
+            if let Some(value) = line.strip_prefix("worktree ") {
+                path = Some(PathBuf::from(value));
+            } else if let Some(value) = line.strip_prefix("branch ") {
+                on_branch = value == reference;
+            } else if line.starts_with("prunable") {
+                prunable = true;
+            }
+        }
+        if on_branch {
+            if prunable {
+                return Err("Branch references a prunable worktree; manual reconciliation required.".into());
+            }
+            if registered.is_some() {
+                return Err("Worker branch appears in multiple worktree registrations.".into());
+            }
+            registered = path;
+        }
+    }
+    let Some(path) = registered else {
+        return Ok(ClaimBranchEvidence::BranchOnly);
+    };
+    let metadata = fs::symlink_metadata(&path).map_err(|error|
+        format!("Registered checkout cannot be inspected: {error}")
+    )?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return Err("Registered worker checkout is not a safe directory.".into());
+    }
+    let canonical = path.canonicalize().map_err(|error| error.to_string())?;
+    if !is_registered_linked_worktree(main, &path)? {
+        return Err("Registered checkout did not verify as a linked Git worktree.".into());
+    }
+    Ok(ClaimBranchEvidence::VerifiedLinked(canonical))
 }
 
 #[derive(Debug, Serialize)]
@@ -1688,6 +1811,30 @@ mod tests {
         assert_eq!(git_status(&path).unwrap().branch, "pandacode/feature-one");
         assert!(create_worktree(&f.root, "feature-one".into()).is_err());
         assert!(create_worktree(&f.root, "../../escape".into()).is_err());
+    }
+
+    #[test]
+    fn only_registered_and_existing_linked_worktrees_pass_isolation_audit() {
+        let f = Fixture::new(true);
+        let linked = create_worktree(&f.root, "audit-real".into()).unwrap();
+        assert!(is_registered_linked_worktree(&f.root, &linked).unwrap());
+        assert!(!is_registered_linked_worktree(&f.root, &f.root).unwrap());
+
+        // A random folder containing a forged .git file is not listed by the
+        // real repository and must never count as isolated.
+        let spoof = f.base.join("spoof");
+        fs::create_dir(&spoof).unwrap();
+        fs::write(spoof.join(".git"), "gitdir: not-a-real-registration").unwrap();
+        assert!(!is_registered_linked_worktree(&f.root, &spoof).unwrap());
+        assert!(!is_registered_linked_worktree(&f.root, &f.base.join("missing")).unwrap());
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            let link = f.base.join("alias-to-linked");
+            symlink(&linked, &link).unwrap();
+            assert!(!is_registered_linked_worktree(&f.root, &link).unwrap());
+        }
     }
 
     #[test]

@@ -1,0 +1,35 @@
+name: Nexora Mandatory Task Planner
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+jobs:
+  task-planner:
+    name: NC-TEAM-001 task planner gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch PR head as data only (never execute PR code)
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags origin "refs/pull/${PR_NUMBER}/head:refs/remotes/origin/pr/${PR_NUMBER}"
+          test "$(git rev-parse "refs/remotes/origin/pr/${PR_NUMBER}")" = "$HEAD_SHA"
+      - name: Test the trusted governance validator
+        run: node --test tests/task-planner-gate.test.mjs
+      - name: Verify that this PR has a fresh task checklist planner
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/nexora/check-task-planner.mjs

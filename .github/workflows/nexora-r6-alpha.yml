@@ -1,0 +1,72 @@
+# Experimental unsigned install bundles only. Never publish a GitHub Release.
+# Pull request source runs on disposable GitHub-hosted runners with no secrets.
+name: Nexora R6 unsigned installer smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/nexora-r6-alpha.yml'
+      - 'scripts/release/**'
+      - 'src-tauri/tauri*.conf.json'
+      - 'src-tauri/Cargo.toml'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexora-r6-alpha-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unsigned-alpha:
+    name: Unsigned test installer ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, target: darwin-aarch64 }
+          - { os: windows-2022, target: windows-x86_64 }
+          - { os: ubuntu-22.04, target: linux-x86_64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    env:
+      CI: 'true'
+      TAURI_SIGNING_PRIVATE_KEY: ''
+      APPLE_SIGNING_IDENTITY: '-'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux Tauri and AppImage dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libxdo-dev build-essential pkg-config squashfs-tools libfuse2 xvfb dbus-x11 xdg-utils
+      - run: npm ci
+      - name: Check identity and release contracts
+        run: |
+          npm run test:nexora:r0
+          npm run test:release
+      - name: Build native unsigned installer and local checksum
+        run: node scripts/release/build.mjs ${{ matrix.target }}
+      - name: Install and test startup on disposable Windows/Linux runner
+        if: runner.os != 'macOS'
+        env:
+          RELEASE_TARGET: ${{ matrix.target }}
+        run: node scripts/release/ci-startup-smoke.mjs
+      - name: Archive unsigned test-only installer (never a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: UNSIGNED-TEST-ONLY-${{ matrix.target }}-${{ github.sha }}
+          path: release/*/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

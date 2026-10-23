@@ -10,6 +10,28 @@ By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 Report security issues privately as described in [SECURITY.md](SECURITY.md),
 not in public issues.
 
+## Nexora Code fork — Mandatory Task Planner & Team Lead Review
+
+For tasks targeting Nexora Code, apply [NC-TEAM-001](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
+BEFORE editing any files.
+Every assignment requires a new
+[task checklist](docs/nexora/templates/TASK-CHECKLIST.md) at
+docs/nexora/tasks/YYYY-MM-DD-task-slug.md.
+
+Team Lead breaks down tasks, assigns actual available Agent Workers with
+disjoint file scopes/worktrees, and collects worker commits/test evidence.
+Team Lead must review the actual diffs, verify test evidence and document
+GO/NO-GO before declaring delivery. If no agent delegation is actually
+available, mark TEAM_LEAD_SERIAL and do not claim independent review.
+
+Every PR must link its planner, real worker assignments, scope ownership,
+Team Lead signoff, security review, CI/native test evidence and blockers.
+Release and protected-branch merge permissions remain separate.
+The Nexora Task Planner Gate CI job rejects PRs without a newly added,
+completed planner. This is a structural guard only; independent review and
+required branch protection must still be configured and satisfied.
+Legacy PandaCode shipping notes below are not fork publishing approval.
+
 ## Prerequisites
 
 - **Node.js 22** and npm.
