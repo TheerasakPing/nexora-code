@@ -218,7 +218,7 @@ pub(crate) fn valid_credential_ref(server: &str, reference: &str) -> bool {
     })
 }
 
-fn validate(server: &McpServer) -> Result<(), String> {
+pub(crate) fn validate(server: &McpServer) -> Result<(), String> {
     validate_name(&server.name)?;
     if server.credential_ref.as_deref().is_some_and(|reference| {
         !valid_credential_ref(&server.name, reference)
