@@ -5,6 +5,12 @@ description = "A lightweight native workspace for coding agents"
 authors = ["PandaCode contributors"]
 edition = "2021"
 
+# Preserve the original package/lib identity for lockfile compatibility.
+# Only the distributed binary changes to the independent fork brand.
+[[bin]]
+name = "nexora-code"
+path = "src/main.rs"
+
 [lib]
 name = "pandacode_lib"
 # Desktop only links the rlib; add "staticlib", "cdylib" back for mobile targets.

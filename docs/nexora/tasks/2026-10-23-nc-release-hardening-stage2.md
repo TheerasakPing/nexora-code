@@ -9,10 +9,10 @@ Objective: close important *verifiable* release/identity work and document remai
 
 | Work | Owner | Acceptance | Status |
 | --- | --- | --- | --- |
-| ID-01 | TEAM_LEAD_SERIAL | Rename **shipped executable** only to nexora-code, preserve Cargo package/library names, session/database/tool keys and upstream attribution. Update release scripts/tests. | [ ] |
-| SEC-01 | TEAM_LEAD_SERIAL | Audit/rebrand public website *without links to upstream PandaCode binaries or nonexistent signed Nexora releases*. Honest unsigned alpha labeling. | [ ] |
+| ID-01 | TEAM_LEAD_SERIAL | Source/Cargo metadata and release scripts updated to ship nexora-code executable while keeping cargo pkg/lib, Session/DB/tool keys | [x] |
+| SEC-01 | TEAM_LEAD_SERIAL | Website links only to fork-owned Actions preview and repository; fork/license provenance and disabled updater disclosed; Astro build PASS | [x] |
 | NATIVE-01 | TEAM_LEAD_SERIAL | Verify Mac executable identity and no-user-data regression; test app package and startup on M4. | [ ] |
-| QA-01 | TEAM_LEAD_SERIAL | Node/release/website and hosted six required native CI checks, record actual evidence; diagnose negatives. | [ ] |
+| QA-01 | TEAM_LEAD_SERIAL | Node 168/168, release 33/33, R0 PASS; website Astro build PASS; local Mac Cargo check and CI run pending | [ ] |
 | AUDIT-01 | TEAM_LEAD_SERIAL | Update R0-R8 progress ledger with exact acceptance counts and blockers; push PR. | [ ] |
 | MERGE-01 | INDEPENDENT_REVIEWER_PENDING | Qualified reviewer before protected `develop` merge under NC-TEAM-001, even though GitHub settings currently require 0 approving reviews. | [ ] |
 | PROD-01 | PROJECT_OWNER_PENDING | Developer ID + notarization / clean Gatekeeper install, real all-OS GUI+provider/8-worker stress and final brand trademark/legal release acceptance. | [ ] |
@@ -27,3 +27,16 @@ Objective: close important *verifiable* release/identity work and document remai
 ## Baseline completion and counts
 
 As of opening this plan: engineering **21/24 unchecked**, branding **7/7 not fully accepted**, R0-R8 **61** phase detail boxes unchecked. These scopes overlap. R6 hosted unsigned builds passed; production native/install Gatekeeper remains NO-GO.
+
+## Evidence and handoff (2026-10-23)
+
+- Exact source baseline PR #26 before this patch: 9/9 source/installer GitHub checks PASS; no recorded independent reviews.
+- GitHub `develop` branch protection enforces six CI contexts and administrator protection, **but required_approving_review_count was 0**. Governance NC-TEAM-001 still requires independent review before merge; do not silently self-approve.
+- `cargo metadata --no-deps`: single executable target `nexora-code`, stable `pandacode_lib` rlib and `pandacode` Cargo package.
+- `npm test`: **168/168 PASS** (4 new branding/executable/website origin guard tests).
+- `npm run test:release`: **33/33 PASS**; `npm run test:nexora:r0`: PASS.
+- `npm --prefix website run build`: PASS (4 Astro pages generated). Website no longer links to upstream PandaCode installers or claims notarized stable binary availability; original license provenance preserved.
+- Browser full website tests under concurrent long-running Mac Rust check: mixed results/timeouts; cannot count as complete E2E. Review test artifacts and rerun without heavy compilation before acceptance.
+- Real native Mac `cargo check --bin nexora-code`: in progress at source handoff; R6 hosted app packaging and cross-platform checks must be rerun for exact new commit before marking acceptance.
+- **Next three:** (1) exact-head CI on Mac/Win/Linux and binary name inspections, (2) reliable serial browser/native GUI/PTY/provider restart tests, (3) qualified independent reviewer plus signing/notarization and documented Production owner approval.
+- **Team Lead:** GO source submission/CI; NO-GO production, protected merge without independent reviewer, 100% project completed claim.

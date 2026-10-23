@@ -129,7 +129,7 @@ async function verifyDmg(path, app, releaseVersion, productName) {
     const installed = resolve(mount, macOSAppName(productName));
     await run('/usr/bin/codesign', ['--verify', '--deep', '--strict', installed]);
     const installedVersion = execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', resolve(installed, 'Contents/Info.plist')], { encoding: 'utf8' }).trim();
-    if (installedVersion !== releaseVersion || await digest(resolve(installed, 'Contents/MacOS/pandacode')) !== await digest(resolve(app, 'Contents/MacOS/pandacode'))) throw new Error('The disk image contains a different app build.');
+    if (installedVersion !== releaseVersion || await digest(resolve(installed, 'Contents/MacOS/nexora-code')) !== await digest(resolve(app, 'Contents/MacOS/nexora-code'))) throw new Error('The disk image contains a different app build.');
   } finally {
     if (mounted) await run('/usr/bin/hdiutil', ['detach', mount, '-quiet']);
     // Only remove empty mount directories; never recursively delete a volume.

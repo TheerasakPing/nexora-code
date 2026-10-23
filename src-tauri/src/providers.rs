@@ -957,7 +957,7 @@ async fn codex_models(path: &Path) -> Result<Vec<ModelInfo>, String> {
     let mut stdin = child.stdin.take().ok_or("Codex stdin unavailable")?;
     let mut stdout = child.stdout.take().ok_or("Codex stdout unavailable")?;
     let result = tokio::time::timeout(Duration::from_secs(8), async {
-        write_json(&mut stdin, &json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"pandacode","title":"PandaCode","version":"0.1.0"}}})).await?;
+        write_json(&mut stdin, &json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"nexora-code","title":"Nexora Code","version":"0.1.0"}}})).await?;
         let mut bytes = Vec::new();
         let mut buffer = [0u8; 4096];
         let mut total = 0;
@@ -1608,7 +1608,7 @@ impl Protocol {
         match self.config.provider.as_str() {
             "pi" => json!({"type":"get_state","id":"pandacode-init"}),
             "codex" => {
-                let mut request = json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"pandacode","title":"PandaCode","version":"0.1.0"}}});
+                let mut request = json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"nexora-code","title":"Nexora Code","version":"0.1.0"}}});
                 request["params"]["capabilities"] =
                     json!({"experimentalApi":true,"requestAttestation":false});
                 request
