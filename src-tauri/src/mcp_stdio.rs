@@ -82,6 +82,33 @@ impl ReadOnlyStdio {
         self.read_bounded_frame().await
     }
 
+    /// Invoke a single call AFTER native consent, same-process discovery and
+    /// actual advertised-tool verification by the Rust execution boundary.
+    pub async fn invoke_approved_tool(
+        &mut self, tool: &str, arguments: serde_json::Map<String, Value>,
+    ) -> Result<Value, &'static str> {
+        let frame = serde_json::json!({
+            "jsonrpc": "2.0", "id": 9471u64, "method": "tools/call",
+            "params": {"name": tool, "arguments": arguments}
+        });
+        let mut bytes = serde_json::to_vec(&frame).map_err(|_| "Invalid tool invocation")?;
+        if bytes.len() + 1 > MAX_RPC_FRAME {
+            return Err("Tool invocation exceeds transport maximum");
+        }
+        bytes.push(b'\n');
+        time::timeout(Duration::from_secs(5), self.stdin.write_all(&bytes))
+            .await.map_err(|_| "MCP tool invocation timed out")?
+            .map_err(|_| "MCP tool write failed")?;
+        let reply = self.read_bounded_frame().await?;
+        let response: Value = serde_json::from_slice(&reply)
+            .map_err(|_| "MCP tool response was not JSON")?;
+        if response["jsonrpc"] != "2.0" || response["id"].as_u64() != Some(9471) ||
+            !response["result"].is_object() || response.get("error").is_some() {
+            return Err("MCP tool response rejected");
+        }
+        Ok(response["result"].clone())
+    }
+
     /// Legacy MCP handshake requires the initialized notification before
     /// requesting any catalogs. Never allow arbitrary notifications here.
     pub async fn notify_initialized(&mut self) -> Result<(), &'static str> {

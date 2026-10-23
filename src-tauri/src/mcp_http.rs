@@ -41,6 +41,64 @@ impl ReadOnlyHttp {
         Ok(Self { target, client })
     }
 
+    /// One native-approved tool invocation. Caller must first verify exact
+    /// advertised tool and consume an argument/config-scoped one-shot ticket.
+    /// No generic method string is accepted from the renderer.
+    pub async fn invoke_approved_tool(
+        &self, tool: &str, arguments: serde_json::Map<String, Value>,
+    ) -> Result<Value, &'static str> {
+        let frame = serde_json::json!({
+            "jsonrpc":"2.0", "id":9471u64, "method":"tools/call",
+            "params":{"name":tool,"arguments":arguments,
+                "_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28"}}
+        });
+        let bytes = serde_json::to_vec(&frame).map_err(|_| "Cannot encode tool call")?;
+        if bytes.len() > MAX_RPC_FRAME {
+            return Err("MCP tool request too large");
+        }
+        let response = self.client
+            .post(self.target.original_url().clone())
+            .header(header::CONTENT_TYPE, "application/json")
+            .header(header::ACCEPT, "application/json, text/event-stream")
+            .header("MCP-Protocol-Version", "2026-07-28")
+            .body(bytes)
+            .send().await.map_err(|_| "Approved tool HTTP request failed")?;
+        let peer = response.remote_addr().ok_or("MCP tool peer unavailable")?;
+        self.target.verify_connected_peer(peer)
+            .map_err(|_| "MCP tool peer is outside approved IP set")?;
+        if !response.status().is_success() {
+            return Err("MCP tool HTTP status rejected");
+        }
+        let mime = response.headers().get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok()).unwrap_or("");
+        let is_json = mime.split(';').next().is_some_and(|value| value.trim().eq_ignore_ascii_case("application/json"));
+        let is_sse = mime.split(';').next().is_some_and(|value| value.trim().eq_ignore_ascii_case("text/event-stream"));
+        if !is_json && !is_sse {
+            return Err("MCP tool HTTP response is not JSON/SSE");
+        }
+        if response.content_length().is_some_and(|len| len > MAX_RPC_FRAME as u64) {
+            return Err("MCP tool result exceeds output limit");
+        }
+        let mut response = response;
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(|_| "MCP tool stream failed")? {
+            if bytes.len().saturating_add(chunk.len()) > MAX_RPC_FRAME {
+                return Err("MCP tool result exceeds output limit");
+            }
+            bytes.extend_from_slice(&chunk);
+            if is_sse {
+                if let Some(payload) = find_sse_response(&bytes, 9471)? {
+                    return checked_tool_response(&payload);
+                }
+            }
+        }
+        if is_sse {
+            Err("MCP tool SSE stream closed without matching result")
+        } else {
+            checked_tool_response(&bytes)
+        }
+    }
+
     /// No call/execute/read operations until a separate action-scoped approval
     /// is added at this executor boundary. This handler is discovery only.
     pub async fn request_catalog(&self, frame: Value) -> Result<Vec<u8>, &'static str> {
@@ -101,6 +159,16 @@ impl ReadOnlyHttp {
             Ok(result)
         }
     }
+}
+
+fn checked_tool_response(data: &[u8]) -> Result<Value, &'static str> {
+    let decoded: Value = serde_json::from_slice(data)
+        .map_err(|_| "MCP tool result is not valid JSON")?;
+    if decoded["jsonrpc"] != "2.0" || decoded["id"].as_u64() != Some(9471)
+        || !decoded["result"].is_object() || decoded.get("error").is_some() {
+        return Err("MCP tool result has invalid request ID, error or shape");
+    }
+    Ok(decoded["result"].clone())
 }
 
 /// Only accept a complete bounded SSE message event addressed to this exact

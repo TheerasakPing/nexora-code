@@ -21,10 +21,16 @@ window.__TAURI_INTERNALS__ = {
       server: args.serverName, protocol: args.protocolVersion, status:'inspected_disconnect',
       items:[
         {kind:'tool',name:'<img src=x onerror=window.__mcpInjected=true>',label:'Safe lookup'},
+        {kind:'tool',name:'safe_echo',label:'Safe Echo'},
         {kind:'resource',name:'resource://mock/1',label:'Test Resource'},
         {kind:'prompt',name:'safe',label:'<svg onload=window.__mcpInjected=true>'}
       ]
     };
+    if (command === 'mcp_execute_tool_once') {
+      if (args.toolName !== 'safe_echo') throw new Error('Test fixture denies unknown tools');
+      return { server: args.serverName, tool: args.toolName,
+        status: 'completed_disconnect', result: { content: [{ type: 'text', text: '<img src=x onerror=window.__mcpInjected=true>' }] } };
+    }
     throw new Error('Unexpected IPC in fixture: ' + command);
   }
 };

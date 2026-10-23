@@ -267,6 +267,38 @@ pub(crate) async fn confirm_catalog_inspection(
     }
 }
 
+/// Native consent for ONE specific tool invocation, not for all tools on the
+/// server. The exact arguments must fit the dialog in full; no truncation.
+pub(crate) async fn confirm_tool_execution(
+    app: tauri::AppHandle,
+    server: String,
+    transport: String,
+    tool: String,
+    arguments: String,
+    config_hash: String,
+) -> Result<VerifiedOperatorConsent, String> {
+    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+    if arguments.len() > 2048 || arguments.chars().any(|value| value == '\u{001b}') {
+        return Err("Tool arguments exceed the native approval display limit".into());
+    }
+    let accepted = tokio::task::spawn_blocking(move || app.dialog()
+        .message(format!(
+            "Execute ONE MCP tool? This can CHANGE FILES, SEND DATA or RUN COMMANDS depending on the server.\n\nServer: {server}\nTransport: {transport}\nTool: {tool}\nArguments (complete): {arguments}\nConfig SHA-256: {config_hash}\n\nApprove this exact call once?"
+        ))
+        .title("Nexora Code — MCP Tool Execution Approval")
+        .kind(MessageDialogKind::Warning)
+        .buttons(MessageDialogButtons::OkCancelCustom(
+            "Run Once".into(), "Deny".into(),
+        ))
+        .blocking_show()
+    ).await.map_err(|_| "Native MCP tool approval dialog unavailable".to_owned())?;
+    if accepted {
+        Ok(VerifiedOperatorConsent { _private: () })
+    } else {
+        Err("Operator denied this MCP tool invocation".into())
+    }
+}
+
 // Only deterministic native test fixtures can issue simulated operator
 // consent; production has no renderer/agent-accessible constructor.
 #[cfg(test)]
@@ -383,6 +415,15 @@ impl McpPermissionLedger {
         }
         self.record(id, AuditKind::Consumed);
         Ok(())
+    }
+
+    /// A validated one-use ledger ticket yields an internal, non-serializable
+    /// capability for the immediately scoped execution connection.
+    pub(crate) fn take_operator_consent(
+        &mut self, id: Uuid, intent: &ToolIntent, now: Instant,
+    ) -> Result<VerifiedOperatorConsent, Denial> {
+        self.take(id, intent, now)?;
+        Ok(VerifiedOperatorConsent { _private: () })
     }
 
     pub fn revoke_session(&mut self, session_id: &str) {

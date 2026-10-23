@@ -3169,6 +3169,7 @@ pub fn run() {
                 list_local_servers,
                 mcp_permissions::mcp_policy_preflight,
                 mcp_inspector::mcp_inspect_catalog,
+                mcp_inspector::mcp_execute_tool_once,
                 mcp_registry::mcp_registry_list,
                 mcp_registry::mcp_registry_upsert,
                 mcp_registry::mcp_registry_remove,

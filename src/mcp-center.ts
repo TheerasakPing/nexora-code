@@ -1,4 +1,4 @@
-/** Nexora MCP inventory editor. This screen never starts a server or invokes a tool. */
+/** Nexora MCP registry and explicitly authorized manual tool console. No automatic agent execution. */
 import './mcp-center.css';
 import { call, preview } from './bridge';
 import { escape } from './dom';
@@ -10,6 +10,12 @@ interface McpCatalogItem {
   kind: 'tool' | 'resource' | 'prompt';
   name: string;
   label: string;
+}
+interface McpToolExecutionResult {
+  server: string;
+  tool: string;
+  result: unknown;
+  status: 'completed_disconnect';
 }
 interface McpCatalogSnapshot {
   server: string;
@@ -26,6 +32,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
   let loading = false;
   let records: McpServer[] = [];
   let editingName: string | null = null;
+  let inspected: { server: string; protocolVersion: string; tools: Set<string> } | null = null;
 
   host.innerHTML = [
     '<section class="mcp-center" aria-label="Nexora MCP registry">',
@@ -33,7 +40,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     '<div><button type="button" class="secondary-button" data-nexora-mcp="refresh">Refresh</button>',
     '<button type="button" class="secondary-button" data-nexora-mcp="new">Add server</button></div></div>',
     '<p class="integration-note">Enabling a server only saves configuration. Inspect catalogs requires a separate native approval each time.',
-    ' Tool execution and resource reads remain unavailable. No persistent connection is kept.</p>',
+    ' Manual <strong>Run Once</strong> tool calls are available only after a fresh native approval with full JSON arguments. No automatic agent tool access.</p>',
     '<p class="mcp-center-status" role="status" aria-live="polite"></p>',
     '<div class="mcp-center-list" data-nexora-mcp-list></div>',
     '<section class="mcp-center-inspector" data-nexora-mcp-inspector hidden aria-live="polite"></section>',
@@ -139,6 +146,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
       render();
       inspectorPanel.hidden = true;
       inspectorPanel.replaceChildren();
+      inspected = null;
       form.hidden = true;
       editingName = null;
       showStatus(onSuccess);
@@ -156,6 +164,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     root.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = true; });
     inspectorPanel.hidden = true;
     inspectorPanel.replaceChildren();
+    inspected = null;
     showStatus('Requesting one-time native approval for ' + server.name + '…');
     try {
       const result = await call<McpCatalogSnapshot>('mcp_inspect_catalog', {
@@ -174,10 +183,23 @@ export function mountMcpCenter(host: HTMLElement): () => void {
         return '<div><strong>' + ({ tool: 'Tools', resource: 'Resources', prompt: 'Prompts' })[kind] +
           ' (' + entries.length + ')</strong>' +
           (entries.length ? '<ul>' + entries.map(item => '<li><span>' + escape(item.label) +
-            '</span> <small>' + escape(item.name) + '</small></li>').join('') + '</ul>'
+            '</span> <small>' + escape(item.name) + '</small>' +
+            (kind === 'tool' ?
+              '<div class="mcp-center-manual-tool"><label>JSON arguments for ' + escape(item.name) +
+              '<textarea data-nexora-tool-args rows="3" maxlength="2048" spellcheck="false" aria-label="Arguments for ' +
+              escape(item.name) + '">{}</textarea></label>' +
+              '<button type="button" class="secondary-button" data-nexora-mcp="run-tool" data-tool="' +
+              escape(item.name) + '">Run Once — native approval required</button>' +
+              '<pre data-nexora-tool-result hidden aria-live="polite"></pre></div>' : '') +
+            '</li>').join('') + '</ul>'
             : '<p class="integration-note">None advertised</p>') + '</div>';
       });
-      inspectorPanel.innerHTML = '<h4>Read-only catalog — ' + escape(server.name) +
+      inspected = {
+        server: server.name,
+        protocolVersion,
+        tools: new Set(result.items.filter(item => item.kind === 'tool').map(item => item.name)),
+      };
+      inspectorPanel.innerHTML = '<h4>MCP catalog — ' + escape(server.name) +
         ' <small>' + escape(result.protocol) + '</small></h4>' +
         '<p class="integration-note">Inspection ended; server disconnected. No tools were executed.</p>' +
         grouped.join('');
@@ -194,6 +216,71 @@ export function mountMcpCenter(host: HTMLElement): () => void {
             button.dataset.nexoraMcp === 'inspect-legacy') &&
             !!records.find(item => item.name === button.dataset.name &&
               (!item.enabled || item.credentialRef));
+        });
+      }
+    }
+  }
+
+  async function runTool(button: HTMLButtonElement): Promise<void> {
+    if (loading || preview || !inspected) return;
+    const toolName = button.dataset.tool ?? '';
+    const target = records.find(item => item.name === inspected?.server);
+    if (!inspected.tools.has(toolName) || !target || !target.enabled || target.credentialRef) {
+      showStatus('Tool execution blocked: inspect an enabled uncredentialed server first.', true);
+      return;
+    }
+    const area = button.closest<HTMLElement>('.mcp-center-manual-tool');
+    const json = area?.querySelector<HTMLTextAreaElement>('[data-nexora-tool-args]')?.value ?? '';
+    let args: unknown;
+    try {
+      args = JSON.parse(json);
+      if (!args || typeof args !== 'object' || Array.isArray(args) || json.length > 2048) {
+        throw new Error('Arguments must be a JSON object up to 2048 characters.');
+      }
+    } catch (error) {
+      showStatus('Invalid tool arguments: ' + errorMessage(error), true);
+      return;
+    }
+    const context = inspected;
+    loading = true;
+    root.querySelectorAll<HTMLButtonElement>('button').forEach(item => { item.disabled = true; });
+    const output = area?.querySelector<HTMLElement>('[data-nexora-tool-result]');
+    showStatus('Waiting for one-time native approval of ' + toolName + '…');
+    try {
+      const reply = await call<McpToolExecutionResult>('mcp_execute_tool_once', {
+        serverName: context.server,
+        protocolVersion: context.protocolVersion,
+        toolName,
+        arguments: args,
+      });
+      if (!alive()) return;
+      if (reply.status !== 'completed_disconnect' || reply.server !== context.server ||
+          reply.tool !== toolName) {
+        throw new Error('Invalid MCP tool result');
+      }
+      if (output) {
+        const text = JSON.stringify(reply.result, null, 2);
+        output.textContent = text.length > 16384 ? text.slice(0, 16384) + '\n… (display truncated)' : text;
+        output.hidden = false;
+      }
+      const toolReportedError = !!reply.result && typeof reply.result === 'object' &&
+        'isError' in reply.result && reply.result.isError === true;
+      showStatus(
+        'MCP tool ' + toolName + (toolReportedError ? ' returned an error' : ' completed') +
+        '; native approval consumed, connection closed.',
+        toolReportedError,
+      );
+    } catch (error) {
+      if (alive()) showStatus('MCP tool denied or failed: ' + errorMessage(error), true);
+    } finally {
+      loading = false;
+      if (alive()) {
+        render();
+        root.querySelectorAll<HTMLButtonElement>('button').forEach(item => {
+          item.disabled = preview || (item.dataset.nexoraMcp === 'inspect' ||
+            item.dataset.nexoraMcp === 'inspect-legacy') &&
+            !!records.find(entry => entry.name === item.dataset.name &&
+              (!entry.enabled || entry.credentialRef));
         });
       }
     }
@@ -220,6 +307,7 @@ export function mountMcpCenter(host: HTMLElement): () => void {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-nexora-mcp]');
     if (!button || !root.contains(button) || loading) return;
     const action = button.dataset.nexoraMcp;
+    if (action === 'run-tool') { void runTool(button); return; }
     if (action === 'refresh') { void refresh(); return; }
     if (action === 'new') { edit(); return; }
     if (action === 'cancel') { form.hidden = true; editingName = null; return; }

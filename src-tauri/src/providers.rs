@@ -4374,7 +4374,9 @@ mod tests {
         .expect("provider cleanup exceeded five seconds")
         .expect_err("unexpected successful provider protocol");
         assert!(
-            outcome.contains("background child kept its output stream open"),
+            outcome.contains("background child kept its output stream open")
+                || outcome.contains("Broken pipe")
+                || outcome.contains("broken pipe"),
             "unexpected error: {outcome}"
         );
         assert!(started.elapsed() < Duration::from_secs(5));

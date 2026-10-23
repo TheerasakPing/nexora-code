@@ -33,3 +33,9 @@
 .mcp-center-inspector li { overflow-wrap:anywhere; padding:3px 0; }
 .mcp-center-inspector li small { color:var(--muted); margin-left:6px; }
 .mcp-center-entry-actions button:disabled { opacity:.5; cursor:not-allowed; }
+
+.mcp-center-manual-tool { border-left:2px solid var(--border); padding:8px 10px; margin-top:5px; }
+.mcp-center-manual-tool label { display:block; font-size:.79rem; font-weight:600; }
+.mcp-center-manual-tool textarea { width:100%; background:var(--panel, transparent); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:8px; margin:5px 0; font:inherit; font-family:monospace; }
+.mcp-center-manual-tool pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:7px; padding:8px; }
+.mcp-center-manual-tool pre[hidden] { display:none; }
