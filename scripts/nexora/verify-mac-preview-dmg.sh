@@ -19,7 +19,7 @@ trap cleanup EXIT
 /usr/bin/hdiutil attach -readonly -nobrowse -noautoopen -quiet -mountpoint "$MOUNT" "$DMG"
 mounted=1
 APP="$MOUNT/Nexora Code.app"
-[[ -d "$APP" && -L "$MOUNT/Applications" ]] || { echo "ERROR: invalid DMG layout" >&2; exit 4; }
+[[ -d "$APP" && -L "$MOUNT/Applications" && -f "$MOUNT/READ ME - INSTALLATION.txt" ]] || { echo "ERROR: invalid DMG layout or missing Gatekeeper instructions" >&2; exit 4; }
 [[ "$(readlink "$MOUNT/Applications")" == "/Applications" ]] || { echo "ERROR: incorrect Applications symlink" >&2; exit 4; }
 PLIST="$APP/Contents/Info.plist"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")" == "com.theerasakping.nexoracode" ]] || {
@@ -32,10 +32,19 @@ EXE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$PLIST")"
 [[ -f "$APP/Contents/MacOS/$EXE" ]] || { echo "ERROR: missing app executable" >&2; exit 4; }
 lipo -archs "$APP/Contents/MacOS/$EXE" | grep -qw arm64 || { echo "ERROR: not ARM64" >&2; exit 4; }
 /usr/bin/codesign --verify --deep --strict "$APP"
+# Codesign integrity validation is not Apple Gatekeeper distribution trust.
+# Never silently suggest that passing `codesign --verify` means installable.
+if /usr/sbin/spctl --assess --type execute --verbose=2 "$APP" >/dev/null 2>&1; then
+  echo "GATEKEEPER_ASSESSMENT=ACCEPTED (does NOT imply notarized or production approved)"
+else
+  echo "GATEKEEPER_ASSESSMENT=REJECTED (expected for ad-hoc unsigned preview)"
+  echo "WARNING: automatic Finder installation can be rejected by this Mac."
+  echo "See README in DMG; Apple allows informed per-app approval via Privacy & Security."
+fi
 if grep -aFq 'github.com/aicodeking/pandacode/releases/latest/download/latest.json' "$APP/Contents/MacOS/$EXE"; then
   echo "ERROR: original upstream update endpoint embedded in app" >&2; exit 4
 fi
 /usr/bin/hdiutil detach -quiet "$MOUNT"
 mounted=0
-echo "PASS: checksum, volume, version, identifier, arm64 executable, ad-hoc bundle seal, updater endpoint isolation"
+echo "PASS: checksum, volume, version, identifier, arm64 executable, ad-hoc bundle seal, updater endpoint isolation (NOT Gatekeeper installation approval)"
 echo "RELEASE NO-GO: not Apple Developer ID signed/notarized; no real provider/session/3-OS acceptance proven."

@@ -30,3 +30,24 @@ test('test-only Mac workflow archives preview, never publishes a release', () =>
   assert.match(action, /contents: read/);
   assert.doesNotMatch(action, /gh release create|softprops\/action-gh-release/);
 });
+
+test('Mac installer discloses Gatekeeper rejection and embeds visible instructions', () => {
+  const build = read('scripts/nexora/build-mac-preview-dmg.sh');
+  const verify = read('scripts/nexora/verify-mac-preview-dmg.sh');
+  const instructions = read('scripts/nexora/MAC-PREVIEW-INSTALL.txt');
+  assert.match(build, /MAC-PREVIEW-INSTALL\.txt/);
+  assert.match(build, /READ ME - INSTALLATION\.txt/);
+  assert.match(verify, /spctl --assess --type execute/);
+  assert.match(verify, /GATEKEEPER_ASSESSMENT=REJECTED/);
+  assert.match(verify, /missing Gatekeeper instructions/);
+  assert.match(instructions, /System Settings > Privacy & Security/);
+  assert.match(instructions, /Open Anyway/);
+  assert.match(instructions, /AD-HOC SIGNED, NOT APPLE-NOTARIZED/);
+  assert.match(instructions, /ลาก/);
+  // Never bypass macOS security via an install script.
+  for (const script of [build, verify]) {
+    assert.doesNotMatch(script, /spctl\s+--(master|global)-disable/);
+    assert.doesNotMatch(script, /xattr\s+-[cdr]+/);
+    assert.doesNotMatch(script, /sudo\s+/);
+  }
+});

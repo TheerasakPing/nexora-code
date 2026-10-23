@@ -78,3 +78,18 @@ short-retention download in GitHub Actions, with no GitHub Release created.
 
 **GO:** source implementation, hosted optimized Mac preview, verified DMG and bounded Mac M4 process startup.
 **NO-GO:** production label, trusted signed installer, protected develop merge without independent reviewer.
+
+## 2026-10-23 Gatekeeper incident — installation rejected
+
+User's Mac reported “Could not install — This Mac could not verify the app.”
+Real-device reproduction: `spctl --assess --type execute -vv` rejects the
+CI Preview .app, and `xcrun stapler validate` reports no notarization
+ticket. `codesign` reports `Signature=adhoc` and no TeamIdentifier.
+This means **previous “signature PASS” was not an installation PASS**.
+The engineering image now embeds a bilingual README explaining manual
+owner-only, Apple-supported Privacy & Security → Open Anyway, and the
+verifier prints the explicit Gatekeeper outcome. Read
+`docs/nexora/MAC-GATEKEEPER-INSTALLATION.md`.
+No broad Gatekeeper disablement or silent quarantine removal was performed.
+Normal one-click installation requires Developer ID + notarization
+credentials not present on this host, and a verified quarantine test.

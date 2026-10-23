@@ -18,9 +18,9 @@
 | Item | Owner | Gate | State |
 | --- | --- | --- | --- |
 | SEC-01 | TEAM_LEAD_SERIAL | Root cause: intact ad-hoc build != Gatekeeper approved | [x] |
-| UX-01 | TEAM_LEAD_SERIAL | Embedded bilingual install instructions explaining drag-to-Applications + Apple per-app Open Anyway | [ ] |
-| SEC-02 | TEAM_LEAD_SERIAL | Extend DMG verifier to flag rejection rather than calling installability PASS | [ ] |
-| QA-01 | TEAM_LEAD_SERIAL | Unit tests + actual DMG mounted, hash/code-signature, Gatekeeper label validated | [ ] |
+| UX-01 | TEAM_LEAD_SERIAL | Embedded bilingual install instructions explaining drag-to-Applications + Apple per-app Open Anyway | [x] |
+| SEC-02 | TEAM_LEAD_SERIAL | Extend DMG verifier to flag rejection rather than calling installability PASS | [x] |
+| QA-01 | TEAM_LEAD_SERIAL | 4/4 focused tests; locally repack from verified CI app; sha256, mount, signature PASS, Gatekeeper REJECTED correctly | [x] |
 | INT-01 | TEAM_LEAD_SERIAL | Push changes to consolidated PR #26 and get exact-head CI evidence | [ ] |
 | PROD-01 | OWNER / APPLE DEVELOPER ACCOUNT | Developer ID sign, hardened runtime, notarize + staple, macOS Finder installer E2E | [ ] |
 | REVIEW | Independent code reviewer (unassigned) | Review PR before merge to protected develop | [ ] |
@@ -31,3 +31,17 @@
 
 **Remaining baseline:** engineering acceptance 21/24 open; branding 7/7 open; detailed R0–R8 checks 61 open. These are overlapping views, never additive.
 **Evidence and next steps:** to be updated after implementation and test.
+
+## Verified fix and actual Mac test results
+
+- **Source files:** `scripts/nexora/MAC-PREVIEW-INSTALL.txt`, `scripts/nexora/build-mac-preview-dmg.sh`, `scripts/nexora/verify-mac-preview-dmg.sh`, `tests/mac-preview-build.test.mjs`, `docs/nexora/MAC-GATEKEEPER-INSTALLATION.md`.
+- `node --test tests/mac-preview-build.test.mjs`: **4/4 PASS**; static policy enforces no global security disablement or quarantine stripping.
+- Verified original GitHub CI ARM64 app downloaded in previous task, copied to local workspace cache only (no /Applications modification), and repackaged with prominent bilingual README: **PASS**.
+- New local DMG `release/mac-preview/Nexora-Code-0.1.0-macOS-arm64-PREVIEW-UNNOTARIZED.dmg` SHA256:
+  `f4cc4dc71bc28029d73d34b1952a8522757619558c514c64768973a73a4caabf`.
+  This is **different** from original CI DMG because README was added.
+- `bash scripts/nexora/verify-mac-preview-dmg.sh`: SHA-256, volume mount, ARM64, signature and fork updater integrity **PASS**; `GATEKEEPER_ASSESSMENT=REJECTED` explicitly shown (expected, not a passed distribution gate).
+- **Mac Gatekeeper assessment:** NO-GO for normal one-click installation. Only Apple's manual per-app Open Anyway after explicit verified-source consent; not an automated workaround.
+- **Credentials:** Developer ID Application and approved Apple Notarization account must be provisioned by the project owner. No certificates or signing secrets were available in verified environment.
+- **QA scope:** no live macOS visual UI acceptance or notarized package yet; independent reviewer not assigned. Do not lower product acceptance gates.
+- **Team Lead decision:** GO to deliver user-facing diagnostic/instructions and safe unsigned preview (source-only); NO-GO stable Release / normal Gatekeeper install or protected develop merge without independent reviewer.

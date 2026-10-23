@@ -59,13 +59,16 @@ if ! /usr/bin/codesign --verify --deep --strict "$STAGE/Nexora Code.app" >/dev/n
   /usr/bin/codesign --force --deep --sign - "$STAGE/Nexora Code.app"
 fi
 /usr/bin/codesign --verify --deep --strict "$STAGE/Nexora Code.app"
+# Make Apple Gatekeeper limitations visible *before* a user tries to install.
+# This is an unsigned engineering preview: the README is not a bypass.
+cp "$ROOT/scripts/nexora/MAC-PREVIEW-INSTALL.txt" "$STAGE/READ ME - INSTALLATION.txt"
 /bin/ln -s /Applications "$STAGE/Applications"
 /usr/bin/hdiutil create -quiet -volname "Nexora Code Preview" -fs HFS+ \
   -srcfolder "$STAGE" -format UDZO -ov "$DMG"
 /usr/bin/hdiutil verify -quiet "$DMG"
 /usr/bin/hdiutil attach -quiet -readonly -nobrowse -noautoopen -mountpoint "$MOUNT" "$DMG"
 mounted=1
-[[ -d "$MOUNT/Nexora Code.app" && -L "$MOUNT/Applications" ]] || {
+[[ -d "$MOUNT/Nexora Code.app" && -L "$MOUNT/Applications" && -f "$MOUNT/READ ME - INSTALLATION.txt" ]] || {
   echo "ERROR: DMG layout invalid" >&2; exit 5
 }
 [[ "$(readlink "$MOUNT/Applications")" == "/Applications" ]] || { echo "ERROR: bad Applications link" >&2; exit 5; }
