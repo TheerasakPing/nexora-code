@@ -35,3 +35,8 @@
 **Team Lead verdict:** GO source implementation and verification only. R1 Exit / protected merge / Production NO-GO pending independent review, other workspace scan and real native acceptance.
 
 **Team Lead verdict:** GO source submission, NO-GO protected merge and R1 phase exit; independent review, Windows and native GUI E2E PENDING. See docs/nexora/R1-FILE-SEARCH-CACHED-HANDLE-2026-10-23.md.
+
+**GO/NO-GO final gate:** GO for source PR review with scoped real Mac filesystem E2E only;
+NO-GO R1 phase completion, protected merge and production until Windows path
+security, scanner traversal, live native installed GUI/provider E2E and genuine
+independent reviewer are accepted. Exact-head CI for this branch PENDING.
