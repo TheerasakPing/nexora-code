@@ -1,0 +1,36 @@
+NEXORA CODE — MAC APPLE SILICON PREVIEW
+======================================
+WARNING: ENGINEERING PREVIEW. AD-HOC SIGNED, NOT APPLE-NOTARIZED.
+It is NOT an Apple-verified, one-click-installable production app.
+
+วิธีติดตั้ง (สำหรับเจ้าของเครื่องที่เชื่อถือ Source Code และตรวจสอบ SHA-256 แล้ว)
+1) แตกไฟล์ ZIP จาก GitHub Actions และตรวจ SHA-256 ของ DMG กับไฟล์ .sha256
+2) เปิด DMG จากนั้นลาก "Nexora Code.app" ไปไว้ที่โฟลเดอร์ Applications
+   (อย่าเปิดแอปโดยตรงจากภายใน DMG)
+3) เปิด Applications > Nexora Code; macOS อาจแจ้งว่าไม่สามารถตรวจสอบแอปได้
+4) ถ้าตรวจแหล่งที่มาและไฟล์แล้ว และต้องการทดลองจริง ให้เปิด
+   System Settings > Privacy & Security > Security > Open Anyway
+   (ปุ่มแสดงชั่วคราวหลังพยายามเปิดแอป) และยืนยันอีกครั้ง
+5) หากไม่มีปุ่ม Open Anyway ให้ลองเปิดแอปจาก Applications อีกครั้ง
+   ก่อนกลับไปหน้า Privacy & Security
+
+ENGLISH
+1) Verify the DMG SHA-256 against its supplied .sha256 sidecar.
+2) Open the DMG and DRAG "Nexora Code.app" into Applications.
+   Do not attempt to launch it directly from the disk image.
+3) Try opening Nexora Code from Applications.
+4) ONLY if you trust and have verified the source, open
+   System Settings > Privacy & Security > Security > Open Anyway
+   after the blocked launch attempt. Confirm explicitly.
+5) This exception is per-app. Do NOT disable Gatekeeper globally.
+
+IMPORTANT / สำคัญ
+- This app is not Developer ID signed or Apple notarized. Bypassing the
+  warning reduces macOS protection. Never do so for an untrusted download.
+- No installer, script or verifier in this package should remove quarantine
+  attributes or change Gatekeeper settings for you.
+- The real production fix is Developer ID signature + Apple Notarization
+  + notarization stapling + independent QA (not supplied in this preview).
+- Keep your existing production applications and data intact.
+- Source/issue tracker: https://github.com/TheerasakPing/nexora-code
+- Docs: docs/nexora/MAC-GATEKEEPER-INSTALLATION.md (in repository).

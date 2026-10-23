@@ -30,3 +30,28 @@
 - Keep GitHub head SHA fresh for all six required checks; older PR #21 PASS cannot substitute for a new SHA.
 - No real independent GitHub reviewer exists: sole repository collaborator is TheerasakPing, who cannot approve own PR. This is an explicit protected-branch blocker, not permission to bypass the rule.
 - R6 alpha macOS installer workflow was cancelled on earlier stacked PR, while Windows/Linux package CI passed; new exact-head smoke validation still required.
+
+
+## G. NC-TEAM-003 — Subtask Verification Matrix (retrospective audit, not invented tests)
+
+This planner existed **before NC-TEAM-003**. Historic checked [x] boxes
+record earlier **narrow source-only** milestones and do NOT assert NC-TEAM-003
+E2E/Smoke acceptance. Every historic subtask below is explicitly PENDING
+until the Team Lead rechecks actual test command/OS/SHA/log and signs each.
+Missing or unverified native evidence remains an acceptance NO-GO. The
+retrospective entries are not fabricated executions or agent delegations.
+
+| Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| ONE-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| ONE-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| ONE-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| ONE-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| ONE-05 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+| ONE-06 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Historic source evidence only; E2E/Smoke per-work-item review needs exact logs/OS/SHA, reviewer pending |
+
+
+**Team Lead GO/NO-GO (retrospective):** SOURCE PR GO for further review only.
+Individual NC-TEAM-003 gates remain **PENDING** (not accepted); the prior
+task's source-level status is not revoked or silently upgraded. Protected
+merge and production NO-GO until genuine independent review / native gates.

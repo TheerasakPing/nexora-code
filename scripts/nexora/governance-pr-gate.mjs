@@ -25,10 +25,84 @@ export function validatePlanner(path, content) {
   }
   if (!/Test|Evidence/i.test(content)) errors.push('Missing test/evidence section.');
   if (!/GO\s*\/\s*NO-GO|GO\/NO-GO/.test(content)) errors.push('Missing GO/NO-GO gate.');
+  errors.push(...validateSubtaskMatrix(content, path));
   if (!/^\*\*Team Lead verdict:\*\*\s*(?:SOURCE REVIEW GO|GO)(?:\b|[ :])/mi.test(content)) {
     errors.push('Team Lead must record GO for PR submission before delivery.');
   }
   if ((content.match(/- \[[ x]\]/g) ?? []).length < 3) errors.push('Missing checkable task evidence.');
+  return errors;
+}
+
+/**
+ * NC-TEAM-003 structural subtask handoff gate.
+ * This only validates the report shape and consistency; human review must
+ * verify that a worker and the test evidence are real.
+ */
+export function validateSubtaskMatrix(content, plannerPath = '') {
+  const errors = [];
+  const heading = content.match(/^## G\. NC-TEAM-003[^\n]*$/m);
+  if (!heading) return ['Missing NC-TEAM-003 per-subtask verification matrix.'];
+  const section = content.slice(heading.index + heading[0].length).split(/^## /m)[0];
+  const lines = section.split('\n').map(line => line.trim()).filter(line => line.startsWith('|'));
+  const fields = line => line.split('|').slice(1, -1).map(cell => cell.trim());
+  const expected = ['Subtask ID', 'Worker', 'Unit/Contract', 'E2E', 'Smoke', 'Team Lead Review', 'Evidence / N/A reason'];
+  if (!lines.length || expected.some((name, i) => fields(lines[0])[i] !== name)) {
+    return ['NC-TEAM-003 matrix must have columns: ' + expected.join(' | ')];
+  }
+  const rows = lines.slice(1).filter(line => !/^\|[\s|:-]+\|$/.test(line)).map(fields);
+  if (!rows.length) return ['NC-TEAM-003 requires at least one real subtask row.'];
+  const seen = new Set();
+  const rowById = new Map();
+  for (const row of rows) {
+    const [id, worker, unit, e2e, smoke, lead, evidence] = row;
+    if (row.length !== 7) { errors.push('NC-TEAM-003 matrix row has missing columns.'); continue; }
+    if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/.test(id)) errors.push('Invalid subtask ID in matrix: ' + id);
+    if (seen.has(id)) errors.push('Duplicate subtask ID in matrix: ' + id);
+    seen.add(id);
+    rowById.set(id, row);
+    if (!worker || /^(TBD|NONE|UNASSIGNED)$/i.test(worker)) errors.push(id + ': real worker ID or TEAM_LEAD_SERIAL required.');
+    for (const [gate, result] of [['Unit/Contract',unit], ['E2E',e2e], ['Smoke',smoke]]) {
+      if (!/^(?:PASS|FAIL|PENDING|BLOCKED(?:: .+)?|N\/A: .+)$/i.test(result)) {
+        errors.push(id + ': ' + gate + ' must be PASS, FAIL, PENDING, BLOCKED or reasoned N/A.');
+      }
+      if (/^N\/A:/i.test(result) && !/Team Lead|Lead approved|Lead approval/i.test(result + ' ' + evidence)) {
+        errors.push(id + ': N/A requires documented Team Lead approval.');
+      }
+    }
+    if (!/^(?:GO|NO-GO|PENDING)$/i.test(lead)) errors.push(id + ': Team Lead Review must be GO, NO-GO or PENDING.');
+    if (lead === 'GO' && [unit, e2e, smoke].some(value => /^(PENDING|BLOCKED|FAIL)/i.test(value))) {
+      errors.push(id + ': Team Lead cannot approve a subtask with missing or failed tests.');
+    }
+    if (!evidence || /^(TBD|PLACEHOLDER|NONE)$/i.test(evidence)) errors.push(id + ': actual evidence or explicit pending blocker required.');
+  }
+  // Match declared implementation subtasks, not final independent approval
+  // rows. Earlier plans can have varied B formatting; always require the
+  // matrix and at least one row even if a B header is unavailable.
+  const decomposition = content.match(/^## B\.[^\n]*\n([\s\S]*?)(?=^## [A-Z]\.|$(?![\s\S]))/m);
+  if (decomposition) {
+    // Existing planners merged before NC-TEAM-003 retain their historical
+    // source-only [x] checkmarks; they MUST include retrospective matrix rows,
+    // but cannot be rewritten to claim previously unrecorded native E2E.
+    // New plans are strictly checked: an [x] needs triad + Team Lead GO.
+    const historicalPlanners = new Set([
+      '2026-10-23-nc-team-002-progress-accountability.md',
+    ]);
+    const isLegacy = historicalPlanners.has(plannerPath.split('/').at(-1)) &&
+      /NC-TEAM-003[^\n]*retrospective audit/.test(content);
+    for (const line of decomposition[1].split('\n').filter(line => line.startsWith('|'))) {
+      const [id, ...cells] = line.split('|').slice(1, -1).map(v => v.trim());
+      if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/.test(id)) continue;
+      if (!seen.has(id) && !/(?:-REVIEW|-QA)$/.test(id)) {
+        errors.push(id + ': missing NC-TEAM-003 test/review matrix row.');
+      }
+      if (!isLegacy && cells.some(v => /^\[x\]$/i.test(v))) {
+        const row = rowById.get(id);
+        if (!row || row[5] !== 'GO' || row.slice(2, 5).some(v => !/^(PASS|N\/A: .+)$/i.test(v))) {
+          errors.push(id + ': [x] accepted subtask requires verified Unit/Contract, E2E, Smoke and Team Lead GO.');
+        }
+      }
+    }
+  }
   return errors;
 }
 
@@ -47,6 +121,12 @@ export function validatePullRequestBody(body, planners) {
   }
   if (!/\bGO for PR\b/i.test(body)) {
     failures.push('Pull request body must record Team Lead GO for PR submission.');
+  }
+  if (!/NC-TEAM-003/i.test(body) || !/\bE2E\b/i.test(body) || !/\bSmoke\b/i.test(body)) {
+    failures.push('PR handoff must cover NC-TEAM-003 per-subtask E2E and Smoke verification.');
+  }
+  if (!/Team Lead (?:Review|GO|NO-GO)/i.test(body)) {
+    failures.push('PR handoff must describe Team Lead review of every subtask.');
   }
   return failures;
 }
@@ -108,7 +188,7 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  process.stdout.write('NC-TEAM-001 structural PR checklist gate: PASS\n');
+  process.stdout.write('NC-TEAM-001/002/003 structural PR checklist gate: PASS\n');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

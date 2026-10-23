@@ -9,7 +9,7 @@ export function approvalModes(provider: ProviderId): ApprovalMode[] {
     : provider === 'grok'
     ? 'Grok asks before edits and commands, whatever its own config says.'
     : provider === 'pi'
-    ? 'Pi has no approval system; PandaCode asks before edits, commands and other non-read tools.'
+    ? 'Pi has no approval system; Nexora Code asks before edits, commands and other non-read tools.'
     : provider === 'deepseek'
     ? 'DeepSeek edits and runs commands inside this project freely; it asks you before going outside it.'
     : 'Use the harness’s normal rules. Ask you when approval is needed.' };

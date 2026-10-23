@@ -17,6 +17,7 @@ const link = (label: string, url: string) =>
 /** The About group: app version, license, updates from GitHub Releases, and links. */
 export function aboutSettingsHtml(): string {
   return `<div class="settings-group settings-about" aria-labelledby="settings-about-heading">
+    <div class="settings-about-brand"><img src="/nexora-mark.svg" alt="" width="44" height="44"/><span><strong>Nexora Code</strong><small>Native AI Coding Workspace · Preview</small></span></div>
     <div class="setting-row"><div><strong id="settings-about-heading">About Nexora Code</strong><small class="settings-about-version">Version …</small></div></div>
     <div class="setting-row"><div><strong>License</strong><small>MIT-based PandaCode fork license with attribution. No account or telemetry.</small></div>${link('PandaCode License', PROJECT_LINKS.license)}</div>
     <div class="setting-row"><div><strong>Fork attribution</strong><small>This is a fork of PandaCode — https://github.com/aicodeking/pandacode</small></div>${link('Original PandaCode', PROJECT_LINKS.upstream)}</div>

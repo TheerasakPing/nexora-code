@@ -36,3 +36,14 @@ test('example governance planner exists for this rule change', () => {
   assert.match(plan, /GOV-05/);
   assert.match(plan, /Team Lead verdict/);
 });
+
+test('NC-TEAM-003 requires task-by-task E2E, Smoke and Lead review across entrypoints', () => {
+  for (const file of ['AGENTS.md', 'docs/nexora/SOP-DEVELOPMENT-RELEASE.md', 'docs/nexora/templates/TASK-CHECKLIST.md']) {
+    const value = read(file);
+    for (const requirement of ['NC-TEAM-003', 'E2E', 'Smoke', 'Team Lead']) {
+      assert.ok(value.includes(requirement), file + ': missing ' + requirement);
+    }
+  }
+  assert.match(read('scripts/nexora/governance-pr-gate.mjs'), /validateSubtaskMatrix/);
+  assert.match(read('docs/nexora/templates/TASK-CHECKLIST.md'), /\| Subtask ID \| Worker \| Unit\/Contract \| E2E \| Smoke \| Team Lead Review \|/);
+});

@@ -181,8 +181,8 @@ test('identifies sample data and renders the desktop workspace without runtime e
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.reload();
-  await expect(page).toHaveTitle('PandaCode');
-  await expect(page.locator('.brand')).toHaveText('PandaCode');
+  await expect(page).toHaveTitle('Nexora Code');
+  await expect(page.locator('.brand')).toHaveText('Nexora Code');
   await expect(page.getByText('Browser preview · sample data', { exact: true })).toBeVisible();
   await expect(page.locator('.task-item.selected .task-title')).toHaveText('Make search feel instant');
   await expect(page.locator('#task-heading')).toHaveCount(0);

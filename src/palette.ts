@@ -4,7 +4,7 @@ import { accentTokens, vsixTokens, type Tokens, type VsixTheme } from './palette
 import { wallpaperAccents } from './wallpaper-accents';
 export type { VsixTheme } from './palette-core';
 
-/* The app's colors: PandaCode's own palette with an accent that is classic yellow,
+/* The app's colors: Nexora Code's own palette with a cyan classic accent,
  * a fixed color, or drawn from the current wallpaper — or, when a VS Code theme is
  * active, that theme's colors, which then stay put whatever the wallpaper does. */
 
@@ -12,7 +12,7 @@ export type AccentChoice = { mode: 'wallpaper' } | { mode: 'classic' } | { mode:
 type Saved = { accent: AccentChoice; vsix: VsixTheme | null; cache: { key: string; tokens: Tokens; terminal: Record<string, string> } | null };
 
 const STORE = 'pandacode.palette';
-export const CLASSIC = '#ffd43b';
+export const CLASSIC = '#57d6e3';
 export const SWATCHES = ['#4f8ef7', '#34c084', '#a86cf0', '#f0679b', '#ff8a3d', '#2fb8c4'];
 const TOKEN_NAMES = ['--bg', '--sidebar', '--panel', '--raised', '--border', '--text', '--muted', '--faint', '--success', '--danger',
   '--accent', '--accent-rgb', '--accent-dim', '--accent-ink', '--focus', '--on-accent', '--accent-hover', '--accent-deep-rgb', '--accent-tint', '--accent-tint-strong'];

@@ -260,7 +260,7 @@ const ACTIVITY_WINDOW = 24 * 60 * 60 * 1000;
 const $app = document.querySelector<HTMLDivElement>('#app')!;
 $app.innerHTML = `<div class="workspace">
   <aside id="workspace-sidebar" class="sidebar" aria-label="Projects and tasks">
-    <div class="brand" data-tauri-drag-region><span class="brand-name" data-tauri-drag-region>PandaCode</span></div>
+    <div class="brand" data-tauri-drag-region><img class="brand-logo" src="/nexora-mark.svg" width="29" height="29" alt="" draggable="false"/><span class="brand-name" data-tauri-drag-region>Nexora <strong>Code</strong></span></div>
     <div class="sidebar-actions"><button class="new-task-button" data-action="new-task">${icon('plus')}<span>New task</span><kbd>${shortcut('N')}</kbd></button><button class="search-trigger" data-action="search">${icon('search')}<span>Search</span><kbd>${shortcut('K')}</kbd></button></div>
     <div class="sidebar-projects"><button id="project-filter" class="project-filter" data-action="filter-projects" aria-label="Filter projects" aria-haspopup="dialog" aria-expanded="false"><span data-filter-label>All projects</span>${icon('down')}</button>${button('import-conversations', 'Import conversations', 'download', 'import-trigger')}${button('add-project', 'Open project', 'plus')}</div>
     <div id="navigation" class="navigation"></div>
@@ -1000,7 +1000,7 @@ function renderTranscript(preservePosition = false): void {
   const toolViews = captureTools(transcript), groupViews = captureToolGroups(transcript), turnViews = captureTurns(transcript), changeViews = captureChangeCards(transcript), scrollTop = transcript.scrollTop;
   const readingTool = readingTranscriptTool();
   const s = session();
-  if (!s) { transcript.innerHTML = `<div class="welcome"><span class="welcome-mark" aria-hidden="true">${icon('bamboo')}</span><h1>${project() ? 'No task selected' : 'Choose a project'}</h1><button class="primary-button" data-action="${project() ? 'new-task' : 'add-project'}">${icon('plus')}${project() ? 'Start a task' : 'Open a project'}</button></div>`; return; }
+  if (!s) { transcript.innerHTML = `<div class="welcome"><span class="welcome-mark" aria-hidden="true"><img src="/nexora-mark.svg" class="brand-welcome-logo" width="47" height="47" alt=""/></span><h1>${project() ? 'No task selected' : 'Choose a project'}</h1><button class="primary-button" data-action="${project() ? 'new-task' : 'add-project'}">${icon('plus')}${project() ? 'Start a task' : 'Open a project'}</button></div>`; return; }
   if ((state.messagesLoading || state.messagesError) && !state.streams.has(s.id) && !finishingStreams.has(s.id)) { transcript.innerHTML = `<p class="history-notice" role="status">${state.messagesError ? 'Unable to load this task. Select it again to retry.' : 'Loading conversation…'}</p>`; return; }
   if (state.view === 'board' && newTaskView()) {
     transcript.innerHTML = '<p class="pending-comments">Start this task when you’re ready. Agent updates and your replies will appear here.</p><div id="stream-region"></div>';
@@ -1010,7 +1010,7 @@ function renderTranscript(preservePosition = false): void {
   if (newTaskView() && bot) { transcript.innerHTML = `${botWelcome(bot)}<div id="stream-region"></div>`; return; }
   if (newTaskView()) {
     const name = project()?.name ?? 'this project';
-    transcript.innerHTML = `<div class="new-task-welcome"><span class="new-task-mark" aria-hidden="true">${icon('bamboo')}</span><h1 aria-label="What should we build in ${escape(name)}?">What should we build in <button id="welcome-project" class="welcome-project" data-action="change-task-project" aria-label="Change task project" aria-haspopup="dialog" aria-expanded="false" title="${escape(project()?.path)}" ${s.worktreePath ? 'disabled' : ''}>${escape(name)}</button>?</h1></div><div id="stream-region"></div>`;
+    transcript.innerHTML = `<div class="new-task-welcome"><span class="new-task-mark" aria-hidden="true"><img src="/nexora-mark.svg" class="brand-welcome-logo" width="47" height="47" alt=""/></span><h1 aria-label="What should we build in ${escape(name)}?">What should we build in <button id="welcome-project" class="welcome-project" data-action="change-task-project" aria-label="Change task project" aria-haspopup="dialog" aria-expanded="false" title="${escape(project()?.path)}" ${s.worktreePath ? 'disabled' : ''}>${escape(name)}</button>?</h1></div><div id="stream-region"></div>`;
     return;
   }
   const turns = groupTurns(visibleMessages());
@@ -1897,7 +1897,7 @@ async function performSlashAction(action: string, argumentsText: string, task: S
       await navigator.clipboard.writeText(answer.content); notify('Response copied'); break;
     }
     case 'pwd': modal('Working directory', `<p class="dialog-description">${escape(workspacePath())}</p>`); break;
-    default: throw new Error('This command is not available in PandaCode yet.');
+    default: throw new Error('This command is not available in Nexora Code yet.');
   }
 }
 
@@ -2933,7 +2933,7 @@ async function showDefaultProvider(anchor: HTMLElement): Promise<void> {
 }
 function showDeleteTask(): void {
   const task = session(); if (!task || isRunning(task.id) || configuringSessions.has(task.id)) return;
-  const dialog = modal('Delete task?', `<form id="delete-task-form"><p class="delete-task-name">${escape(task.title)}</p><p class="delete-task-description">Permanently delete this conversation and its worker history from PandaCode? This cannot be undone. Its terminal tabs close and running commands may stop. Project files and worktrees stay.</p><p class="delete-task-error" role="alert" hidden></p><div class="dialog-footer"><button type="button" class="secondary-button" data-action="close-dialog">Cancel</button><button type="submit" class="secondary-button delete-task-confirm">Delete task</button></div></form>`, 'delete-task-dialog');
+  const dialog = modal('Delete task?', `<form id="delete-task-form"><p class="delete-task-name">${escape(task.title)}</p><p class="delete-task-description">Permanently delete this conversation and its worker history from Nexora Code? This cannot be undone. Its terminal tabs close and running commands may stop. Project files and worktrees stay.</p><p class="delete-task-error" role="alert" hidden></p><div class="dialog-footer"><button type="button" class="secondary-button" data-action="close-dialog">Cancel</button><button type="submit" class="secondary-button delete-task-confirm">Delete task</button></div></form>`, 'delete-task-dialog');
   const form = dialog.querySelector<HTMLFormElement>('#delete-task-form')!;
   const confirm = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
   const error = form.querySelector<HTMLElement>('[role="alert"]')!;
@@ -3018,13 +3018,13 @@ function closeSettings(): void {
   (settingsReturnFocus?.isConnected ? settingsReturnFocus : $('#prompt'))?.focus({ preventScroll: true });
   settingsReturnFocus = null;
 }
-/** Light and dark belong to PandaCode's palette; switching leaves a VS Code theme. */
+/** Light and dark belong to Nexora Code's palette; switching leaves a VS Code theme. */
 function toggleTheme(): void {
   const vsix = palette.vsix;
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
   if (vsix) palette.setVsix(null);
   setTheme(next); renderThemeToggle();
-  if (vsix) notify(`${vsix.name} turned off · PandaCode ${next}`);
+  if (vsix) notify(`${vsix.name} turned off · Nexora Code ${next}`);
   if (settingsView) { closeSettings(); void showSettings('appearance'); }
 }
 let colorsSettingsCleanup: (() => void) | undefined;
@@ -3580,7 +3580,7 @@ async function boot(): Promise<void> {
   if (state.view !== 'conversation') { state.boardPanel = false; renderInspector(); renderBoardView(); }
   if (!preview && !state.providers.some(p => p.installed)) notify('Open Settings to check your installed agent CLIs.');
 }
-// PandaCode's own updates: checked on GitHub Releases, installed when no agent is working.
+// Nexora Code's own updates: checked on GitHub Releases, installed when no agent is working.
 const updates = startAppUpdates({ busy: () => state.sessions.some(task => isRunning(task.id)), notify });
 {
   const pill = $('#update-status');
@@ -3588,7 +3588,7 @@ const updates = startAppUpdates({ busy: () => state.sessions.some(task => isRunn
     const current = updates.state;
     pill.hidden = current.kind !== 'ready' && current.kind !== 'installing';
     if (current.kind !== 'ready' && current.kind !== 'installing') return;
-    pill.title = current.kind === 'ready' ? `PandaCode ${current.version} is ready. Restart now, or it restarts on its own when your agents are done.` : `Installing ${current.version}…`;
+    pill.title = current.kind === 'ready' ? `Nexora Code ${current.version} is ready. Restart now, or it restarts on its own when your agents are done.` : `Installing ${current.version}…`;
     (pill as HTMLButtonElement).disabled = current.kind === 'installing';
   };
   updates.subscribe(paint);

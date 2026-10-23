@@ -11,6 +11,24 @@ The upstream auto-updater is disabled until new fork-owned signing keys and veri
 
 See [Roadmap](docs/nexora/ROADMAP.md) and [R0 Acceptance](docs/nexora/R0-ACCEPTANCE.md).
 
+## Nexora Code builds (engineering preview)
+
+**Test-only unsigned builds for Mac M4, Windows x64 and Linux x64:**
+[GitHub Actions — Nexora R6 unsigned installer smoke](https://github.com/TheerasakPing/nexora-code/actions/workflows/nexora-r6-alpha.yml).
+Select a successful run and download the artifact matching your platform.
+Artifacts expire. There is no notarized, signed, production-ready release yet.
+The app remains a fork of PandaCode; existing PandaCode sessions/settings/tool
+IDs are deliberately preserved or isolated to protect data and compatibility.
+
+For macOS first-launch instructions see
+[Mac Gatekeeper / Preview installation](docs/nexora/MAC-GATEKEEPER-INSTALLATION.md).
+For current production blockers and acceptance status see
+[Release workstream planner](docs/nexora/tasks/2026-10-23-nc-release-hardening-stage2.md).
+
+**The original PandaCode documentation and upstream download references below
+are retained as historical source documentation, not Nexora Code download links.**
+
+
 ---
 
 ## Original PandaCode documentation (retained)

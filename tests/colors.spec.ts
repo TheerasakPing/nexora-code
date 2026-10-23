@@ -18,7 +18,7 @@ test('the accent follows the wallpaper scene and falls back to classic yellow wi
   await pin(page, 'wed-night');
   await page.goto('/');
   await expect(page.locator('.workspace')).toHaveAttribute('data-wallpaper', 'wed-night', { timeout: 15000 });
-  await expect.poll(() => accent(page)).not.toBe('#ffd43b');
+  await expect.poll(() => accent(page)).not.toBe('#57d6e3');
   const night = await accent(page);
   await pin(page, 'mon-afternoon');
   await page.reload();
@@ -28,11 +28,11 @@ test('the accent follows the wallpaper scene and falls back to classic yellow wi
   expect(await token(page, '--on-accent')).toMatch(/^#[0-9a-f]{6}$/);
   await openColors(page);
   await page.getByRole('radio', { name: 'Classic', exact: true }).click();
-  await expect.poll(() => accent(page)).toBe('#ffd43b');
+  await expect.poll(() => accent(page)).toBe('#57d6e3');
   await page.getByRole('radio', { name: 'Blue', exact: true }).click();
   await expect(page.getByRole('radio', { name: 'Blue', exact: true })).toHaveAttribute('aria-checked', 'true');
   const blue = await accent(page);
-  expect(blue).not.toBe('#ffd43b');
+  expect(blue).not.toBe('#57d6e3');
   await page.reload();
   await expect.poll(() => accent(page)).toBe(blue);
 });
@@ -70,7 +70,7 @@ test('a VS Code theme from Open VSX recolors the app and holds still when the wa
   await page.getByRole('button', { name: 'Remove Tokyo Night' }).click();
   await expect(page.locator('.vsix-status')).toContainText('Theme removed');
   await expect(page.locator('html')).not.toHaveAttribute('data-vsix', '');
-  await expect(page.getByRole('radio', { name: /PandaCode/ })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('radio', { name: /Nexora Code/ })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByRole('radio', { name: 'Wallpaper', exact: true })).toBeEnabled();
 });
 

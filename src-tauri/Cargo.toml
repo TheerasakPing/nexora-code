@@ -5,6 +5,12 @@ description = "A lightweight native workspace for coding agents"
 authors = ["PandaCode contributors"]
 edition = "2021"
 
+# Preserve the original package/lib identity for lockfile compatibility.
+# Only the distributed binary changes to the independent fork brand.
+[[bin]]
+name = "nexora-code"
+path = "src/main.rs"
+
 [lib]
 name = "pandacode_lib"
 # Desktop only links the rlib; add "staticlib", "cdylib" back for mobile targets.
@@ -68,6 +74,12 @@ codegen-units = 1
 opt-level = "s"
 strip = true
 panic = "abort"
+
+# macOS 27 dyld rejects proc-macro dylibs with unaligned LINKEDIT string pools
+# when LLVM strips them (Rust issue #157750). Keep the final release binary
+# stripped, but retain symbols in compile-time build scripts and proc macros.
+[profile.release.build-override]
+strip = false
 
 # Local/test builds (`--profile fast-release`); shipped builds use release.
 [profile.fast-release]

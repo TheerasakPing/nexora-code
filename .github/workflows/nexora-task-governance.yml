@@ -1,4 +1,4 @@
-name: Nexora Mandatory Task Planner
+name: Nexora Mandatory Task Planner + Subtask E2E/Smoke
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -6,6 +6,7 @@ permissions:
   contents: read
 jobs:
   task-planner:
+    # Preserve this exact job/check name for existing required branch protection.
     name: NC-TEAM-001 task planner gate
     runs-on: ubuntu-22.04
     timeout-minutes: 10
@@ -27,7 +28,7 @@ jobs:
           test "$(git rev-parse "refs/remotes/origin/pr/${PR_NUMBER}")" = "$HEAD_SHA"
       - name: Test the trusted governance validator
         run: node --test tests/task-planner-gate.test.mjs
-      - name: Verify that this PR has a fresh task checklist planner
+      - name: Enforce fresh Task Planner and NC-TEAM-003 per-subtask E2E/Smoke/Lead gates
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}

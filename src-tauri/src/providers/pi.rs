@@ -39,7 +39,13 @@ impl Drop for Bridge {
 }
 
 pub(super) fn configure(command: &mut Command, config: &RunConfig) {
-    command.args(["--mode", "rpc"]);
+    // Embedded Pi is not the user's standalone terminal Pi. Discovered user
+    // extensions may block RPC startup with dialogs or duplicate host modules,
+    // and may execute outside Nexora's protected permission bridge. Explicit
+    // --extension (Nexora's own bridge) is still loaded by the Pi CLI.
+    // Native MCP servers must likewise use Nexora's approved host, not Pi's.
+    // Skills and context files remain available; ~/.pi/agent is unchanged.
+    command.args(["--mode", "rpc", "--no-extensions", "--no-mcp"]);
     if !config.model.is_empty() && config.model != "default" {
         if let Some((provider, model)) = config.model.split_once('/') {
             command.args(["--provider", provider, "--model", model]);
@@ -499,6 +505,44 @@ mod tests {
             p.config.model = model.into();
             assert_eq!(p.receive(state.clone()).is_ok(), applied, "{model}");
         }
+    }
+
+    #[test]
+    fn embedded_pi_isolates_discovered_extensions_and_preserves_approval_bridge() {
+        let config = super::super::tests::config("pi");
+        let mut command = Command::new("pi");
+        configure(&mut command, &config);
+        let bridge = Bridge::configure(&mut command, "plan", None).unwrap();
+        let args: Vec<_> = command
+            .as_std()
+            .get_args()
+            .map(|arg| arg.to_str().unwrap().to_owned())
+            .collect();
+        assert!(args.windows(2).any(|args| args == ["--mode", "rpc"]));
+        assert!(args.contains(&"--no-extensions".to_owned()));
+        assert!(args.contains(&"--no-mcp".to_owned()));
+        assert!(!args.contains(&"--no-skills".to_owned()));
+        // An explicit bridge remains loaded even with discovery disabled.
+        let position = args.iter().position(|arg| arg == "--extension").unwrap();
+        let bridge_path = std::path::Path::new(&args[position + 1]);
+        assert!(bridge_path.is_file());
+        let source = std::fs::read_to_string(bridge_path).unwrap();
+        assert!(source.contains("pandacode-bridge"));
+        let bridge_env = command.as_std().get_envs().find(|(k, _)| *k == "PANDACODE_PI_BRIDGE")
+            .and_then(|(_, v)| v).unwrap().to_str().unwrap();
+        let cfg: serde_json::Value = serde_json::from_str(bridge_env).unwrap();
+        assert_eq!(cfg["mode"], "plan");
+        drop(bridge);
+        assert!(!bridge_path.exists());
+    }
+
+    #[test]
+    fn pi_timeout_diagnostic_is_provider_specific() {
+        let msg = super::super::initialization_timeout_message("pi");
+        assert!(msg.contains("Pi RPC"));
+        assert!(msg.contains("--no-extensions"));
+        assert!(!msg.contains("Agent initialization timed out."));
+        assert!(super::super::initialization_timeout_message("codex").contains("Agent initialization timed out."));
     }
 
     #[test]

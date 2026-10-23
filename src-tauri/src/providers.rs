@@ -59,6 +59,15 @@ pub use subagents::SubagentActivity;
 const MAX_FRAME: usize = 4 * 1024 * 1024;
 const MODEL_CATALOG_LIMIT: usize = 10_000;
 const STDERR_LIMIT: usize = 16 * 1024;
+
+fn initialization_timeout_message(provider: &str) -> &'static str {
+    if provider == "pi" {
+        "Pi RPC initialization timed out. Nexora isolates user extensions and loads only its approval bridge. Verify 'pi --mode rpc --no-extensions --no-mcp' starts in a terminal; if not, check the Pi CLI installation and login."
+    } else {
+        "Agent initialization timed out. Check the CLI's login and configuration in a terminal."
+    }
+}
+
 const TOOL_INPUT_LIMIT: usize = 4096;
 const TOOL_OUTPUT_LIMIT: usize = 8192;
 const TOOL_CACHE_LIMIT: usize = 64;
@@ -948,7 +957,7 @@ async fn codex_models(path: &Path) -> Result<Vec<ModelInfo>, String> {
     let mut stdin = child.stdin.take().ok_or("Codex stdin unavailable")?;
     let mut stdout = child.stdout.take().ok_or("Codex stdout unavailable")?;
     let result = tokio::time::timeout(Duration::from_secs(8), async {
-        write_json(&mut stdin, &json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"pandacode","title":"PandaCode","version":"0.1.0"}}})).await?;
+        write_json(&mut stdin, &json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"nexora-code","title":"Nexora Code","version":"0.1.0"}}})).await?;
         let mut bytes = Vec::new();
         let mut buffer = [0u8; 4096];
         let mut total = 0;
@@ -1599,7 +1608,7 @@ impl Protocol {
         match self.config.provider.as_str() {
             "pi" => json!({"type":"get_state","id":"pandacode-init"}),
             "codex" => {
-                let mut request = json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"pandacode","title":"PandaCode","version":"0.1.0"}}});
+                let mut request = json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"nexora-code","title":"Nexora Code","version":"0.1.0"}}});
                 request["params"]["capabilities"] =
                     json!({"experimentalApi":true,"requestAttestation":false});
                 request
@@ -2921,7 +2930,7 @@ async fn run_process_with_tools(
                     apply_step(&mut protocol,Step::default(),&sink,&mut stdin,&mut jobs,&mut queued).await?;
                 },
                 _=tokio::time::sleep_until(deadline),if stopped || protocol.phase==0=>{
-                    if stopped{break Ok(());}break Err("Agent initialization timed out. Check the CLI's login and configuration in a terminal.".into());
+                    if stopped{break Ok(());}break Err(initialization_timeout_message(&protocol.config.provider).into());
                 },
                 _=tokio::time::sleep_until(protocol.goals.deadline().unwrap_or_else(||tokio::time::Instant::now()+Duration::from_secs(86400))),if protocol.goals.deadline().is_some()=>{
                     let step=protocol.goal_tick();

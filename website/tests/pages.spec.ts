@@ -1,7 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { readdir, readFile } from 'node:fs/promises';
 
-const repo = 'https://github.com/aicodeking/pandacode';
+const repo = 'https://github.com/TheerasakPing/nexora-code';
 
 /* The reading pages: /changelog lists every releases/X.Y.Z.md, /privacy states that
  * PandaCode collects nothing, /license carries the LICENSE text word for word, and all three work without scripts. */
@@ -31,7 +31,7 @@ async function expectNoOverflow(page: Page) {
 test('changelog lists every release, newest first, with dates and working anchors', async ({ page }) => {
   const versions = await releaseFiles();
   await page.goto('/changelog/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('What’s new in PandaCode.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Upstream PandaCode release history.');
   await expect(page.locator('.release')).toHaveCount(versions.length);
   const latest = newest(versions);
   const first = page.locator('.release').first();
@@ -62,8 +62,8 @@ test('privacy policy says PandaCode collects nothing, with a contents rail', asy
   await expect(page.locator('.legal-updated time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
   const prose = page.locator('.legal-prose');
   for (const fact of [
-    'PandaCode collects nothing.',
-    'no accounts, no license checks, no telemetry, no analytics, no crash reports and no PandaCode servers',
+    'Nexora Code collects nothing.',
+    'no accounts, no license checks, no telemetry, no analytics, no crash reports and no Nexora Code servers',
     'formulae.brew.sh', 'downloads.claude.ai', 'api.github.com', 'cdn.kimi.com', 'about every 6 hours',
     'raw.githubusercontent.com', 'at most once a day',
     'It sets no cookies, runs no analytics',
@@ -114,7 +114,7 @@ test('reading pages are complete without JavaScript', async ({ browser, baseURL 
     await expect(footer.getByRole('link', { name: 'License', exact: true })).toHaveAttribute('href', '/license/');
     await expect(footer.getByRole('link', { name: 'GitHub', exact: true })).toHaveAttribute('href', repo);
     await expect(footer.getByRole('link', { name: 'Support', exact: true })).toHaveAttribute('href', `${repo}/issues`);
-    await expect(page.locator('.navigation .button')).toHaveAttribute('href', `${repo}/releases/latest`);
+    await expect(page.locator('.navigation .button')).toHaveAttribute('href', `${repo}/actions/workflows/nexora-r6-alpha.yml`);
     await expectNoOverflow(page);
   }
   await context.close();

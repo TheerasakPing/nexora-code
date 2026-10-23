@@ -36,6 +36,82 @@ in the older notes further down. Never infer permission to deploy or update.
    tests alone do not prove native acceptance. Read [SOP NC-TEAM-001](docs/nexora/SOP-DEVELOPMENT-RELEASE.md)
    for the full process.
 
+## NC-TEAM-002 — MANDATORY remaining-work accounting at every handoff
+
+8. **COUNT AND REPORT.** At the end of EVERY assigned task (including a
+   "continue" request), the Team Lead MUST update the dated Task Planner and
+   issue a concise progress ledger stating: (a) what was actually completed and
+   verified (commit/PR/test evidence), (b) accepted versus pending work counts
+   with an explicit denominator and counting method, (c) blocked items and
+   their required owner/approval, (d) the next highest-priority executable
+   tasks, and (e) final GO/NO-GO for delivery, merge and release SEPARATELY.
+   If fresh evidence is unavailable, mark counts **UNVERIFIED** and reference
+   the last dated snapshot; never report guessed percentages.
+9. **NO FALSE COMPLETION.** A merged PR, passing source unit tests, generated
+   artifact, or closed issue does NOT close an R0–R8 acceptance gate unless
+   its stated DoD and required OS/CI/reviewer evidence passed. Track separately:
+   Engineering acceptance packages (24 baseline), cross-phase branding epics
+   (BR-01–BR-07), R0–R8 detailed checklist items, and GitHub issues/PRs.
+   These sets overlap; NEVER sum them into one fake remaining-task total.
+10. **KEEP SOURCE OF TRUTH CURRENT.** The Task Planner must link the living
+    master checklist and a dated verified snapshot when a task changes a
+    milestone status; note stale source data and any independent review still
+    pending. Every report must disclose the difference between source-complete,
+    integrated, native-accepted and production-released.
+
+## NC-TEAM-003 — MANDATORY subtask quality gates: Unit + E2E + Smoke + Team Lead review
+
+11. **NO WORK WITHOUT A NEW PLANNER.** EVERY new user work assignment,
+    including "continue", minor docs, configuration, test fixes, and each
+    follow-up, MUST start by writing its own dated Task Checklist Planner
+    **before** source/production file edits. One existing planner cannot be
+    reused as a substitute for a new user assignment.
+12. **TEAM LEAD OWNERSHIP AND REAL DELEGATION.** The Team Lead MUST split
+    the work into uniquely identified small subtasks with explicit acceptance
+    criteria, dependencies and ownership, then assign EACH implementation
+    subtask to an actually available Agent Worker matched by specialization.
+    The Lead records actual agent ID, branch/worktree, file scope and handoff.
+    Concurrent writing to shared code/contracts is prohibited without an
+    explicit ordered integration plan. The Lead retains integration/review
+    authority; no agent may self-approve. When no real task-delegation API or
+    worker is available, the Lead MUST record **TEAM_LEAD_SERIAL**, implement
+    serially, and disclose missing independent reviewer/delegation. Broker
+    worker-capacity counts are NOT proof that task agents were assigned.
+13. **PER-SUBTASK TEST TRIAD IS REQUIRED.** Every subtask's handoff MUST
+    record **(a) Unit/Contract**, **(b) End-to-End (E2E)** and **(c) Smoke**
+    independently in the planner's NC-TEAM-003 verification matrix with
+    commands/scenarios, run location/OS, exact results, log/CI links and SHA.
+    An E2E proves the affected user-to-output behavior across relevant
+    boundaries; a smoke proves the built/integrated deliverable starts and
+    basic critical path works. Mock/browser E2E is explicitly labeled
+    *mock/browser* and NEVER counted as native app E2E. A successful build,
+    static lint, or unit test is not a substitute for E2E or Smoke.
+14. **NO SILENT EXCEPTIONS OR FALSE PASS.** The tests must actually run for
+    each subtask when applicable. If not applicable (e.g., pure documentation),
+    record `N/A: <concrete reason>` PER test and Team Lead approval; choose
+    the nearest document/link render/integration smoke when feasible. If the
+    test cannot run but applies, record `BLOCKED` or `PENDING`, owner and
+    missing resource/runner, NEVER `PASS` and NEVER full acceptance. Failed
+    E2E/Smoke requires worker repair and re-run. Automated checks may verify
+    evidence *structure*, not that a claimed run occurred.
+15. **INDEPENDENT LEAD INSPECTION PER SUBTASK.** The Lead MUST inspect every
+    actual worker diff and test log, run/reproduce critical smoke/E2E where
+    feasible, check security, compatibility, resources, secrets and regression,
+    and mark `LEAD_REVIEW=GO` only for a validated subtask. `PENDING` /
+    `NO-GO` and test failures keep that subtask unaccepted. Completion is
+    only after all required evidence, or justified Lead-approved N/A, is
+    recorded; report SOURCE/CI/NATIVE/PRODUCTION gates separately. A Lead
+    reviewing their own serial work is NOT an independent reviewer for
+    protected branch merges or release approvals.
+16. **ENFORCE IN PR + CONTINUE TO REPORT.** New PR task planners MUST include
+    the NC-TEAM-003 per-subtask verification matrix. The governance CI check
+    rejects missing/invalid matrix columns, missing subtask rows, missing
+    test status or unreasoned N/A, missing Team Lead review and fabricated
+    structural completion claims. PR body summarizes real assignments,
+    test triad evidence and Team Lead GO for PR submission. This automated
+    gate never replaces a qualified independent reviewer or native E2E.
+    Update NC-TEAM-002 remaining-work counts and blockers on every handoff.
+
 These rules are MANDATORY for every assistant/agent entrypoint to this repo.
 No worker action or user delivery may skip the Task Planner and Team Lead gate.
 PR structure is checked by the Nexora Task Planner Gate workflow; this does

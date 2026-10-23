@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="brandTitle brandDesc">
+  <title id="brandTitle">Nexora Code</title>
+  <desc id="brandDesc">Two-tone cyan and violet geometric N on midnight indigo.</desc>
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#172842"/>
+      <stop offset="50%" stop-color="#10182C"/>
+      <stop offset="100%" stop-color="#17112C"/>
+    </linearGradient>
+    <linearGradient id="n" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#45E5E1"/>
+      <stop offset="45%" stop-color="#6FCEFD"/>
+      <stop offset="100%" stop-color="#A986FF"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#907DFF"/>
+      <stop offset="100%" stop-color="#C49AFF"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="35%" cy="18%" r="80%">
+      <stop offset="0%" stop-color="#3D849F" stop-opacity=".24"/>
+      <stop offset="100%" stop-color="#3D849F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="106" fill="url(#base)"/>
+  <rect x="24" y="24" width="464" height="464" rx="106" fill="url(#glow)"/>
+  <rect x="31" y="31" width="450" height="450" rx="99" fill="none" stroke="#9FCDF9" stroke-opacity=".17" stroke-width="2"/>
+  <path d="M160 349 V163" fill="none" stroke="#45E5E1" stroke-width="43" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M164 166 L347 348" fill="none" stroke="url(#n)" stroke-width="45" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M351 349 V163" fill="none" stroke="url(#violet)" stroke-width="43" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="160" cy="163" r="10" fill="#C8FFFF" opacity=".92"/>
+  <circle cx="351" cy="349" r="10" fill="#E8D5FF" opacity=".92"/>
+</svg>

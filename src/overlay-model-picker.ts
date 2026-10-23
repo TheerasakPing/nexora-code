@@ -39,7 +39,7 @@ export async function openOverlayModelPicker(options: {
   const available = await providers();
   if (!options.valid()) return;
   available.forEach(provider => options.catalog(provider.id,provider.models));
-  if (!available.length) throw new Error('No harnesses found. Check your agent connections in PandaCode.');
+  if (!available.length) throw new Error('No harnesses found. Check your agent connections in Nexora Code.');
   // Native discovery lists a saved OpenCode selection as its models; with none, shorten the full catalog.
   const openCodeSaved = (available.find(provider => provider.id === 'opencode')?.models.length ?? 0) > 1;
   return openModelPicker({

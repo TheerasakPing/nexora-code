@@ -1,28 +1,25 @@
-// Where PandaCode lives. Builds are published on GitHub Releases; update the notes
-// below once release builds are signed (Apple notarization, Authenticode).
-const repoUrl = 'https://github.com/aicodeking/pandacode';
-
+// Fork-owned distribution links only. Never direct Nexora users to upstream
+// PandaCode installers, or assume an unsigned test build is a signed release.
+const repoUrl = 'https://github.com/TheerasakPing/nexora-code';
+const previewBuilds = `${repoUrl}/actions/workflows/nexora-r6-alpha.yml`;
 export const project = {
   repo: repoUrl,
   clone: `${repoUrl}.git`,
-  releases: `${repoUrl}/releases/latest`,
+  releases: previewBuilds, // Temporary preview build list, NOT an approved Release.
   issues: `${repoUrl}/issues`,
   security: `${repoUrl}/security/policy`,
 };
-
-// Direct downloads: release assets keep these names, so /releases/latest/download/ always
-// points at the newest build. Each has a matching .sha256 beside it.
-const latest = `${repoUrl}/releases/latest/download`;
+// GitHub Actions artifacts are temporary and require opening the successful
+// workflow run. Do not invent URLs for nonexistent, signed release assets.
 export const platformDownloads = [
-  { label: 'macOS', detail: 'Apple silicon', href: `${latest}/PandaCode-macOS-arm64.dmg` },
-  { label: 'Windows', detail: 'x64', href: `${latest}/PandaCode-Windows-x64-setup.exe` },
-  { label: 'Linux', detail: 'AppImage', href: `${latest}/PandaCode-Linux-x86_64.AppImage` },
+  { label: 'macOS', detail: 'Apple silicon · Actions preview', href: previewBuilds },
+  { label: 'Windows', detail: 'x64 · Actions preview', href: previewBuilds },
+  { label: 'Linux', detail: 'x64 · Actions preview', href: previewBuilds },
 ] as const;
-
 export const distribution = {
   platforms: 'macOS · Windows · Linux',
   isUnsignedPreview: true,
   requirements: 'Apple silicon · macOS 12+',
-  previewNotice: 'Not notarized by Apple. macOS may block the first launch.',
-  appleSupportUrl: 'https://support.apple.com/en-us/102445',
+  previewNotice: 'Ad-hoc signed only, NOT Apple notarized. macOS Gatekeeper will block normal opening; follow the verified owner-only Preview instructions.',
+  appleSupportUrl: 'https://support.apple.com/en-us/guide/mac-help/mh40617/mac',
 };

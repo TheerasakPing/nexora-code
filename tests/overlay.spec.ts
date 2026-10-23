@@ -376,7 +376,7 @@ test('launcher stays lightweight and starts concurrent tasks without opening the
   const loaded: string[] = [];
   page.on('request', request => loaded.push(request.url()));
   await page.goto('/?view=launcher');
-  await expect(page.getByRole('main', {name:'PandaCode quick launcher'})).toBeVisible();
+  await expect(page.getByRole('main', {name:'Nexora Code quick launcher'})).toBeVisible();
   await expect(page.locator('.launcher-task[data-task="preview-active"]')).toBeVisible();
   await expect(page.getByRole('button',{name:/Build a responsive gallery/})).toContainText('Needs attention');
   await expect(page.locator('.launcher-count')).toHaveText('4 active');

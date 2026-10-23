@@ -25,11 +25,11 @@ const previewCatalogs: Record<ProviderId, ProviderModel[]> = {
 };
 const previewProviders: Provider[] = (Object.entries({codex:'Codex',claude:'Claude Code',kimi:'Kimi Code',opencode:'OpenCode',glm:'GLM Coding Plan',antigravity:'Antigravity',grok:'Grok Build',mimo:'MiMo Token Plan',pi:'Pi',deepseek:'DeepSeek'}) as [ProviderId,string][]).map(([id,name]) => ({id,name,installed:id !== 'antigravity',path:id === 'antigravity' ? null : `/sample/bin/${id}`,version:'Sample provider',models:[]}));
 const tasks: OverlayTask[] = [
-  {id:'preview-active', sessionId:'preview-active', kind:'task', title:'Polish the new onboarding', projectId:'preview-project', projectName:'PandaCode', provider:'codex', status:'running', updatedAt:Date.now()},
-  {id:'preview-approval', sessionId:'preview-approval', kind:'task', title:'Build a responsive gallery', projectId:'preview-project', projectName:'PandaCode', provider:'claude', status:'waiting', updatedAt:Date.now()},
-  {id:'preview-worker', sessionId:'preview-worker', kind:'worker', title:'Build search indexing', parentTitle:'Polish the new onboarding', parentSessionId:'preview-active', workerId:'worker-indexing', projectId:'preview-project', projectName:'PandaCode', provider:'opencode', status:'running', updatedAt:Date.now()},
-  {id:'preview-subagent', sessionId:'preview-active', kind:'subagent', subagentId:'preview-child', title:'Audit accessibility', parentTitle:'Polish the new onboarding', projectId:'preview-project', projectName:'PandaCode', provider:'codex', status:'running', updatedAt:Date.now()},
-  {id:'preview-recent', sessionId:'preview-recent', kind:'task', title:'Review the API changes', projectId:'preview-project', projectName:'PandaCode', provider:'kimi', status:'idle', updatedAt:Date.now()},
+  {id:'preview-active', sessionId:'preview-active', kind:'task', title:'Polish the new onboarding', projectId:'preview-project', projectName:'Nexora Code', provider:'codex', status:'running', updatedAt:Date.now()},
+  {id:'preview-approval', sessionId:'preview-approval', kind:'task', title:'Build a responsive gallery', projectId:'preview-project', projectName:'Nexora Code', provider:'claude', status:'waiting', updatedAt:Date.now()},
+  {id:'preview-worker', sessionId:'preview-worker', kind:'worker', title:'Build search indexing', parentTitle:'Polish the new onboarding', parentSessionId:'preview-active', workerId:'worker-indexing', projectId:'preview-project', projectName:'Nexora Code', provider:'opencode', status:'running', updatedAt:Date.now()},
+  {id:'preview-subagent', sessionId:'preview-active', kind:'subagent', subagentId:'preview-child', title:'Audit accessibility', parentTitle:'Polish the new onboarding', projectId:'preview-project', projectName:'Nexora Code', provider:'codex', status:'running', updatedAt:Date.now()},
+  {id:'preview-recent', sessionId:'preview-recent', kind:'task', title:'Review the API changes', projectId:'preview-project', projectName:'Nexora Code', provider:'kimi', status:'idle', updatedAt:Date.now()},
 ];
 const threads = new Map<string, OverlayThread>();
 function previewThread(sessionId: string, subagentId?: string): OverlayThread {
@@ -77,7 +77,7 @@ export async function overlayCall<T>(command: string, args: Record<string, unkno
       .slice(0, Math.max(1, Math.min(Number(args.limit) || 30, 100)))
       .map(path => ({name:path.split('/').pop()!, path, isDir:false})) as T;
   }
-  if (command === 'overlay_snapshot') return { tasks, projects:[{id:'preview-project',name:'PandaCode',path:'/Projects/PandaCode'}], context:effectiveContext(), activeCount:tasks.filter(t => ['running','waiting','coordinating'].includes(t.status)).length } as T;
+  if (command === 'overlay_snapshot') return { tasks, projects:[{id:'preview-project',name:'Nexora Code',path:'/Projects/Nexora Code'}], context:effectiveContext(), activeCount:tasks.filter(t => ['running','waiting','coordinating'].includes(t.status)).length } as T;
   if (command === 'overlay_thread') return previewThread(String(args.sessionId), args.subagentId as string | undefined) as T;
   if (command === 'get_message_content') {
     const message = previewThread(String(args.sessionId)).messages.find(message => message.id === args.messageId && ['user','assistant'].includes(message.role));
@@ -97,7 +97,7 @@ export async function overlayCall<T>(command: string, args: Record<string, unkno
     return fork as T;
   }
   if (command === 'overlay_launch') {
-    const id = crypto.randomUUID(), context = effectiveContext(); tasks.unshift({id,sessionId:id,kind:'task',title:String(args.prompt),projectId:'preview-project',projectName:'PandaCode',provider:context.provider,status:'running',updatedAt:Date.now()});
+    const id = crypto.randomUUID(), context = effectiveContext(); tasks.unshift({id,sessionId:id,kind:'task',title:String(args.prompt),projectId:'preview-project',projectName:'Nexora Code',provider:context.provider,status:'running',updatedAt:Date.now()});
     window.dispatchEvent(new CustomEvent('pandacode-overlay-launched',{detail:{id,...context}})); return id as T;
   }
   if (command === 'overlay_toggle') { window.open(`${location.origin}/?view=launcher`, 'pandacode-launcher', 'width=650,height=510'); return undefined as T; }

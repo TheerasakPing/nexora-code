@@ -1396,6 +1396,113 @@ pub fn list_files(root: &Path, path: Option<String>) -> Result<Vec<FileEntry>, S
         .collect())
 }
 
+/// Open exactly the file shown in the Workspace preview using OS file handles,
+/// not a second pathname lookup after a canonicalize-based path check.
+/// The filesystem may change between validation and opening; these handles
+/// must reject symlink traversal and never read a file outside this checkout.
+#[cfg(unix)]
+fn open_scoped_preview(root: &Path, relative: &str) -> Result<File, String> {
+    use std::{
+        ffi::CString,
+        os::{
+            fd::{AsRawFd, FromRawFd},
+            unix::{ffi::OsStrExt, fs::OpenOptionsExt},
+        },
+    };
+    // Keeps .git/case variants, absolute paths and traversal policy in one place.
+    scoped_path(root, relative)?;
+    let segments: Vec<_> = Path::new(relative)
+        .components()
+        .filter_map(|component| match component {
+            Component::Normal(value) => Some(value),
+            _ => None,
+        })
+        .collect();
+    if segments.is_empty() {
+        return Err("Only regular project files can be previewed".into());
+    }
+    let mut directory = fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC)
+        .open(root)
+        .map_err(|e| e.to_string())?;
+    for (index, name) in segments.iter().enumerate() {
+        let name = CString::new(name.as_bytes()).map_err(|e| e.to_string())?;
+        let flags = if index + 1 == segments.len() {
+            libc::O_RDONLY | libc::O_NOFOLLOW | libc::O_NONBLOCK | libc::O_CLOEXEC
+        } else {
+            libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC
+        };
+        let fd = unsafe { libc::openat(directory.as_raw_fd(), name.as_ptr(), flags) };
+        if fd < 0 {
+            return Err(format!(
+                "Cannot preview project file (symlink paths are not supported): {}",
+                std::io::Error::last_os_error()
+            ));
+        }
+        let opened = unsafe { File::from_raw_fd(fd) };
+        if index + 1 == segments.len() {
+            if !opened.metadata().map_err(|e| e.to_string())?.is_file() {
+                return Err("Only regular project files can be previewed".into());
+            }
+            return Ok(opened);
+        }
+        directory = opened;
+    }
+    Err("Invalid project file path".into())
+}
+
+/// Windows opens a no-follow handle and checks the final, kernel-resolved path.
+/// This prevents an ancestor junction swapped after the earlier path check
+/// from causing an outside file's bytes to be read.
+#[cfg(windows)]
+fn open_scoped_preview(root: &Path, relative: &str) -> Result<File, String> {
+    use std::os::windows::{
+        fs::{MetadataExt, OpenOptionsExt},
+        io::AsRawHandle,
+    };
+    use windows::Win32::{
+        Foundation::HANDLE,
+        Storage::FileSystem::{
+            GetFinalPathNameByHandleW, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS,
+            FILE_FLAG_OPEN_REPARSE_POINT, FILE_NAME_NORMALIZED,
+        },
+    };
+    let path = scoped_path(root, relative)?;
+    let root = root.canonicalize().map_err(|e| e.to_string())?;
+    let file = fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT.0 | FILE_FLAG_BACKUP_SEMANTICS.0)
+        .open(path)
+        .map_err(|e| e.to_string())?;
+    let meta = file.metadata().map_err(|e| e.to_string())?;
+    if !meta.is_file() || meta.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT.0 != 0 {
+        return Err("Cannot preview junctions, links or non-file project paths".into());
+    }
+    let mut buffer = vec![0u16; 32768];
+    let len = unsafe {
+        GetFinalPathNameByHandleW(
+            HANDLE(file.as_raw_handle()),
+            &mut buffer,
+            FILE_NAME_NORMALIZED,
+        )
+    };
+    if len == 0 || len as usize >= buffer.len() {
+        return Err("Cannot verify the opened project file".into());
+    }
+    let actual =
+        PathBuf::from(String::from_utf16(&buffer[..len as usize]).map_err(|e| e.to_string())?);
+    if !actual.starts_with(&root) {
+        return Err("Opened file is outside the project".into());
+    }
+    Ok(file)
+}
+
+#[cfg(not(any(unix, windows)))]
+fn open_scoped_preview(_root: &Path, _relative: &str) -> Result<File, String> {
+    Err("Secure workspace preview handles are unavailable on this platform".into())
+}
+
 /// Largest image an agent's question may show inline.
 const IMAGE_LIMIT: u64 = 8 * 1024 * 1024;
 
@@ -1404,7 +1511,12 @@ const IMAGE_LIMIT: u64 = 8 * 1024 * 1024;
 pub fn image_data_url(root: &Path, path: &str) -> Result<String, String> {
     use base64::Engine;
     let target = scoped_path(root, path)?;
-    let mime = match target.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).as_deref() {
+    let mime = match target
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .as_deref()
+    {
         Some("png") => "image/png",
         Some("jpg" | "jpeg") => "image/jpeg",
         Some("gif") => "image/gif",
@@ -1412,23 +1524,26 @@ pub fn image_data_url(root: &Path, path: &str) -> Result<String, String> {
         Some("svg") => "image/svg+xml",
         _ => return Err("Only PNG, JPEG, GIF, WebP and SVG images can be shown".into()),
     };
-    let file = File::open(&target).map_err(|e| e.to_string())?;
+    let file = open_scoped_preview(root, path)?;
     let metadata = file.metadata().map_err(|e| e.to_string())?;
     if !metadata.is_file() || metadata.len() > IMAGE_LIMIT {
         return Err("The image is missing or larger than 8 MB".into());
     }
     let mut bytes = Vec::new();
-    file.take(IMAGE_LIMIT + 1).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
-    Ok(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
+    file.take(IMAGE_LIMIT + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| e.to_string())?;
+    if bytes.len() as u64 > IMAGE_LIMIT {
+        return Err("The image is missing or larger than 8 MB".into());
+    }
+    Ok(format!(
+        "data:{mime};base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(bytes)
+    ))
 }
 
 pub fn read_file(root: &Path, path: String) -> Result<String, String> {
-    let target = scoped_path(root, &path)?;
-    let metadata = fs::metadata(&target).map_err(|e| e.to_string())?;
-    if !metadata.is_file() {
-        return Err("Only regular text files can be previewed".into());
-    }
-    let file = File::open(target).map_err(|e| e.to_string())?;
+    let file = open_scoped_preview(root, &path)?;
     let metadata = file.metadata().map_err(|e| e.to_string())?;
     if !metadata.is_file() {
         return Err("Only regular text files can be previewed".into());
@@ -1588,7 +1703,93 @@ mod tests {
         assert!(git_diff(&f.root, Some("escape/secret".into()), false).is_err());
         fs::write(f.root.join("local"), "safe").unwrap();
         std::os::unix::fs::symlink("local", f.root.join("local-link")).unwrap();
-        assert_eq!(read_file(&f.root, "local-link".into()).unwrap(), "safe");
+        // File previews intentionally reject even in-project symlinks to
+        // guarantee no race can pivot the opened handle to an external file.
+        assert!(read_file(&f.root, "local-link".into()).is_err());
+        assert_eq!(read_file(&f.root, "local".into()).unwrap(), "safe");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn preview_handles_reject_file_and_directory_symlinks_and_special_files() {
+        use std::os::unix::fs::symlink;
+        let f = Fixture::new(false);
+        fs::create_dir(f.root.join("private")).unwrap();
+        fs::write(f.base.join("outside.txt"), "TOP SECRET").unwrap();
+        fs::write(f.base.join("outside.png"), [137, 80, 78, 71]).unwrap();
+        fs::write(f.root.join("private/inside.txt"), "workspace").unwrap();
+        fs::write(f.root.join("private/inside.png"), [137, 80, 78, 71]).unwrap();
+        symlink(f.base.join("outside.txt"), f.root.join("outside.txt")).unwrap();
+        symlink(f.base.join("outside.png"), f.root.join("outside.png")).unwrap();
+        symlink(
+            f.root.join("private/inside.txt"),
+            f.root.join("inside-link.txt"),
+        )
+        .unwrap();
+        symlink(f.root.join("private"), f.root.join("dir-link")).unwrap();
+        assert!(read_file(&f.root, "outside.txt".into()).is_err());
+        assert!(image_data_url(&f.root, "outside.png").is_err());
+        assert!(read_file(&f.root, "inside-link.txt".into()).is_err());
+        assert!(read_file(&f.root, "dir-link/inside.txt".into()).is_err());
+        assert!(image_data_url(&f.root, "dir-link/inside.png").is_err());
+        assert_eq!(
+            read_file(&f.root, "private/inside.txt".into()).unwrap(),
+            "workspace"
+        );
+        assert!(image_data_url(&f.root, "private/inside.png")
+            .unwrap()
+            .starts_with("data:image/png;base64,"));
+        // A named pipe in the checkout must be rejected without blocking.
+        use std::ffi::CString;
+        let pipe_path = f.root.join("fifo");
+        let pipe_name = CString::new(pipe_path.as_os_str().as_encoded_bytes()).unwrap();
+        assert_eq!(unsafe { libc::mkfifo(pipe_name.as_ptr(), 0o600) }, 0);
+        let started = Instant::now();
+        assert!(read_file(&f.root, "fifo".into()).is_err());
+        assert!(started.elapsed() < Duration::from_secs(1));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn preview_race_never_returns_bytes_from_swapped_symlink() {
+        use std::{
+            os::unix::fs::symlink,
+            sync::{
+                atomic::{AtomicBool, Ordering},
+                Arc,
+            },
+        };
+        let f = Fixture::new(false);
+        fs::write(f.base.join("secret.txt"), "OUTSIDE_SECRET_DO_NOT_READ").unwrap();
+        fs::write(f.root.join("switch.txt"), "inside").unwrap();
+        let done = Arc::new(AtomicBool::new(false));
+        let root = f.root.clone();
+        let secret = f.base.join("secret.txt");
+        let stop = Arc::clone(&done);
+        let adversary = thread::spawn(move || {
+            for _ in 0..400 {
+                let replacement = root.join("next-link");
+                let _ = fs::remove_file(&replacement);
+                symlink(&secret, &replacement).unwrap();
+                fs::rename(&replacement, root.join("switch.txt")).unwrap();
+                let safe = root.join("next-safe");
+                fs::write(&safe, "inside").unwrap();
+                fs::rename(&safe, root.join("switch.txt")).unwrap();
+            }
+            stop.store(true, Ordering::Release);
+        });
+        let mut attempts = 0;
+        while !done.load(Ordering::Acquire) || attempts < 400 {
+            if let Ok(data) = read_file(&f.root, "switch.txt".into()) {
+                assert_eq!(data, "inside", "preview opened bytes outside workspace");
+            }
+            attempts += 1;
+            if attempts >= 20_000 {
+                break;
+            }
+        }
+        adversary.join().unwrap();
+        assert_eq!(read_file(&f.root, "switch.txt".into()).unwrap(), "inside");
     }
 
     #[cfg(unix)]
