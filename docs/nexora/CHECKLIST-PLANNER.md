@@ -9,6 +9,8 @@
 This is a **living checklist**, not a claim that R0–R8 or production deployment is complete.
 Only check an item after its evidence and acceptance gate are recorded. Do not invent completion percentages or dates.
 
+**Update (2026-10-23, NC-TEAM-002):** See the [verified progress snapshot](PROGRESS-SNAPSHOT-2026-10-23.md) for the latest GitHub integration status and clearly separated remaining counts. PR #21 is merged into develop, but the acceptance markers below remain conservative until their own DoD/OS/reviewer gates pass. The original 2026-10-22 snapshot is retained as historical evidence; do not confuse the 24 *planned engineering packages* with GitHub PR numbers.
+
 ## สรุปสำหรับติดตามงาน (ภาษาไทย)
 
 **จุดประสงค์:** ใช้ไฟล์นี้เป็นแผนงานหลักของ Nexora Code สำหรับติดตามงานตาม Roadmap ไม่ใช่หลักฐานว่าโครงการเสร็จ 100% โดยเครื่องหมาย [x] หมายถึงมีหลักฐานของงานที่ระบุไว้เท่านั้น ส่วน [ ] หมายถึงยังไม่ผ่านเกณฑ์หรือยังทำไม่ครบ
