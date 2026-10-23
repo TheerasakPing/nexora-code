@@ -2637,6 +2637,35 @@ mod tests {
         std::fs::remove_dir_all(dir).unwrap();
     }
 
+    // The parent watches the final marker's existence and kills the child
+    // immediately. Create + write of that filename is NOT atomic: the parent
+    // can otherwise read an empty/partial ID on fast Linux runners.
+    fn r1_publish_ready_marker(db: &Path, payload: &[u8]) {
+        let staging = db.with_extension("ready.tmp");
+        std::fs::write(&staging, payload).unwrap();
+        std::fs::rename(&staging, db.with_extension("ready")).unwrap();
+    }
+
+    #[test]
+    fn r1_ready_marker_publishes_complete_single_and_multi_session_ids() {
+        let dir = std::env::temp_dir().join(format!("nexora-r1-ready-marker-{}", id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = dir.join("fixture.db");
+        let single = id();
+        r1_publish_ready_marker(&db, single.as_bytes());
+        let ready = db.with_extension("ready");
+        assert_eq!(std::fs::read_to_string(&ready).unwrap(), single);
+        assert!(!db.with_extension("ready.tmp").exists());
+        std::fs::remove_file(&ready).unwrap();
+
+        let many: Vec<String> = (0..8).map(|_| id()).collect();
+        r1_publish_ready_marker(&db, &serde_json::to_vec(&many).unwrap());
+        let read: Vec<String> = serde_json::from_slice(&std::fs::read(&ready).unwrap()).unwrap();
+        assert_eq!(read, many);
+        assert!(!db.with_extension("ready.tmp").exists());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
     // This function is invoked by a *separate copy* of the current test
     // executable. It deliberately stays alive with SQLite open so the parent
     // can simulate actual OS process death, not just close/reopen an SQLite
@@ -2662,7 +2691,7 @@ mod tests {
         if std::env::var_os("NEXORA_R1_TEST_CRASH_WAITING").is_some() {
             store.status(&session.id, "waiting").unwrap();
         }
-        std::fs::write(path.with_extension("ready"), &session.id).unwrap();
+        r1_publish_ready_marker(&path, session.id.as_bytes());
         // The parent terminates this process with Child::kill (SIGKILL on Unix).
         // No user project, provider, external tool, or remote service is touched.
         loop {
@@ -2784,11 +2813,7 @@ mod tests {
                 .unwrap();
             session_ids.push(session.id);
         }
-        std::fs::write(
-            path.with_extension("ready"),
-            serde_json::to_vec(&session_ids).unwrap(),
-        )
-        .unwrap();
+        r1_publish_ready_marker(&path, &serde_json::to_vec(&session_ids).unwrap());
         loop {
             std::thread::park_timeout(std::time::Duration::from_secs(1));
         }
