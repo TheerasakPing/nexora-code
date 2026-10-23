@@ -53,3 +53,8 @@
 - **Known remaining security:** Windows directory listing is still pathname-based and not declared race-safe; `file_search`, Git stage/diff and OS live GUI/PTY/provider need separate R1 acceptance. No Apple notarization or independent reviewer.
 - **Team Lead review:** Inspected OS-handle ownership, `dup/fdopendir/closedir` cleanup, `fstatat(AT_SYMLINK_NOFOLLOW)`, no-follow directory walk and bound; SOURCE GO for narrow R1 Unix listing. Protected develop merge, R1 exit and production **NO-GO**.
 - **PR stage:** R1-DIR-04 exact-head GitHub CI and independent review still PENDING as of source submission. Current-head CI statuses must be checked before acceptance.
+
+**GO/NO-GO release gates:** SOURCE GO for review of the Unix directory
+handle patch; exact-head hosted CI PENDING. R1 full phase exit NO-GO,
+protected develop merge NO-GO and Production NO-GO. Native Windows
+listing junction E2E and genuine independent review remain missing.
