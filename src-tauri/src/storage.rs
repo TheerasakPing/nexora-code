@@ -2637,6 +2637,123 @@ mod tests {
         std::fs::remove_dir_all(dir).unwrap();
     }
 
+    // This function is invoked by a *separate copy* of the current test
+    // executable. It deliberately stays alive with SQLite open so the parent
+    // can simulate actual OS process death, not just close/reopen an SQLite
+    // connection within the same process.
+    #[test]
+    fn r1_crash_writer_child_fixture() {
+        let Some(path) = std::env::var_os("NEXORA_R1_TEST_CRASH_DB") else {
+            return;
+        };
+        let path = PathBuf::from(path);
+        let store = Store::open(&path).unwrap();
+        let project = store.add_project(path.parent().unwrap()).unwrap();
+        let session = store
+            .create_session(&project.id, "codex", "test-model", "ask")
+            .unwrap();
+        store
+            .begin_task_turn(&session.id, "Plan work: do not run again after crash")
+            .unwrap();
+        let tool = r#"{"type":"tool_activity","version":1,"id":"crash:live","name":"Write","status":"running","input":"disposable fixture","output":"partial"}"#;
+        let done = r#"{"type":"tool_activity","version":1,"id":"crash:done","name":"Read","status":"completed","input":"fixture","output":"done"}"#;
+        store.tool_message(&session.id, "crash:live", tool).unwrap();
+        store.tool_message(&session.id, "crash:done", done).unwrap();
+        if std::env::var_os("NEXORA_R1_TEST_CRASH_WAITING").is_some() {
+            store.status(&session.id, "waiting").unwrap();
+        }
+        std::fs::write(path.with_extension("ready"), &session.id).unwrap();
+        // The parent terminates this process with Child::kill (SIGKILL on Unix).
+        // No user project, provider, external tool, or remote service is touched.
+        loop {
+            std::thread::park_timeout(std::time::Duration::from_secs(1));
+        }
+    }
+
+    #[test]
+    fn r1_actual_os_kill_recovers_sqlite_session_and_never_replays_tool() {
+        use std::{
+            process::{Command, Stdio},
+            time::{Duration, Instant},
+        };
+        // 10 real OS process deaths, alternating RUNNING and WAITING.
+        // Each iteration uses a new on-disk SQLite WAL fixture.
+        for cycle in 0..10 {
+            let dir = std::env::temp_dir().join(format!(
+                "nexora-r1-process-crash-{}-{}",
+                std::process::id(), id()
+            ));
+            std::fs::create_dir_all(&dir).unwrap();
+            let db = dir.join("fixture.db");
+            let ready = db.with_extension("ready");
+            let mut cmd = Command::new(std::env::current_exe().unwrap());
+            cmd.args([
+                "--exact",
+                "storage::tests::r1_crash_writer_child_fixture",
+                "--nocapture",
+            ])
+            .env("NEXORA_R1_TEST_CRASH_DB", &db)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+            if cycle % 2 == 1 {
+                cmd.env("NEXORA_R1_TEST_CRASH_WAITING", "1");
+            }
+            let mut child = cmd.spawn().unwrap();
+            let deadline = Instant::now() + Duration::from_secs(12);
+            while !ready.exists() && Instant::now() < deadline {
+                if let Some(status) = child.try_wait().unwrap() {
+                    panic!("Crash fixture exited before ready: {status}");
+                }
+                std::thread::sleep(Duration::from_millis(15));
+            }
+            if !ready.exists() {
+                let _ = child.kill();
+                let _ = child.wait();
+                panic!("Crash fixture did not persist its ready marker");
+            }
+            let sid = std::fs::read_to_string(&ready).unwrap();
+            // The child must still be running when the operating system kills it.
+            assert!(child.try_wait().unwrap().is_none());
+            child.kill().unwrap();
+            let status = child.wait().unwrap();
+            assert!(!status.success(), "crash fixture must not exit cleanly");
+            for restart in 0..2 {
+                let store = Store::open(&db).unwrap();
+                let session = store.session(&sid).unwrap();
+                assert_eq!(session.status, "interrupted", "cycle {cycle}, reopen {restart}");
+                assert_eq!(session.task_stage, "in_progress");
+                let messages = store.messages(&sid, None).unwrap();
+                assert_eq!(messages.len(), 3, "startup must not replay or insert a tool");
+                assert_eq!(
+                    messages.iter().filter(|item| item.role == "user").count(),
+                    1, "no duplicated prompt on restart"
+                );
+                let unfinished = messages
+                    .iter()
+                    .find(|item| item.role == "tool" && item.content.contains("\"id\":\"crash:live\""))
+                    .unwrap();
+                let event: serde_json::Value =
+                    serde_json::from_str(&unfinished.content).unwrap();
+                assert_eq!(event["status"], "failed");
+                let result = event["output"].as_str().unwrap();
+                assert!(result.contains("partial"));
+                assert_eq!(
+                    result.matches("interrupted before this tool").count(),
+                    1, "recovery must be idempotent"
+                );
+                let completed = messages
+                    .iter()
+                    .find(|item| item.role == "tool" && item.content.contains("\"id\":\"crash:done\""))
+                    .unwrap();
+                let done: serde_json::Value =
+                    serde_json::from_str(&completed.content).unwrap();
+                assert_eq!(done["status"], "completed");
+            }
+            std::fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
     #[test]
     fn unfinished_tools_settle_on_turn_end_and_restart() {
         let dir = std::env::temp_dir().join(format!("pandacode-interrupted-tools-{}", id()));
