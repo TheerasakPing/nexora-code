@@ -302,6 +302,54 @@ fn search_directories(windows: bool, env: &impl Fn(&str) -> Option<OsString>) ->
     dirs
 }
 
+/// Finder launches may call this while building the first PATH. Never allow a
+/// FIFO/device, symlink swap, or unbounded npm config file to stall the GUI.
+const MAX_NPMRC_BYTES: u64 = 64 * 1024;
+
+fn read_bounded_npmrc(home: &Path) -> Option<String> {
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW | libc::O_CLOEXEC);
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
+        use windows::Win32::Storage::FileSystem::{
+            FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_OPEN_REPARSE_POINT,
+        };
+        options.custom_flags(FILE_FLAG_OPEN_REPARSE_POINT.0);
+        let file = options.open(home.join(".npmrc")).ok()?;
+        let meta = file.metadata().ok()?;
+        if !meta.is_file()
+            || meta.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT.0 != 0
+            || meta.len() > MAX_NPMRC_BYTES
+        {
+            return None;
+        }
+        let mut bytes = Vec::with_capacity(meta.len() as usize);
+        file.take(MAX_NPMRC_BYTES + 1).read_to_end(&mut bytes).ok()?;
+        return (bytes.len() as u64 <= MAX_NPMRC_BYTES)
+            .then(|| String::from_utf8(bytes).ok())
+            .flatten();
+    }
+    #[cfg(not(windows))]
+    {
+        let file = options.open(home.join(".npmrc")).ok()?;
+        let meta = file.metadata().ok()?;
+        if !meta.is_file() || meta.len() > MAX_NPMRC_BYTES {
+            return None;
+        }
+        let mut bytes = Vec::with_capacity(meta.len() as usize);
+        file.take(MAX_NPMRC_BYTES + 1).read_to_end(&mut bytes).ok()?;
+        (bytes.len() as u64 <= MAX_NPMRC_BYTES)
+            .then(|| String::from_utf8(bytes).ok())
+            .flatten()
+    }
+}
+
 /// Where `npm i -g` puts CLIs, located the way npm does, without running it: a configured
 /// `prefix` (environment, then `~/.npmrc`), else the prefix of the real `node` binary, so
 /// a node reached through a symlink (`~/.local/bin/node`, a version manager) still counts.
@@ -312,7 +360,7 @@ fn npm_global_bin(
     dirs: &[PathBuf],
 ) -> Option<PathBuf> {
     let npmrc = || {
-        let text = std::fs::read_to_string(home?.join(".npmrc")).ok()?;
+        let text = read_bounded_npmrc(home?)?;
         let value = text.lines().find_map(|line| {
             let (key, value) = line.split_once('=')?;
             (key.trim() == "prefix").then(|| value.trim().trim_matches('"').to_owned())
@@ -473,6 +521,68 @@ mod tests {
         let configured = executable(&f, &format!("home/.npm-packages/bin/{tool}"));
         f.file("home/.npmrc", "fund=false\nprefix = ~/.npm-packages\n");
         assert_eq!(find_in_directories(&tool, search_directories(false, &env), false), Some(configured));
+    }
+
+    #[test]
+    fn npmrc_discovery_is_bounded_and_preserves_prefix_priority() {
+        let f = Fixture::new();
+        let home = f.0.join("home");
+        fs::create_dir_all(&home).unwrap();
+        assert!(read_bounded_npmrc(&home).is_none());
+        f.file("home/.npmrc", "fund=false\nprefix=~/.npm-packages\n");
+        assert!(read_bounded_npmrc(&home).unwrap().contains("prefix=~/.npm-packages"));
+
+        let dirs = vec![f.0.join("no-tools")];
+        let env = |name: &str| match name {
+            "NPM_CONFIG_PREFIX" => Some(f.0.join("env-prefix").into_os_string()),
+            _ => None,
+        };
+        assert_eq!(
+            npm_global_bin(false, &env, Some(&home), &dirs),
+            Some(f.0.join("env-prefix/bin"))
+        );
+        f.file("home/.npmrc", &"x".repeat(MAX_NPMRC_BYTES as usize + 1));
+        assert!(read_bounded_npmrc(&home).is_none(), "oversize config must be skipped");
+        // Invalid file must not block CLI discovery when no override exists.
+        assert!(npm_global_bin(false, &|_| None, Some(&home), &dirs).is_none());
+        assert_eq!(
+            npm_global_bin(false, &env, Some(&home), &dirs),
+            Some(f.0.join("env-prefix/bin")),
+            "explicit env prefix must take precedence over invalid config"
+        );
+        fs::remove_file(home.join(".npmrc")).unwrap();
+        fs::create_dir(home.join(".npmrc")).unwrap();
+        assert!(read_bounded_npmrc(&home).is_none(), "directories are not config files");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn npmrc_named_pipe_and_symlink_cannot_block_finder_startup() {
+        use std::{ffi::CString, os::unix::ffi::OsStrExt, time::{Duration, Instant}};
+        let f = Fixture::new();
+        let home = f.0.join("home");
+        fs::create_dir_all(&home).unwrap();
+        let path = home.join(".npmrc");
+        let encoded = CString::new(path.as_os_str().as_bytes()).unwrap();
+        assert_eq!(unsafe { libc::mkfifo(encoded.as_ptr(), 0o600) }, 0);
+        let start = Instant::now();
+        assert!(read_bounded_npmrc(&home).is_none());
+        assert!(start.elapsed() < Duration::from_secs(1), "named pipe blocked GUI startup");
+        fs::remove_file(&path).unwrap();
+        let outside = f.file("secret.txt", "prefix=/unauthorized/bin");
+        std::os::unix::fs::symlink(&outside, &path).unwrap();
+        assert!(read_bounded_npmrc(&home).is_none(), "symlink config must fail closed");
+        // Same known minimal PATH as a Finder launch, no shell evaluation.
+        let env = |key: &str| match key {
+            "PATH" => Some("/usr/bin:/bin".into()),
+            "HOME" => Some(home.clone().into_os_string()),
+            _ => None,
+        };
+        let search_start = Instant::now();
+        let dirs = search_directories(false, &env);
+        assert!(dirs.contains(&PathBuf::from("/opt/homebrew/bin")));
+        assert!(!dirs.contains(&PathBuf::from("/unauthorized/bin")));
+        assert!(search_start.elapsed() < Duration::from_secs(1));
     }
 
     #[test]
