@@ -186,6 +186,20 @@ pub struct ToolIntent {
     pub capability: Capability,
 }
 
+// Identity bytes must not carry control sequences, invisible Unicode format
+// characters, whitespace or shell/JSON delimiters into later native audit and
+// approval surfaces. These are identifiers, not user-facing labels.
+fn valid_intent_identifier(value: &str, limit: usize) -> bool {
+    !value.is_empty()
+        && value.len() <= limit
+        && !value
+            .split('/')
+            .any(|segment| segment.is_empty() || segment == "." || segment == "..")
+        && value.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.' | b'/' | b':')
+        })
+}
+
 impl ToolIntent {
     pub fn from_config(
         session_id: &str,
@@ -193,8 +207,7 @@ impl ToolIntent {
         server_config: &[u8],
         capability: Capability,
     ) -> Result<Self, Denial> {
-        if session_id.is_empty()
-            || session_id.len() > 128
+        if !valid_intent_identifier(session_id, 128)
             || server_id.is_empty()
             || server_id.len() > 64
             || server_config.is_empty()
@@ -202,7 +215,7 @@ impl ToolIntent {
             || !server_id
                 .bytes()
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'_' || c == b'-')
-            || matches!(&capability, Capability::ReadOnlyTool(name) | Capability::MutatingTool(name) if name.is_empty() || name.len() > 256)
+            || matches!(&capability, Capability::ReadOnlyTool(name) | Capability::MutatingTool(name) if !valid_intent_identifier(name, 256))
         {
             return Err(Denial::InvalidIntent);
         }
@@ -315,6 +328,68 @@ mod tests {
     }
     fn intent(session: &str, verb: Capability) -> ToolIntent {
         ToolIntent::from_config(session, "filesystem", b"stdio:npx @mcp/fs", verb).unwrap()
+    }
+
+    #[test]
+    fn invalid_identity_components_are_fail_closed_before_grant_creation() {
+        for invalid in [
+            "",
+            "has space",
+            "with\nnewline",
+            "with\rreturn",
+            "nul\0byte",
+            "../hidden",
+            "\u{202e}reversed",
+            "caf\u{00e9}",
+            "with\tseparator",
+        ] {
+            assert!(
+                ToolIntent::from_config(invalid, "filesystem", b"valid", Capability::Connect)
+                    .is_err(),
+                "unsafe session id was accepted: {invalid:?}"
+            );
+            for capability in [
+                Capability::ReadOnlyTool(invalid.to_owned()),
+                Capability::MutatingTool(invalid.to_owned()),
+            ] {
+                assert!(
+                    ToolIntent::from_config("session-1", "filesystem", b"valid", capability)
+                        .is_err(),
+                    "unsafe tool name was accepted: {invalid:?}"
+                );
+            }
+        }
+        assert!(ToolIntent::from_config(
+            &"a".repeat(129),
+            "filesystem",
+            b"valid",
+            Capability::Connect
+        )
+        .is_err());
+        assert!(ToolIntent::from_config(
+            "session-1",
+            "filesystem",
+            b"valid",
+            Capability::ReadOnlyTool("a".repeat(257)),
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn structured_ascii_identifiers_preserve_grant_isolation() {
+        let read = ToolIntent::from_config(
+            "session:42/file.v1",
+            "filesystem",
+            b"stdio:validated",
+            Capability::ReadOnlyTool("tools/read_file.v2".into()),
+        )
+        .unwrap();
+        let mut book = McpPermissionLedger::default();
+        let now = Instant::now();
+        let id = book.request(read.clone(), now).unwrap();
+        book.approve(id, consent(), now).unwrap();
+        assert!(book.take(id, &read, now).is_ok());
+        assert!(book.take(id, &read, now).is_err());
     }
 
     #[test]
