@@ -436,6 +436,157 @@ mod tests {
     }
 
     #[test]
+    fn fifty_disk_reopens_never_replay_unknown_intents_or_unlock_dependents() {
+        // Source-level restart simulation: repeatedly close/reopen the real
+        // on-disk SQLite connection. This does NOT simulate an OS power loss.
+        let (path, initial) = database();
+        drop(initial);
+        for cycle in 0..50u64 {
+            let run_id = format!("cycle_{cycle}");
+            let approve_key = format!("approval_{cycle}");
+            let effect_key = format!("effect_{cycle}");
+
+            let db = Connection::open(&path).unwrap();
+            let journal = WorkflowJournal::open(&db).unwrap();
+            journal.create(&run_id, &plan()).unwrap();
+            journal
+                .record_intent(&run_id, "approval", cycle + 1, &approve_key)
+                .unwrap();
+            journal
+                .record_outcome(
+                    &run_id,
+                    "approval",
+                    cycle + 1,
+                    &approve_key,
+                    FinalOutcome::Succeeded,
+                )
+                .unwrap();
+            journal
+                .record_intent(&run_id, "write", cycle + 1, &effect_key)
+                .unwrap();
+            assert_eq!(journal.event_count(&run_id).unwrap(), 3);
+            drop(db);
+
+            let reopened = Connection::open(&path).unwrap();
+            let recovered = WorkflowJournal::open(&reopened).unwrap();
+            assert_eq!(
+                recovered.recover_interrupted().unwrap(),
+                1,
+                "Cycle {cycle}: exactly one interrupted effect must be fenced"
+            );
+            assert_eq!(recovered.status(&run_id, "approval").unwrap(), "succeeded");
+            assert_eq!(recovered.status(&run_id, "write").unwrap(), "unknown");
+            assert_eq!(recovered.status(&run_id, "review").unwrap(), "pending");
+            assert!(recovered.ready_candidates(&run_id).unwrap().is_empty());
+            assert!(recovered
+                .record_intent(&run_id, "write", cycle + 2, &format!("replay_{cycle}"))
+                .is_err());
+            assert!(recovered
+                .record_outcome(
+                    &run_id,
+                    "write",
+                    cycle + 1,
+                    &effect_key,
+                    FinalOutcome::Succeeded
+                )
+                .is_err());
+            assert_eq!(recovered.recover_interrupted().unwrap(), 0);
+            assert_eq!(recovered.event_count(&run_id).unwrap(), 4);
+            drop(reopened);
+        }
+        let db = Connection::open(&path).unwrap();
+        let journal = WorkflowJournal::open(&db).unwrap();
+        let count: i64 = db
+            .query_row(
+                "SELECT COUNT(*) FROM workflow_journal_nodes WHERE status='unknown'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 50);
+        let number_of_events: i64 = db
+            .query_row("SELECT COUNT(*) FROM workflow_journal_events", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(number_of_events, 200);
+        assert_eq!(journal.recover_interrupted().unwrap(), 0);
+        drop(db);
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn sqlite_event_write_failure_rolls_back_intent_and_outcome_atomically() {
+        let (path, db) = database();
+        let journal = WorkflowJournal::open(&db).unwrap();
+        journal.create("injected_failure", &plan()).unwrap();
+        db.execute_batch(
+            "CREATE TEMP TRIGGER fail_audit BEFORE INSERT ON workflow_journal_events
+             BEGIN SELECT RAISE(ABORT,'simulated audit disk write failure'); END;",
+        )
+        .unwrap();
+        assert!(journal
+            .record_intent("injected_failure", "approval", 1, "first_try")
+            .is_err());
+        assert_eq!(
+            journal.status("injected_failure", "approval").unwrap(),
+            "pending"
+        );
+        assert_eq!(journal.event_count("injected_failure").unwrap(), 0);
+        db.execute_batch("DROP TRIGGER fail_audit;").unwrap();
+
+        journal
+            .record_intent("injected_failure", "approval", 2, "safe_try")
+            .unwrap();
+        db.execute_batch(
+            "CREATE TEMP TRIGGER fail_audit BEFORE INSERT ON workflow_journal_events
+             BEGIN SELECT RAISE(ABORT,'simulated audit disk write failure'); END;",
+        )
+        .unwrap();
+        assert!(journal
+            .record_outcome(
+                "injected_failure",
+                "approval",
+                2,
+                "safe_try",
+                FinalOutcome::Succeeded
+            )
+            .is_err());
+        assert_eq!(
+            journal.status("injected_failure", "approval").unwrap(),
+            "running"
+        );
+        assert_eq!(journal.event_count("injected_failure").unwrap(), 1);
+        // Recovery must also roll back its UNKNOWN status update if the
+        // durable audit event fails; it may never invent a resolved state.
+        assert!(journal.recover_interrupted().is_err());
+        assert_eq!(
+            journal.status("injected_failure", "approval").unwrap(),
+            "running"
+        );
+        assert_eq!(journal.event_count("injected_failure").unwrap(), 1);
+        db.execute_batch("DROP TRIGGER fail_audit;").unwrap();
+
+        assert_eq!(journal.recover_interrupted().unwrap(), 1);
+        assert_eq!(
+            journal.status("injected_failure", "approval").unwrap(),
+            "unknown"
+        );
+        assert!(journal
+            .record_outcome(
+                "injected_failure",
+                "approval",
+                2,
+                "safe_try",
+                FinalOutcome::Succeeded
+            )
+            .is_err());
+        assert_eq!(journal.event_count("injected_failure").unwrap(), 2);
+        drop(db);
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
     fn invalid_intent_key_and_duplicated_effect_keys_are_rejected() {
         let (path, db) = database();
         let journal = WorkflowJournal::open(&db).unwrap();
