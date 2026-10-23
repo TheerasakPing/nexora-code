@@ -2,7 +2,7 @@
 
 **Date / User request:** 2026-10-23 / “ทำ R2ให้เสร้จ” (finish R2).
 **Lead:** ChatGPT, TEAM_LEAD_SERIAL. Nexora Studio workspace has no exposed task-delegation API; no independent reviewer or falsely assigned engineers. Work is serialized and split into bounded packages.
-**Location / PR:** isolated worktree `/Volumes/Data/workspace/git/nexora-code-integration-20261023`, PR #32 into develop. Branch remote may be concurrently advanced; compare remote SHA before any push. No changes to user's installed app, private credentials, local Keychain, app database, or existing original checkout.
+**Location / PR:** PR #26 was merged at commit 8f8bd40 during this work; later R2 changes require a NEW follow-up PR, not an edit to merged PR. Isolated worktree `/Volumes/Data/workspace/git/nexora-code-integration-20261023`, PR #32 into develop. Branch remote may be concurrently advanced; compare remote SHA before any push. No changes to user's installed app, private credentials, local Keychain, app database, or existing original checkout.
 **Goal:** implement as many security-gated R2 deliverables as testable now. Do not connect to untrusted servers, start external binaries, or collect/store user secrets until verified trusted UI consent, secure vault and transport controls exist.
 **R2 completion gate:** ALL native/security consent + isolated credentials + stdio and pinned Streamable HTTP lifecycle + inspector + real OS E2E + reviewer. Source-only implementation or CI does NOT close R2. R1 remains NOT accepted; explicit R2 priority requested supersedes previous phase order for code work, not for release acceptance.
 
@@ -13,8 +13,8 @@
 | R2-01 | Inventory audit: verify current Registry, ACL, disabled live executor and backlog, identify leaks | TEAM_LEAD_SERIAL | src-tauri/src/mcp_*.rs / docs | None | [x] |
 | R2-02 | Implement bounded fail-closed JSON-RPC MCP frame and catalog parser + pagination/capability/diagnostic constraints | TEAM_LEAD_SERIAL | src-tauri/src/mcp_protocol.rs, lib.rs | R2-01 | [x] |
 | R2-03 | Add strict credential-reference-only schema; no inline secret/argv/env/token export; preserve v1 registry compatibility | TEAM_LEAD_SERIAL | src-tauri/src/mcp_registry.rs, frontend model/tests if needed | R2-01 | [x] |
-| R2-04 | Model operator consent expiry/revocation, explicit request/attempt audit and safe offline mock transport tests; don't grant renderer live exec | TEAM_LEAD_SERIAL | src-tauri/src/mcp_security.rs / mcp_permissions.rs | R2-01 | [ ] |
-| R2-05 | Unit/contract, native Rust mock E2E, Node guards, frontend/build and smoke on Mac M4; record results | TEAM_LEAD_SERIAL | tests/, docs/nexora, this planner | R2-02..04 | [ ] |
+| R2-04 | Model operator consent expiry/revocation, explicit request/attempt audit and safe offline mock transport tests; don't grant renderer live exec | TEAM_LEAD_SERIAL | src-tauri/src/mcp_security.rs / mcp_permissions.rs | R2-01 | [x] |
+| R2-05 | Unit/contract, native Rust mock E2E, Node guards, frontend/build and smoke on Mac M4; record results | TEAM_LEAD_SERIAL | tests/, docs/nexora, this planner | R2-02..04 | [x] |
 | R2-06 | Lead diff/security inspection and safe PR integration after remote fetch, exact-head 3-OS CI | TEAM_LEAD_SERIAL | PR #26 and evidence docs | R2-05 | [ ] |
 | R2-REVIEW | Actual independent reviewer, Mac/Windows/Linux installed native operator consent/transport/secret E2E | INDEPENDENT_REVIEWER_PENDING | Approval gate | R2-06 | [ ] |
 
@@ -25,8 +25,8 @@
 | R2-01 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Inspected registry/schema, source-only preflight: all actions denied, Node guard 2/2 PASS macOS M4; Lead inspected |
 | R2-02 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 Rust Inspector 5/5 PASS, real JSON-RPC fixture request/response E2E 3 catalogs and cyclic cursors denied; full Rust 1080 PASS 33 ignored; Lead source diff inspected |
 | R2-03 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 registry v1 compatibility and vault reference fixture, Node contract 3 PASS, Rust full 1084/0 (33 ignored), actual OS secure store mocked in Rust tests; native keychain E2E still pending |
-| R2-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Consent/expiry/replay and mock denied executor pending |
-| R2-05 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Node/Rust/real subprocess mock E2E and smoke pending |
+| R2-04 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 Rust mcp_security::tests 13/13: expiry, wrong session, replay, bounded redacted audit. Real read-only stdio/HTTP mocks 6/6; Lead inspection 2026-10-23. Live native approval NOT available |
+| R2-05 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 full Rust 1092 PASS, 33 ignored; Node 198 PASS, Release 33 PASS, Vite PASS, Cargo check PASS; real local HTTP/stdio process mock read-only E2E; native GUI/provider/Keychain NOT accepted |
 | R2-06 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Git diff review and exact SHA CI pending |
 | R2-REVIEW | INDEPENDENT_REVIEWER_PENDING | PENDING | PENDING | PENDING | PENDING | Real native E2E and independent review absent |
 
@@ -63,3 +63,20 @@
 - **Mac M4 integration evidence:** `npm test` **195 PASS**, `cargo test --locked --lib` **1,084 PASS, 0 FAIL, 33 ignored**; `cargo test --lib mcp_http::tests::` **3 PASS**, `cargo check --locked --bin nexora-code` PASS, Node R2 secret guard **3 PASS**. CI at this exact SHA must be awaited before any native cross-OS claim.
 - **Lead review:** source status and source fixture evidence inspected, inline secrets blocked and external MCP still **fail-closed** via `mcp_permissions::evaluate`; no actual task-delegation API nor independent PR reviewer recorded.
 - **NO-GO R2 EXIT:** actual trusted operator native approval UI, one-use dispatch enforcement for every action, real stdio process manager, audited tool/resource/prompt inspector, network SSRF/rebind acceptance on three OS, Windows/Linux native secure-store test, multi-server lifecycle, real native GUI and independent reviewer still missing.
+
+## R2 integration evidence, later batch 2026-10-23
+
+- Source details: [R2 secure MCP integration audit](../R2-SECURE-MCP-INTEGRATION-2026-10-23.md).
+- Internal-only `mcp_stdio` spawned-process fixture and `mcp_http` pinned
+  loopback HTTP tests: **3/3 + 3/3 PASS**; no third-party server or remote
+  network used; no real credential read/write performed.
+- Internal-only ledger audit tests: **13/13 PASS**; 256-element fixed-outcome
+  buffer, no user session ID or tool arguments in audit.
+- Combined Mac M4 Rust **1092 PASS, 33 ignored, 0 FAIL**; Node **198 PASS**,
+  Release **33 PASS**, Frontend Build PASS, `cargo check --bin nexora-code` PASS.
+- **R2-04 and R2-05 [x] are SOURCE-TEST PACKAGE milestones ONLY.**
+  Trusted native operator consent, full production multi-server
+  connections and auth, SSE, Inspector GUI, real platform Keychain consent,
+  adversarial native E2E and independent reviewer remain **NO-GO**.
+- R2-06 exact-head CI/reviewer record pending until merged PR head matches
+  this source and the nine jobs conclude.
