@@ -135,8 +135,19 @@ fn ranked(
         if matches.len() == limit && matches.peek().is_some_and(|worst| &rank >= worst) {
             continue;
         }
-        // Revalidate matches even on a cache hit: files can be deleted or ancestors
-        // replaced with symlinks between keystrokes. Never offer an outside path.
+        // Revalidate each cached match against an *opened* OS handle.
+        // canonicalize-then-is_file is racy: an ancestor may become a
+        // symlink before the second path lookup. On Unix both paths use
+        // no-follow file descriptors rooted in the checkout.
+        #[cfg(unix)]
+        let live = if directories {
+            super::open_scoped_listing_directory(root, Some(&file.path)).is_ok()
+        } else {
+            super::open_scoped_preview(root, &file.path).is_ok()
+        };
+        // Windows reparse ancestor verification needs a separate native
+        // handle-based directory implementation; don't claim it is fixed.
+        #[cfg(not(unix))]
         let live = super::resolve_scoped_path(root, &file.path)
             .is_ok_and(|path| if directories { path.is_dir() } else { path.is_file() });
         if !live {
@@ -578,6 +589,27 @@ mod tests {
         assert!(search_files(&f.0, "secret".into(), None)
             .unwrap()
             .is_empty());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cached_search_rejects_swapped_internal_symlink_aliases() {
+        let f = Fixture::new();
+        f.write("folder/report.txt");
+        f.write("other.txt");
+        assert!(search_files(&f.0, "report".into(), None)
+            .unwrap().iter().any(|result| result.path == "folder/report.txt"));
+        let detached = f.0.join("detached");
+        fs::rename(f.0.join("folder"), &detached).unwrap();
+        std::os::unix::fs::symlink(&detached, f.0.join("folder")).unwrap();
+        // Even aliases inside the root cannot pass a TOCTOU-safe lookup,
+        // because their target can change to outside the workspace.
+        let after_swap = search_files(&f.0, "report".into(), None).unwrap();
+        assert!(after_swap.iter().all(|entry| entry.path != "folder/report.txt"), "symlink alias escaped verification: {after_swap:?}");
+        fs::remove_file(f.0.join("folder")).unwrap();
+        fs::rename(detached, f.0.join("folder")).unwrap();
+        assert!(search_files(&f.0, "report".into(), None)
+            .unwrap().iter().any(|result| result.path == "folder/report.txt"));
     }
 
     #[test]
