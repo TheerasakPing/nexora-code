@@ -20,31 +20,34 @@
 | ID | Deliverable / acceptance | Actual worker | Owned files | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
 | T-01 | Review NC-TEAM-001 and current backlog evidence | TEAM_LEAD_SERIAL | Read-only | none | [x] |
-| T-02 | Add explicit per-task remaining-work reporting rule | TEAM_LEAD_SERIAL | AGENTS.md, SOP | T-01 | [ ] |
-| T-03 | Update Task Planner template to capture accurate remaining counts, blockers and evidence | TEAM_LEAD_SERIAL | docs/nexora/templates/TASK-CHECKLIST.md | T-02 | [ ] |
-| T-04 | Document 2026-10-23 snapshot and counting method | TEAM_LEAD_SERIAL | docs/nexora/PROGRESS-SNAPSHOT-2026-10-23.md | T-01 | [ ] |
-| T-QA | Inspect final diffs and syntax/consistency; record exact GitHub SHA and status | TEAM_LEAD_SERIAL | Read-only | T-02,T-03,T-04 | [ ] |
+| T-02 | Add explicit per-task remaining-work reporting rule | TEAM_LEAD_SERIAL | AGENTS.md, SOP | T-01 | [x] |
+| T-03 | Update Task Planner template to capture accurate remaining counts, blockers and evidence | TEAM_LEAD_SERIAL | docs/nexora/templates/TASK-CHECKLIST.md | T-02 | [x] |
+| T-04 | Document 2026-10-23 snapshot and counting method | TEAM_LEAD_SERIAL | docs/nexora/PROGRESS-SNAPSHOT-2026-10-23.md | T-01 | [x] |
+| T-QA | Inspect policy documents and count logic; record current SHA/CI status | TEAM_LEAD_SERIAL | Read-only | T-02,T-03,T-04 | [x] |
 | T-REVIEW | Independent authorized approval and CI for protected merge | INDEPENDENT_REVIEWER_PENDING | PR | T-QA | [ ] |
 
 ## C. Evidence / acceptance checklist
 - [x] New Task Planner created before policy-file edits.
 - [x] One-writer scopes, risk and dependency mapping recorded; no invented workers.
-- [ ] Updated rule preserves existing NC-TEAM-001 gates and explicit NO-GO semantics.
-- [ ] Remaining counts verified from source and differentiated by type.
-- [ ] Team Lead reviews the exact changed files and records GO for review submission or NO-GO.
+- [x] Updated rule preserves existing NC-TEAM-001 gates and explicit NO-GO semantics.
+- [x] Remaining counts verified from the Master Checklist and differentiated by type.
+- [x] Team Lead reviewed updated paths against original NC-TEAM-001 and checked report semantics; GO for PR submission only.
 - [ ] GitHub CI and independent review PASS for protected develop merge — currently PENDING.
 
 ## D. Worker handoff ledger
 | Task | Worker | Evidence | Risk | Lead review |
 | --- | --- | --- | --- | --- |
 | T-01 | TEAM_LEAD_SERIAL | GitHub Roadmap, Checklist, PR #21 | Checklist statuses can lag source integrations | COMPLETE |
-| T-02–T-04 | TEAM_LEAD_SERIAL | PENDING | Documentation consistency | PENDING |
+| T-02–T-04 | TEAM_LEAD_SERIAL | AGENTS.md + SOP + template + dated snapshot, count audit | No native test / independent review | SOURCE REVIEW GO |
 
 ## E. Team Lead final review / handoff
 - **Source counts from checked roadmap (2026-10-23):** 24 planned engineering acceptance packages, 3 source-complete and 21 not fully accepted; 7/7 branding epics still pending; 61 unchecked R0–R8 phase checklist items. These are different measures, not additive. Whole living checklist has 112 unchecked boxes including duplicated NOW/QA/sprint templates.
 - **Latest independent GitHub fact:** PR #21 (R0–R6 consolidation) is MERGED into develop; no claim that native gates passed.
 - **Actual reviewer:** TEAM_LEAD_SERIAL (not independent).
-- **Policy/QA findings:** PENDING.
+- **Policy/QA findings:** Confirmed NC-TEAM-001 retained, added NC-TEAM-002. Checked 61 open and 11 ticked in detailed phases; 21 unchecked/3 source-complete packages; 7 BR open; 112 unchecked across master including duplicates. References and required headings present. No application/runtime changes.
 - **CI/native three-OS:** PENDING. Prior Mac source-test reports are not this branch's CI.
-- **Final GO/NO-GO:** PENDING; protected merge is NO-GO absent CI and independent approval.
-- **Commit and PR URLs:** PENDING.
+- **Final GO/NO-GO:** GO for PR submission / docs source review. NO-GO for protected merge without branch checks and independent approval; NO-GO for production.
+- **Commit/PR evidence:** Source policy on GitHub branch docs/nc-team-002-progress-accountability-20261023; PR link recorded in PR body. Native tests not applicable to this docs-only change; full GitHub CI still PENDING.
+
+**Team Lead verdict:** SOURCE REVIEW GO — PR submission only; this is not an independent approval, native acceptance, develop merge or production release.
+**Acceptance checks:** structural Task Planner required headings and counts independently re-parsed against GitHub Master Checklist; no tests/CI claimed PASS on this branch.
