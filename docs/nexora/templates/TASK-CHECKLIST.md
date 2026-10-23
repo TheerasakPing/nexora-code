@@ -62,5 +62,24 @@ If the available tools cannot create/delegate agents, record TEAM_LEAD_SERIAL.
 - **Commit / PR / file links:** TBD
 - **Blockers and next tasks:** TBD
 
+## F. Mandatory remaining-work report — NC-TEAM-002
+
+- **Snapshot date/time / source reference:** TBD
+- **What changed this task (commit/PR/tests/OS):** TBD
+- **Engineering acceptance:** TBD accepted / 24; TBD still pending (do not equate PR merge with acceptance)
+- **Brand epics:** TBD accepted / 7; TBD still pending
+- **R0–R8 detailed acceptance checks:** TBD passed / TBD total; TBD unchecked (may overlap with engineering/brand)
+- **Open GitHub PRs / issues:** TBD PRs / TBD issues (separate from roadmap)
+- **P0 blockers / real owner / unblock condition:** TBD
+- **Next 1–3 highest-priority tasks / dependencies:** TBD
+- **Evidence freshness and discrepancies:** VERIFIED as of YYYY-MM-DD, or UNVERIFIED with last known source
+- **Team Lead delivery decision:** GO / NO-GO / PENDING
+- **Protected merge decision:** GO / NO-GO / PENDING
+- **Native acceptance decision:** GO / NO-GO / PENDING
+- **Production release decision:** GO / NO-GO / PENDING
+
+> Counts refer to different overlapping views and MUST NOT be added.
+> A source-integrated PR is not automatically an accepted roadmap deliverable.
+
 > Worker self-report is not an approval. Team Lead must review actual evidence
 > and sign off BEFORE delivery, while main merge and release remain gated.
