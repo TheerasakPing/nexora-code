@@ -12,9 +12,9 @@
 
 | Subtask ID | Deliverable | Real worker | File ownership | Depends | Status |
 | --- | --- | --- | --- | --- | --- |
-| R1-CRASH-01 | Isolated test-subprocess fixture persists running session/tool; signals ready after durable write | TEAM_LEAD_SERIAL | src-tauri/src/storage.rs tests | none | [ ] |
-| R1-CRASH-02 | Kill child at OS level; reopen SQLite, assert interruption and no replay repeatedly | TEAM_LEAD_SERIAL | src-tauri/src/storage.rs tests | R1-CRASH-01 | [ ] |
-| R1-CRASH-03 | Verify Unit/Contract + E2E + Smoke, capture run/OS and source review | TEAM_LEAD_SERIAL | docs/nexora/ and planner | R1-CRASH-02 | [ ] |
+| R1-CRASH-01 | Isolated test-subprocess fixture persists running session/tool; signals ready after durable write | TEAM_LEAD_SERIAL | src-tauri/src/storage.rs tests | none | [x] |
+| R1-CRASH-02 | Kill child at OS level; reopen SQLite, assert interruption and no replay repeatedly | TEAM_LEAD_SERIAL | src-tauri/src/storage.rs tests | R1-CRASH-01 | [x] |
+| R1-CRASH-03 | Verify Unit/Contract + E2E + Smoke, capture run/OS and source review | TEAM_LEAD_SERIAL | docs/nexora/ and planner | R1-CRASH-02 | [x] |
 | R1-CRASH-04 | PR/CI exact-head handoff and protected merge gating | TEAM_LEAD_SERIAL | PR | R1-CRASH-03 | [ ] |
 | R1-CRASH-REVIEW | Genuine reviewer (not worker) before protected merge | INDEPENDENT_REVIEWER_PENDING | protected PR | R1-CRASH-04 | [ ] |
 
@@ -22,9 +22,9 @@
 
 | Subtask ID | Worker | Unit/Contract | E2E | Smoke | Team Lead Review | Evidence / N/A reason |
 | --- | --- | --- | --- | --- | --- | --- |
-| R1-CRASH-01 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | unique disposable child test executable + SQLite fixture pending |
-| R1-CRASH-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | actual OS SIGKILL and restart fixture pending |
-| R1-CRASH-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | full Rust/Node regression and docs review pending |
+| R1-CRASH-01 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 native Rust test fixture spawned separate test binary; 10/10 disposable WAL databases, ready marker and real process child; focused E2E 1 PASS + full Rust 1113 PASS; Team Lead reviewed child scope and bounded startup |
+| R1-CRASH-02 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 OS SIGKILL 10 cycles; 2 reopens each: interrupted session, failed tool once, preserved completed tool, no duplicate prompt/tool; Rust full 1113 PASS; Team Lead verified unclean OS exit semantics |
+| R1-CRASH-03 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO | Mac M4 full Rust 1113 PASS/33 ignored; Node 208/208 after fresh npm run build; Release 33/33; docs/nexora/R1-REAL-PROCESS-CRASH-RECOVERY-2026-10-23.md reviewed for truthful OS scope; no user data |
 | R1-CRASH-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | exact-head CI and PR review pending |
 | R1-CRASH-REVIEW | INDEPENDENT_REVIEWER_PENDING | PENDING | PENDING | PENDING | PENDING | no independent reviewer assigned |
 
@@ -32,11 +32,19 @@
 
 - [x] Fresh dated planner committed before source modifications
 - [x] Task ownership and honest serial fallback recorded, no imaginary agents
-- [ ] OS-killed child tested against real persisted SQLite; no user data touched
-- [ ] Unit/E2E/Smoke and Lead Review evidence signed for each subtask
+- [x] OS-killed child tested against real persisted SQLite; no user data touched
+- [x] Unit/E2E/Smoke and Team Lead Review GO for R1-CRASH-01/02/03 only; PR/independent review PENDING
 - [ ] All CI/checks exact SHA and independent reviewer accept
 - [ ] R1 native GUI/provider, complete TOCTOU, multi-session load and phase exit all accepted
 
 ## E. Team Lead initial decision
 
-**GO:** implement/test source-level real crash recovery; **NO-GO** native/production release or R1 phase exit without outstanding OS/manual gates. Original 21/24 packages, 61 detailed checks and 7/7 brand signoffs pending are overlapping views, not a percent.
+**Team Lead verdict:** GO for PR source submission after Mac M4 unit/integration E2E and smoke tests. **GO/NO-GO:** GO for source review; NO-GO for protected merge, native/production release or R1 phase exit without outstanding OS/manual gates. Original 21/24 packages, 61 detailed checks and 7/7 brand signoffs pending are overlapping views, not a percent.
+
+## Local verification ledger / 2026-10-23
+
+- Mac M4 native module E2E actual OS kill: 1 focused test PASS, 10 distinct child SIGKILL cycles, 20 restart openings.
+- Cargo full library: **1113 PASS, 0 FAIL, 33 ignored**. Node source/frontend: **208/208 PASS** after npm run build; Release: **33/33 PASS**. Existing Node bundle guard requires built dist, initial no-dist run failed its prerequisite, then full suite passed.
+- Team Lead inspection: 117-line additive test-only change to storage.rs; no application code changed, no secrets/network/user storage accessed.
+- Exactly what it does not prove: real external tool side-effect idempotency, installed GUI/PTY/provider crash/resume or Windows 11 native test. R1 gate NO-GO until these are demonstrated.
+- R1-CRASH-04 and independent human reviewer remain PENDING. Source GO for PR submission only.
