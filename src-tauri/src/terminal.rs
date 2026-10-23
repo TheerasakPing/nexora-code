@@ -1020,12 +1020,17 @@ mod tests {
         id: String,
         pid: u32,
         exited: mpsc::Receiver<()>,
+        reaped: bool,
     }
     impl Drop for TestShell {
         fn drop(&mut self) {
             // Failed assertions must not leave their intentionally stubborn shell running.
-            unsafe {
-                libc::kill(-(self.pid as i32), libc::SIGKILL);
+            // Never signal a PID whose owned child has already been reaped:
+            // the operating system may have reused that PID for an unrelated app.
+            if !self.reaped && self.pid > 1 {
+                unsafe {
+                    libc::kill(-(self.pid as i32), libc::SIGKILL);
+                }
             }
         }
     }
@@ -1094,6 +1099,7 @@ mod tests {
             id,
             pid,
             exited,
+            reaped: false,
         }
     }
 
@@ -1159,6 +1165,84 @@ mod tests {
         assert!(!result.running);
         close(&shell.terms, &shell.id).unwrap();
         shell.exited.recv_timeout(Duration::from_secs(3)).unwrap();
+    }
+
+    #[test]
+    fn eight_shared_pty_sessions_close_concurrently_without_orphans() {
+        use std::{
+            collections::HashSet,
+            sync::Barrier,
+            thread,
+            time::{Duration, Instant},
+        };
+        // These are native PTYs and *real* OS shell children, not mocked IO.
+        // Mimic the application's one shared terminal registry by moving all
+        // independently started fixtures into a single registry.
+        let terms: Terminals = Arc::new(Mutex::new(HashMap::new()));
+        let mut sessions = Vec::new();
+        let mut pids = HashSet::new();
+        for index in 0..8 {
+            let script = if index % 2 == 0 {
+                "printf ready; exec sleep 30"
+            } else {
+                "printf ready; read line"
+            };
+            let mut session = shell(script);
+            assert!(pids.insert(session.pid), "two PTYs inherited one PID");
+            let terminal = session
+                .terms
+                .lock()
+                .unwrap()
+                .remove(&session.id)
+                .expect("the fixture must own its terminal");
+            session.id = format!("test-pty-{index}");
+            session.terms = terms.clone();
+            assert!(terms.lock().unwrap().insert(session.id.clone(), terminal).is_none());
+            sessions.push(session);
+        }
+        assert_eq!(terms.lock().unwrap().len(), 8);
+
+        let barrier = Arc::new(Barrier::new(9));
+        let (tx, rx) = mpsc::sync_channel(8);
+        let started = Instant::now();
+        let mut callers = Vec::new();
+        for session in &sessions {
+            let barrier = barrier.clone();
+            let tx = tx.clone();
+            let terms = terms.clone();
+            let id = session.id.clone();
+            callers.push(thread::spawn(move || {
+                barrier.wait();
+                let _ = tx.send(close(&terms, &id));
+            }));
+        }
+        drop(tx);
+        barrier.wait();
+        for _ in 0..8 {
+            rx.recv_timeout(Duration::from_secs(5))
+                .expect("concurrent terminal close is blocked")
+                .expect("a live terminal could not be closed");
+        }
+        for caller in callers {
+            caller.join().expect("terminal close caller panicked");
+        }
+        assert!(terms.lock().unwrap().is_empty(), "closed terminals still occupy the registry");
+        for session in &mut sessions {
+            session
+                .exited
+                .recv_timeout(Duration::from_secs(5))
+                .expect("closed native PTY shell was not reaped");
+            // After the fixture child wait completes, its PID is no longer ours.
+            session.reaped = true;
+            assert!(
+                write(&terms, &session.id, "echo should-not-run\n").is_err(),
+                "closed terminal accepted new input"
+            );
+        }
+        assert!(
+            started.elapsed() < Duration::from_secs(8),
+            "eight concurrent terminal closes exceeded shutdown budget"
+        );
     }
 
     #[test]
