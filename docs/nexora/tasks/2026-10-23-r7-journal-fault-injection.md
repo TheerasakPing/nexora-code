@@ -15,12 +15,12 @@
 | R7-J-01 | TEAM_LEAD_SERIAL | workflow_journal.rs tests | 50 on-disk SQLite reconnect cycles, zero replays | [x] |
 | R7-J-02 | TEAM_LEAD_SERIAL | workflow_journal.rs tests | injected commit/event errors roll back intent/outcome/recovery | [x] |
 | R7-J-03 | TEAM_LEAD_SERIAL | docs/nexora/R7-JOURNAL-FAULT-INJECTION.md | Evidence and limitations | [x] |
-| R7-J-QA | TEAM_LEAD_SERIAL | complete diff/tests | focused/full CI/Clippy and canonical PR update | [ ] |
+| R7-J-QA | TEAM_LEAD_SERIAL | complete diff/tests | focused/full CI/Clippy and canonical PR update | [x] |
 | R7-J-REVIEW | Independent reviewer PENDING | GitHub review | required before develop merge | [ ] |
 
 - [x] Planner prepared before source modifications.
 - [x] Only temp SQLite files are touched; no real effects/permissions or auto replay.
-- [ ] Focused tests prove successful and failed durable state transitions.
+- [x] Focused tests prove successful and failed durable state transitions.
 - [ ] Exact HEAD six required OS/Frontend CI passes after integration.
 - [ ] External independent approval needed before protected develop merge.
 
@@ -44,3 +44,16 @@
   full per-OS 50-crash/cancel/resume or eight-worker two-hour R7 exit gate.
 - Source GO for CI validation; NO-GO for R7/R8 and for develop merge without
   actual six checks and independent human approval.
+
+## Exact local Mac source test evidence — 2026-10-23
+
+- Focused: cargo test --locked workflow_journal --quiet: 6 PASS / 0 FAIL (1088 other tests filtered out), including two new 50-cycle and injected-failure tests.
+- Full Rust unit tests: 1061 PASS / 0 FAIL / 33 IGNORED; Rust CLI integration: 1 PASS.
+- All-target Clippy with --locked -D warnings: PASS.
+- npm run build: PASS.
+- npm test: 156 PASS / 0 FAIL.
+- npm run test:release: 33 PASS / 0 FAIL.
+- npm run test:nexora:r0: PASS.
+- git diff --check: PASS.
+- No GUI was installed/launched, no actual external effects were executed, and no physical OS kill/failure was simulated.
+- This suite must still be accepted by GitHub 6 required checks for the canonical integration HEAD and independent reviewer before protected develop merge.

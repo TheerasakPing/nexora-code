@@ -43,3 +43,11 @@ The source test results and exact commit SHA must be recorded in the dated
 Task Checklist Planner for this task. Tests passing on one Mac do not prove
 three-platform native GUI E2E or signed R8 release readiness. Protected
 develop requires all six current CI checks plus one independent Reviewer.
+
+## Completed local source checks — Mac M4
+
+Focused journal: 6 PASS; full Rust 1061 PASS / 33 ignored; CLI
+integration 1 PASS; Clippy all-targets with denied warnings PASS;
+Node 156 PASS; release tests 33 PASS; Vite build and R0 safety PASS.
+
+Native exact-SHA GitHub CI and real crash/soak tests remain independent gates.
