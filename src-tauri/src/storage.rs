@@ -2637,6 +2637,35 @@ mod tests {
         std::fs::remove_dir_all(dir).unwrap();
     }
 
+    // The parent watches the final marker's existence and kills the child
+    // immediately. Create + write of that filename is NOT atomic: the parent
+    // can otherwise read an empty/partial ID on fast Linux runners.
+    fn r1_publish_ready_marker(db: &Path, payload: &[u8]) {
+        let staging = db.with_extension("ready.tmp");
+        std::fs::write(&staging, payload).unwrap();
+        std::fs::rename(&staging, db.with_extension("ready")).unwrap();
+    }
+
+    #[test]
+    fn r1_ready_marker_publishes_complete_single_and_multi_session_ids() {
+        let dir = std::env::temp_dir().join(format!("nexora-r1-ready-marker-{}", id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = dir.join("fixture.db");
+        let single = id();
+        r1_publish_ready_marker(&db, single.as_bytes());
+        let ready = db.with_extension("ready");
+        assert_eq!(std::fs::read_to_string(&ready).unwrap(), single);
+        assert!(!db.with_extension("ready.tmp").exists());
+        std::fs::remove_file(&ready).unwrap();
+
+        let many: Vec<String> = (0..8).map(|_| id()).collect();
+        r1_publish_ready_marker(&db, &serde_json::to_vec(&many).unwrap());
+        let read: Vec<String> = serde_json::from_slice(&std::fs::read(&ready).unwrap()).unwrap();
+        assert_eq!(read, many);
+        assert!(!db.with_extension("ready.tmp").exists());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
     // This function is invoked by a *separate copy* of the current test
     // executable. It deliberately stays alive with SQLite open so the parent
     // can simulate actual OS process death, not just close/reopen an SQLite
@@ -2662,7 +2691,7 @@ mod tests {
         if std::env::var_os("NEXORA_R1_TEST_CRASH_WAITING").is_some() {
             store.status(&session.id, "waiting").unwrap();
         }
-        std::fs::write(path.with_extension("ready"), &session.id).unwrap();
+        r1_publish_ready_marker(&path, session.id.as_bytes());
         // The parent terminates this process with Child::kill (SIGKILL on Unix).
         // No user project, provider, external tool, or remote service is touched.
         loop {
@@ -2751,6 +2780,108 @@ mod tests {
                 assert_eq!(done["status"], "completed");
             }
             std::fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
+    #[test]
+    fn r1_multi_session_crash_writer_child_fixture() {
+        let Some(path) = std::env::var_os("NEXORA_R1_MULTI_CRASH_DB") else {
+            return;
+        };
+        let path = PathBuf::from(path);
+        let store = Store::open(&path).unwrap();
+        let project = store.add_project(path.parent().unwrap()).unwrap();
+        let mut session_ids = Vec::new();
+        for index in 0..8 {
+            let session = store
+                .create_session(&project.id, "codex", "test-model", "ask")
+                .unwrap();
+            store
+                .begin_task_turn(&session.id, &format!("prompt-{index}"))
+                .unwrap();
+            if index % 2 == 1 {
+                store.status(&session.id, "waiting").unwrap();
+            }
+            let activity = serde_json::json!({
+                "type": "tool_activity", "version": 1,
+                "id": format!("multi:{index}"), "name": "Write",
+                "status": "running", "input": "disposable",
+                "output": format!("partial-{index}")
+            });
+            store
+                .tool_message(&session.id, &format!("multi:{index}"), &activity.to_string())
+                .unwrap();
+            session_ids.push(session.id);
+        }
+        r1_publish_ready_marker(&path, &serde_json::to_vec(&session_ids).unwrap());
+        loop {
+            std::thread::park_timeout(std::time::Duration::from_secs(1));
+        }
+    }
+
+    #[test]
+    fn r1_eight_persisted_sessions_survive_real_child_process_kill() {
+        use std::{
+            process::{Command, Stdio},
+            time::{Duration, Instant},
+        };
+        for cycle in 0..5 {
+            let dir = std::env::temp_dir().join(format!(
+                "nexora-r1-multi-process-crash-{}-{}", std::process::id(), id()
+            ));
+            std::fs::create_dir_all(&dir).unwrap();
+            let db = dir.join("fixture.db");
+            let ready = db.with_extension("ready");
+            let mut child = Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "storage::tests::r1_multi_session_crash_writer_child_fixture", "--nocapture"])
+                .env("NEXORA_R1_MULTI_CRASH_DB", &db)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap();
+            let deadline = Instant::now() + Duration::from_secs(12);
+            while !ready.exists() && Instant::now() < deadline {
+                if let Some(status) = child.try_wait().unwrap() {
+                    panic!("Fixture stopped prematurely: {status}");
+                }
+                std::thread::sleep(Duration::from_millis(15));
+            }
+            if !ready.exists() {
+                let _ = child.kill();
+                let _ = child.wait();
+                panic!("Multi-session fixture did not persist ready marker");
+            }
+            let ids: Vec<String> =
+                serde_json::from_slice(&std::fs::read(&ready).unwrap()).unwrap();
+            assert_eq!(ids.len(), 8);
+            assert!(child.try_wait().unwrap().is_none());
+            child.kill().unwrap();
+            assert!(!child.wait().unwrap().success());
+            for reopen in 0..2 {
+                let store = Store::open(&db).unwrap();
+                for (index, sid) in ids.iter().enumerate() {
+                    let session = store.session(sid).unwrap();
+                    assert_eq!(
+                        session.status, "interrupted",
+                        "cycle {cycle}, reopen {reopen}, session {index}"
+                    );
+                    let messages = store.messages(sid, None).unwrap();
+                    assert_eq!(messages.len(), 2, "no duplicate messages");
+                    assert_eq!(messages[0].role, "user");
+                    assert_eq!(messages[0].content, format!("prompt-{index}"));
+                    let activity: serde_json::Value =
+                        serde_json::from_str(&messages[1].content).unwrap();
+                    assert_eq!(activity["status"], "failed");
+                    assert_eq!(activity["output"].as_str().unwrap().matches(
+                        "interrupted before this tool"
+                    ).count(), 1);
+                    assert!(activity["output"].as_str().unwrap().contains(
+                        &format!("partial-{index}")
+                    ));
+                }
+            }
+            std::fs::remove_dir_all(&dir).unwrap();
         }
     }
 
