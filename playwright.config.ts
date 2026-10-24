@@ -15,7 +15,7 @@ export default defineConfig({
     headless: true,
     launchOptions: {
       // Playwright creates disposable browser contexts; never use a personal profile.
-      executablePath: process.env.PANDACODE_TEST_CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      executablePath: process.env.PANDACODE_TEST_CHROME ?? (process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : undefined),
     },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
