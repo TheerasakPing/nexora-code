@@ -1,0 +1,52 @@
+# Full Browser Preview functional regression suite. No native users/providers/credentials.
+name: Nexora full UI Browser E2E
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/nexora-full-ui-e2e.yml'
+      - 'playwright.config.ts'
+      - 'tests/**'
+      - 'src/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: full-ui-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    name: Full UI E2E shard ${{ matrix.shard }}/4
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      CI: 'true'
+      PW_WORKERS: '2'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build and typecheck frontend
+        run: npm run build
+      - name: Browser Preview full suite shard (no retry, no skipped specs)
+        run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=2 --retries=0 --reporter=line
+      - name: Preserve screenshot and trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-ui-e2e-shard-${{ matrix.shard }}-${{ github.sha }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: warn
