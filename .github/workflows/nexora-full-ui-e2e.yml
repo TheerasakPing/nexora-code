@@ -1,5 +1,5 @@
-# Full Browser Preview functional regression suite. No native users/providers/credentials.
-name: Nexora full UI Browser E2E
+# Full Browser Preview macOS UX regression suite. No native users/providers/credentials.
+name: Nexora full UI Browser E2E macOS
 on:
   pull_request:
     paths:
@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   browser:
-    name: Full UI E2E shard ${{ matrix.shard }}/4
-    runs-on: ubuntu-22.04
+    name: Full macOS UI E2E shard ${{ matrix.shard }}/4
+    runs-on: macos-15
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -37,10 +37,13 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Install pinned Playwright Chromium
+        run: |
+          npx playwright install chromium
+          echo "PANDACODE_TEST_CHROME=$(node -e 'process.stdout.write(require("playwright").chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Build and typecheck frontend
         run: npm run build
-      - name: Browser Preview full suite shard (no retry, no skipped specs)
+      - name: macOS Browser Preview full suite shard (no retry, no skipped specs)
         run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=2 --retries=0 --reporter=line
       - name: Preserve screenshot and trace on failure
         if: failure()

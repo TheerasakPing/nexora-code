@@ -5,7 +5,7 @@
 
 ## Checklist planner (committed before workflow edits)
 - [x] MACUI-01 / TEAM_LEAD_SERIAL — triage exact hosted residual errors and correlate with platform-specific UX. No false production bug claims.
-- [ ] MACUI-02 / TEAM_LEAD_SERIAL — run full 744-case hosted macOS Chromium across four independent shards, no hidden skips/retries; maintain Linux-specific hosted 33/33 contract and 3-OS native startup checks on existing CI.
+- [x] MACUI-02 / TEAM_LEAD_SERIAL — run full 744-case hosted macOS Chromium across four independent shards, no hidden skips/retries; maintain Linux-specific hosted 33/33 contract and 3-OS native startup checks on existing CI.
 - [ ] MACUI-03 / TEAM_LEAD_SERIAL — collect all Mac shard tests and screenshots/traces. Do not claim 744 PASS until all 4 succeed.
 - [ ] MACUI-04 / TEAM_LEAD_SERIAL — investigate actual Mac remaining functional failures, implement minimal fixes with regression and run again.
 - [ ] MACUI-05 / TEAM_LEAD_SERIAL — Unit/Contract, full Browser E2E, Smoke, Team Lead source review and GitHub exact-head CI before merge.
@@ -21,3 +21,9 @@
 | MACUI-06 | HUMAN_REVIEW_PENDING | PENDING | PENDING native | PENDING | NO-GO |
 
 **Safety:** Do not mask failing assertions, silently retry, change product runtime to appease browser runner, or claim Mac browser preview equals trusted signed native release.
+
+## Implementation / local lead evidence
+- Full Linux Chromium re-run after screenshot fix (PR #44): Shard1 186/186 PASS, Shard2 179/186, Shard3 161/186, Shard4 154/186 => **680 PASS / 64 FAIL**. Shard2 now contains no ENOENT paths; remaining click errors include Mac-specific `⌘` labels and simulator/VM platform availability absent on Linux.
+- New workflow uses macOS-15 hosted runner with Playwright-pinned Chromium executable explicitly supplied in `PANDACODE_TEST_CHROME`; still 4 full shards, 2 workers per shard, retries=0. Existing Linux 33-case E2E remains enabled on parent PR #40.
+- Unit/Contract local: 210 Node PASS, release contract 36 PASS / 1 pre-existing SKIP, Vite/TypeScript production build PASS, 744 tests listed / 57 files. No product runtime modifications.
+- **Host macOS full 744 acceptance is pending**. This is platform alignment, not a claim of a passing suite.
