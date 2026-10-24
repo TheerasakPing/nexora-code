@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mkdir, mkdtemp, readFile, rm, writeFile, access } from 'node:fs/promises';
-import { assertHostedRunner, bundleDirectory, selectPackage, smokeEnvironment, installArguments, observeProcess, linuxStartupCommand, cleanupSmokeDirectory, validatePackageSize } from './ci-startup-smoke.mjs';
+import { assertHostedRunner, bundleDirectory, selectPackage, smokeEnvironment, installArguments, observeProcess, linuxStartupCommand, linuxWindowCommand, windowsWindowCommand, cleanupSmokeDirectory, validatePackageSize } from './ci-startup-smoke.mjs';
 
 test('Linux starts Xvfb before the bus so portal services inherit the display', () => {
   assert.deepEqual(linuxStartupCommand('/tmp/build with spaces/NexoraCode.AppImage'), { command: 'xvfb-run', args: ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', '/tmp/build with spaces/NexoraCode.AppImage'] });
@@ -98,4 +98,70 @@ test('startup observation stops a surviving fixture and bounds installer executi
 test('the startup check looks for the installer where the build leaves it', () => {
   assert.equal(bundleDirectory('windows-x86_64', '/repo'), join('/repo', 'src-tauri/target', 'x86_64-pc-windows-msvc', 'release/bundle', 'nsis'));
   assert.equal(bundleDirectory('linux-x86_64', '/repo'), join('/repo', 'src-tauri/target', 'x86_64-unknown-linux-gnu', 'release/bundle', 'appimage'));
+});
+
+test('native GUI smoke runs probes inside a private hosted X display or installed Windows process', async () => {
+  const app = '/temporary with spaces/Nexora Code.AppImage';
+  const linux = linuxWindowCommand(app);
+  assert.equal(linux.command, 'xvfb-run');
+  assert.deepEqual(linux.args.slice(0, 5), ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', 'bash']);
+  assert.match(linux.args[5], /ci-linux-visible-window\.sh$/);
+  assert.equal(linux.args[6], app);
+  const win = windowsWindowCommand('C:\\temporary dir\\nexora-code.exe');
+  assert.equal(win.command, 'powershell.exe');
+  assert.ok(win.args.includes('-NonInteractive'));
+  assert.ok(win.args.includes('-File'));
+  assert.equal(win.args.at(-2), '-AppPath');
+  assert.equal(win.args.at(-1), 'C:\\temporary dir\\nexora-code.exe');
+});
+
+test('hosted native window probes fail closed on absent GUI, require title/geometry and avoid unsafe local runs', async () => {
+  const linux = await readFile(new URL('./ci-linux-visible-window.sh', import.meta.url), 'utf8');
+  const win = await readFile(new URL('./ci-windows-visible-window.ps1', import.meta.url), 'utf8');
+  const startup = await readFile(new URL('./ci-startup-smoke.mjs', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('../../.github/workflows/nexora-r6-alpha.yml', import.meta.url), 'utf8');
+  assert.match(linux, /GITHUB_ACTIONS/);
+  assert.match(linux, /RUNNER_ENVIRONMENT/);
+  assert.match(linux, /xdotool search --onlyvisible --name/);
+  assert.match(linux, /width >= 860 && height >= 580/);
+  assert.match(linux, /trap cleanup EXIT INT TERM/);
+  assert.match(win, /RUNNER_ENVIRONMENT/);
+  assert.match(win, /MainWindowHandle/);
+  assert.match(win, /MainWindowTitle -like/);
+  assert.match(win, /process\.HasExited/);
+  assert.match(startup, /linuxWindowCommand\(installer\)/);
+  assert.match(startup, /windowsWindowCommand\(installedApp\)/);
+  assert.match(workflow, /xdotool/);
+  assert.doesNotMatch(win, /\-EncodedCommand|Invoke-Expression/);
+});
+
+test('Linux native window smoke rejects a window that disappears after first observation', { skip: process.platform !== 'linux' }, async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { chmod } = await import('node:fs/promises');
+  const directory = await mkdtemp(join(tmpdir(), 'nexora-window-negative-'));
+  try {
+    const app = join(directory, 'fake-app');
+    const xdotool = join(directory, 'xdotool');
+    const count = join(directory, 'window-probe-count');
+    await writeFile(app, '#!/bin/sh\\nsleep 12\\n'.replaceAll('\\n', '\n'));
+    await writeFile(xdotool, `#!/bin/sh
+if [ "$1" = search ]; then
+  n=$(cat "${count}" 2>/dev/null || echo 0)
+  n=$((n + 1))
+  echo "$n" > "${count}"
+  [ "$n" -eq 1 ] && echo 123
+elif [ "$1" = getwindowgeometry ]; then
+  printf 'WIDTH=1440\\nHEIGHT=940\\n'
+fi
+`);
+    await Promise.all([chmod(app, 0o755), chmod(xdotool, 0o755)]);
+    const result = spawnSync('bash', [new URL('./ci-linux-visible-window.sh', import.meta.url).pathname, app], {
+      encoding: 'utf8', timeout: 9_000,
+      env: { ...process.env, GITHUB_ACTIONS: 'true', RUNNER_ENVIRONMENT: 'github-hosted', DISPLAY: ':99', PATH: directory + ':' + process.env.PATH }
+    });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /app window vanished/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

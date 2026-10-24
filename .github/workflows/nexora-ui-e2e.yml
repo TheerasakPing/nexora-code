@@ -1,0 +1,49 @@
+# Disposable Chromium preview test. No user workspace, provider credentials or native app.
+name: Nexora expanded UI Functional E2E
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/nexora-ui-e2e.yml'
+      - 'playwright.config.ts'
+      - 'tests/**'
+      - 'src/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: expanded-ui-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  expanded-ui:
+    name: Expanded UI Chromium functional E2E
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      PW_WORKERS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build and typecheck frontend
+        run: npm run build
+      - name: Expanded UI 4-suite functional tests (no retries)
+        run: npx playwright test tests/mcp-inspector.spec.ts tests/terminal.spec.ts tests/agent-teams.spec.ts tests/settings.spec.ts --workers=2 --retries=0 --reporter=line
+      - name: Preserve failing browser screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: expanded-ui-e2e-failures-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7
