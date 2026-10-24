@@ -1,29 +1,32 @@
 # NC-TEAM-003 — Expanded UI Functional E2E (2026-10-24)
 
-**Lead:** TEAM_LEAD_SERIAL. **Actual worker:** TEAM_LEAD_SERIAL. Human independent reviewer: PENDING (do not manufacture).
-**Base:** PR #40 `45b706b`, retains Rust/Tauri v2/React and security advisory fixes. Branch `test/expanded-ui-e2e-r1-20261024`.
-**User requirement:** make expanded UI Functional E2E (Terminal, Settings, Agent Teams and MCP Inspector) pass, with regression evidence.
-**Observed failure:** previous Mac Playwright 33-case run had missing initial session and textbox (snapshot showed `Open a project to get started`), multiple failures. The final suite result was not captured. Hypothesis: preview bootstrap/test fixture race or mock interception; do not assume a root cause without E2E logs.
-**Current tool limitation:** Mac tunnel disconnected; use disposable GitHub-hosted Linux Chromium tests, saved Playwright trace/screenshot logs, then verify locally if tunnel reconnects.
+**Lead / real worker:** TEAM_LEAD_SERIAL. No fictitious delegated agent or human approval.
+**Base:** PR #40, security fixes retained; stacked PR #42, tests only. Rust/Tauri v2/React original UI and features unchanged.
+**Request:** 33 expanded Chromium UI tests across Terminal, Settings, Agent Teams, MCP Inspector must PASS without retries or skipped tests.
+**Original issue (Mac):** Previous 33-case Mac browser run showed an incomplete Preview bootstrap; at least 4 errors captured under concurrent CPU contention. This was not an exhaustive final failure count.
+**Hosted Linux reproduction:** GitHub run [40109772312](https://github.com/TheerasakPing/nexora-code/actions/runs/40109772312) provided reliable disposable Chromium + traces: **31 PASS, 2 FAIL**.
+**Root cause (actual evidence):** Exactly two Terminal tests wrote screenshots to macOS-specific `/private/tmp`; Linux failed with `ENOENT` before later assertions. The Preview seeds and functional UI passed other 31 cases.
+**Fix:** Both screenshots now write to `test.info().outputPath(...)`, isolated per Playwright test, cross-platform and no assertion removal.
+**Verified E2E:** [Run 40109957999](https://github.com/TheerasakPing/nexora-code/actions/runs/40109957999), commit `bc1754d08ca2006aed1acb22f43d53304f62b93b`, **33/33 PASS, 0 FAIL, 0 SKIP, retries=0, 50.0s**, Linux Chromium two workers. Hosted frontend TypeScript/Vite build PASS.
 
-## B. Checklist Planner (committed BEFORE source/test edits)
-- [x] UI-E2E-01 / TEAM_LEAD_SERIAL — inspect prior failing browser snapshots, source boot flow and seed fixture; document suspected race not conclusion.
-- [ ] UI-E2E-02 / TEAM_LEAD_SERIAL — add reproducible Linux Playwright Chromium workflow for exactly the 4 suites + trace and failure artifacts. Must not access real user data.
-- [ ] UI-E2E-03 / TEAM_LEAD_SERIAL — run on hosted CI, capture exact failing cases, repair preview/test fixture readiness only as warranted; no skipping or suppressing assertions.
-- [ ] UI-E2E-04 / TEAM_LEAD_SERIAL — 33/33 expanded functional E2E required with no retries masking failures. Repeat on exact source HEAD and check isolated Chromium context.
-- [ ] UI-E2E-05 / TEAM_LEAD_SERIAL — ensure npm build, Node/Release contracts and R0 Rust 3 OS CI stay green, QA review diffs; record test files/run IDs.
-- [ ] UI-E2E-06 / TEAM_LEAD_SERIAL — open stacked PR targeting PR #40 branch, hand off to Team Lead review before merging; production signing and human independent review remain separate NO-GO.
-- [ ] UI-E2E-07 / HUMAN_REVIEW_PENDING — human security/GUI approval and installed native full-app acceptance.
+## Checklist Planner — actual execution
+- [x] UI-E2E-01 / TEAM_LEAD_SERIAL — audit Mac failures and fixture/boot path; determine root cause only after hosted reproduction.
+- [x] UI-E2E-02 / TEAM_LEAD_SERIAL — add hosted Linux Chromium 4-suite workflow, no credentials, screenshots/traces on failure.
+- [x] UI-E2E-03 / TEAM_LEAD_SERIAL — reproduce 31/33, identify two hardcoded Mac screenshot paths, patch only path to Playwright's per-test output directory.
+- [x] UI-E2E-04 / TEAM_LEAD_SERIAL — full 33/33 successful re-run, no retries or skips.
+- [ ] UI-E2E-05 / TEAM_LEAD_SERIAL — exact final-head CI and R0 Rust baseline remain PENDING at documentation cut (the preceding code head's UI E2E passed).
+- [x] UI-E2E-06 / TEAM_LEAD_SERIAL — create stacked PR #42 against PR #40 branch and perform Team Lead source-only review: no runtime changes, no test skipped, screenshots still captured.
+- [ ] UI-E2E-07 / HUMAN_REVIEW_PENDING — independent human review and installed native GUI multi-OS Provider/PTY E2E and production signing remain NO-GO.
 
-## G. Required per-subtask verification
-| Task | Real worker | Unit/Contract | Functional E2E | Smoke | Lead review | Evidence |
+## G. Per-task quality gate matrix
+| Task | Worker | Unit/Contract | Functional E2E | Smoke | Lead review | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| UI-E2E-01 | TEAM_LEAD_SERIAL | N/A diagnostic | Prior failure captured | Prior Mac failures | GO diagnostic | E2E snapshots showed empty project selection |
-| UI-E2E-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | hosted CI workflow |
-| UI-E2E-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | failed specs and fix diff |
-| UI-E2E-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | hosted 33/33 pass |
-| UI-E2E-05 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | build/CI |
-| UI-E2E-06 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | reviewed PR |
-| UI-E2E-07 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | NO-GO | reviewer + 3 OS installed |
+| UI-E2E-01 | TEAM_LEAD_SERIAL | N/A diagnosis | 31/33 baseline | PASS hosted harness | GO diagnosis | 2 ENOENT failures in Linux, not Preview startup |
+| UI-E2E-02 | TEAM_LEAD_SERIAL | PASS TS build | PASS hosted Playwright start | PASS Vite/Chromium boot | GO source | Hosted workflow with trace retention |
+| UI-E2E-03 | TEAM_LEAD_SERIAL | PASS screenshot path API | PASS 33/33 after patch | PASS output path | GO source | test.info().outputPath twice |
+| UI-E2E-04 | TEAM_LEAD_SERIAL | PASS | **33/33 PASS** | PASS | GO browser E2E | 40109957999, retries=0, no skip |
+| UI-E2E-05 | TEAM_LEAD_SERIAL | PENDING other CI | PENDING exact final-head run | PENDING | PENDING | Hosted baseline workflows |
+| UI-E2E-06 | TEAM_LEAD_SERIAL | PASS diff review | PASS tested commit | PASS PR setup | GO for browser-only change | PR #42, independent approval absent |
+| UI-E2E-07 | HUMAN_REVIEW_PENDING | PENDING | PENDING native installed | PENDING | NO-GO production | Human signoff and 3-OS installed |
 
-**Policy:** no production-release claims until genuine independent review, signed updater/publisher keys, real installed Win11/Linux/Mac provider/UI E2E. No CI falsification or generic test skips.
+**Scope constraint:** 33/33 passing is **browser preview functional E2E** on Linux Chromium, not evidence of installed Tauri GUI/provider user journey on all OS. Never equate it to production release acceptance or human approval.
