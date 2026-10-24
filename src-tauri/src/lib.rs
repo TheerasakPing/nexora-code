@@ -34,6 +34,12 @@ mod jev;
 mod jev_decisions;
 mod local_servers;
 mod mcp_registry;
+mod mcp_vault;
+mod mcp_vault_commands;
+mod mcp_http;
+mod mcp_inspector;
+mod mcp_stdio;
+mod mcp_protocol;
 pub mod mcp_security;
 mod mcp_permissions;
 mod message_queue;
@@ -2881,6 +2887,7 @@ pub fn run() {
             app.manage(agent_tools::UiRequests::default());
             app.manage(architect::Runtime::default());
             app.manage(mcp_registry::Registry::new(&dir));
+            app.manage(mcp_inspector::InspectionGate::default());
             architect::watchdog::watch(app.handle().clone());
             bots::start(app.handle());
             let handle = app.handle().clone();
@@ -3162,6 +3169,9 @@ pub fn run() {
                 get_metrics,
                 list_local_servers,
                 mcp_permissions::mcp_policy_preflight,
+                mcp_inspector::mcp_inspect_catalog,
+                mcp_inspector::mcp_execute_tool_once,
+                mcp_vault_commands::mcp_vault_change,
                 mcp_registry::mcp_registry_list,
                 mcp_registry::mcp_registry_upsert,
                 mcp_registry::mcp_registry_remove,

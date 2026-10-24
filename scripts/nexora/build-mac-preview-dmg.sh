@@ -55,10 +55,15 @@ trap cleanup EXIT
 /usr/bin/ditto "$APP" "$STAGE/Nexora Code.app"
 # An ad-hoc signature protects bundle integrity on the build host; it is NOT
 # Apple Developer ID signing and does not satisfy Gatekeeper/notarization.
-if ! /usr/bin/codesign --verify --deep --strict "$STAGE/Nexora Code.app" >/dev/null 2>&1; then
-  /usr/bin/codesign --force --deep --sign - "$STAGE/Nexora Code.app"
-fi
+# Always convert the *disposable staged copy* to an ad-hoc signature. A
+# previously signed bundle must never pass as an unsigned preview by accident.
+/usr/bin/codesign --force --deep --sign - "$STAGE/Nexora Code.app"
 /usr/bin/codesign --verify --deep --strict "$STAGE/Nexora Code.app"
+signature_details="$(/usr/bin/codesign -dv --verbose=4 "$STAGE/Nexora Code.app" 2>&1)"
+if ! grep -q '^Signature=adhoc$' <<< "$signature_details" || grep -q '^Authority=' <<< "$signature_details"; then
+  echo "ERROR: preview staging is not strictly ad-hoc signed" >&2
+  exit 4
+fi
 # Make Apple Gatekeeper limitations visible *before* a user tries to install.
 # This is an unsigned engineering preview: the README is not a bypass.
 cp "$ROOT/scripts/nexora/MAC-PREVIEW-INSTALL.txt" "$STAGE/READ ME - INSTALLATION.txt"

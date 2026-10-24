@@ -298,6 +298,14 @@ fn run_bounded(
             stop_process_group(process_id);
             format!("{tool} error stream did not close")
         })??;
+    // Unix: the top-level command can exit 0 after spawning grandchildren
+    // whose pipes were redirected. The command owns a distinct process group,
+    // so killing that group also cleans up the descendants left behind.
+    // Windows uses the scoped Job Object with KILL_ON_JOB_CLOSE instead.
+    // Never call Windows' PID-based taskkill after the top-level PID exits:
+    // an unrelated process might have inherited/reused that identifier.
+    #[cfg(unix)]
+    stop_process_group(process_id);
     Ok(GitOutput {
         status,
         stdout,
@@ -1348,6 +1356,103 @@ fn linked_worktree_common(path: &Path) -> Option<PathBuf> {
     .ok()
 }
 
+/// Directory listings must remain attached to an already opened workspace
+/// directory even if another process swaps its path to a symlink.
+#[cfg(unix)]
+fn open_scoped_listing_directory(root: &Path, relative: Option<&str>) -> Result<File, String> {
+    use std::os::{
+        fd::{AsRawFd, FromRawFd},
+        unix::{ffi::OsStrExt, fs::OpenOptionsExt},
+    };
+    if let Some(path) = relative.filter(|path| !path.is_empty()) {
+        scoped_path(root, path)?;
+    }
+    let mut directory = fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC)
+        .open(root)
+        .map_err(|e| e.to_string())?;
+    if let Some(path) = relative.filter(|path| !path.is_empty()) {
+        for component in Path::new(path).components() {
+            let Component::Normal(name) = component else { continue };
+            let name = std::ffi::CString::new(name.as_bytes()).map_err(|e| e.to_string())?;
+            let fd = unsafe {
+                libc::openat(
+                    directory.as_raw_fd(),
+                    name.as_ptr(),
+                    libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC,
+                )
+            };
+            if fd < 0 {
+                return Err(format!("Cannot list symlink directory: {}", std::io::Error::last_os_error()));
+            }
+            directory = unsafe { File::from_raw_fd(fd) };
+        }
+    }
+    Ok(directory)
+}
+
+#[cfg(unix)]
+pub fn list_files(root: &Path, path: Option<String>) -> Result<Vec<FileEntry>, String> {
+    use std::{ffi::{CStr, CString}, os::fd::AsRawFd};
+    struct DirectoryStream(*mut libc::DIR);
+    impl Drop for DirectoryStream {
+        fn drop(&mut self) {
+            unsafe { libc::closedir(self.0); }
+        }
+    }
+    let parent = open_scoped_listing_directory(root, path.as_deref())?;
+    let fd = unsafe { libc::dup(parent.as_raw_fd()) };
+    if fd < 0 { return Err(std::io::Error::last_os_error().to_string()); }
+    let dir_ptr = unsafe { libc::fdopendir(fd) };
+    if dir_ptr.is_null() {
+        let error = std::io::Error::last_os_error().to_string();
+        unsafe { libc::close(fd); }
+        return Err(error);
+    }
+    let stream = DirectoryStream(dir_ptr);
+    let prefix = path.as_deref().filter(|p| !p.is_empty())
+        .map(|p| Path::new(p).components().filter_map(|c| match c {
+            Component::Normal(name) => name.to_str(), _ => None,
+        }).collect::<Vec<_>>().join("/"))
+        .unwrap_or_default();
+    let mut names = BinaryHeap::new();
+    loop {
+        let entry = unsafe { libc::readdir(stream.0) };
+        if entry.is_null() { break; }
+        let filename = unsafe { CStr::from_ptr((*entry).d_name.as_ptr()) };
+        let Some(name) = std::str::from_utf8(filename.to_bytes()).ok() else { continue };
+        if name == "." || name == ".." || is_git_metadata_component(std::ffi::OsStr::new(name)) {
+            continue;
+        }
+        let cname = CString::new(filename.to_bytes()).map_err(|e| e.to_string())?;
+        let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+        if unsafe { libc::fstatat(parent.as_raw_fd(), cname.as_ptr(), &mut stat, libc::AT_SYMLINK_NOFOLLOW) } != 0 {
+            let error = std::io::Error::last_os_error();
+            if error.kind() == std::io::ErrorKind::NotFound { continue; }
+            return Err(format!("Cannot inspect {name}: {error}"));
+        }
+        // Unlike the historical pathname-based listing, never emit symlinks:
+        // their target may switch outside the project after the check.
+        let kind = stat.st_mode & libc::S_IFMT;
+        let is_dir = kind == libc::S_IFDIR;
+        if !is_dir && kind != libc::S_IFREG { continue; }
+        let relative = if prefix.is_empty() {
+            name.to_owned()
+        } else {
+            format!("{prefix}/{name}")
+        };
+        names.push((!is_dir, name.to_owned(), relative));
+        if names.len() > 500 { names.pop(); }
+    }
+    Ok(names.into_sorted_vec().into_iter().map(|(file,name,path)| FileEntry {
+        name, path, is_dir: !file,
+    }).collect())
+}
+
+/// Non-Unix platforms retain the existing scoped listing; Windows reparse
+/// directory swapping needs separate handle-based implementation and native QA.
+#[cfg(not(unix))]
 pub fn list_files(root: &Path, path: Option<String>) -> Result<Vec<FileEntry>, String> {
     let directory = match path.as_deref() {
         None | Some("") => root.to_path_buf(),
@@ -1585,6 +1690,46 @@ mod tests {
         sleeper.args(["-c", "sleep 30"]);
         let err = run_process_with_input(sleeper, "sh", 1024, Duration::from_millis(200), None).err().unwrap();
         assert!(err.contains("timed out"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn successful_bounded_process_reaps_background_process_group() {
+        use std::time::Instant;
+        // A shell can exit 0 with a child still running after redirecting
+        // stdout/stderr. This must not leak children into later sessions.
+        let mut shell = Command::new("sh");
+        shell.args(["-c", r#"sleep 30 >/dev/null 2>&1 & printf '%s\n' "$!""#]);
+        let started = Instant::now();
+        let result = run_process(shell, "isolated smoke", 1024, Duration::from_secs(5)).unwrap();
+        assert!(result.status.success());
+        assert!(started.elapsed() < Duration::from_secs(3));
+        let pid = String::from_utf8(result.stdout.bytes)
+            .unwrap()
+            .trim()
+            .parse::<i32>()
+            .unwrap();
+        assert!(pid > 1);
+        // A child exited by SIGKILL may temporarily be a zombie until its
+        // system reaper collects it. Zombies are not running processes.
+        let mut active = true;
+        for _ in 0..40 {
+            let output = Command::new("ps")
+                .args(["-o", "state=", "-p", &pid.to_string()])
+                .output()
+                .unwrap();
+            let state = String::from_utf8_lossy(&output.stdout);
+            active = !state.trim().is_empty() && !state.trim_start().starts_with('Z');
+            if !active {
+                break;
+            }
+            thread::sleep(Duration::from_millis(20));
+        }
+        if active {
+            // Avoid leaving a test-owned orphan if the regression recurs.
+            unsafe { libc::kill(pid, libc::SIGKILL); }
+        }
+        assert!(!active, "bounded command leaked a background descendant");
     }
 
     struct Fixture {
@@ -1979,6 +2124,65 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn listing_never_yields_symlinks_even_when_their_targets_are_internal() {
+        use std::os::unix::fs::symlink;
+        let f = Fixture::new(false);
+        fs::create_dir(f.root.join("real")).unwrap();
+        fs::write(f.root.join("real/inside.txt"), "inside").unwrap();
+        fs::write(f.base.join("outside.txt"), "secret").unwrap();
+        symlink(f.root.join("real"), f.root.join("internal-dir-link")).unwrap();
+        symlink(f.root.join("real/inside.txt"), f.root.join("internal-file-link")).unwrap();
+        symlink(f.base.join("outside.txt"), f.root.join("external-file-link")).unwrap();
+        let files = list_files(&f.root, None).unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].name, "real");
+        assert!(files[0].is_dir);
+        assert!(list_files(&f.root, Some("internal-dir-link".into())).is_err());
+        assert_eq!(
+            list_files(&f.root, Some("real".into())).unwrap()[0].path,
+            "real/inside.txt"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn listing_symlink_swap_race_never_reports_external_filenames() {
+        use std::{os::unix::fs::symlink, sync::{Arc, atomic::{AtomicBool, Ordering}}};
+        let f = Fixture::new(false);
+        let outside = f.base.join("outside");
+        fs::create_dir(&outside).unwrap();
+        fs::write(outside.join("outside_secret.txt"), "secret").unwrap();
+        fs::create_dir(f.root.join("swap")).unwrap();
+        fs::write(f.root.join("swap/inside.txt"), "safe").unwrap();
+        let base = f.root.clone();
+        let stop = Arc::new(AtomicBool::new(false));
+        let flag = Arc::clone(&stop);
+        let writer = thread::spawn(move || {
+            for _ in 0..250 {
+                fs::rename(base.join("swap"), base.join("staged")).unwrap();
+                symlink(&outside, base.join("swap")).unwrap();
+                fs::remove_file(base.join("swap")).unwrap();
+                fs::rename(base.join("staged"), base.join("swap")).unwrap();
+            }
+            flag.store(true, Ordering::Release);
+        });
+        let mut attempts = 0;
+        while !stop.load(Ordering::Acquire) || attempts < 250 {
+            if let Ok(entries) = list_files(&f.root, Some("swap".into())) {
+                assert!(
+                    entries.iter().all(|item| item.name == "inside.txt"),
+                    "listing escaped project via symlink swap: {entries:?}"
+                );
+            }
+            attempts += 1;
+            if attempts > 5000 { break; }
+        }
+        writer.join().unwrap();
+        assert_eq!(list_files(&f.root, Some("swap".into())).unwrap()[0].name, "inside.txt");
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn listing_skips_outside_symlinks_but_reports_access_errors() {
         use std::os::unix::fs::{symlink, PermissionsExt};
         let f = Fixture::new(false);
@@ -1995,12 +2199,10 @@ mod tests {
         fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
         let result = list_files(&f.root, None);
         fs::set_permissions(&locked, fs::Permissions::from_mode(0o700)).unwrap();
-        // Root can bypass these mode bits; normal desktop users cannot.
-        if unsafe { libc::geteuid() } != 0 {
-            let error = result.unwrap_err();
-            assert!(error.contains("inaccessible"), "{error}");
-            assert!(error.contains("Permission denied"), "{error}");
-        }
+        // The symlink is not followed, including when its target is unreadable.
+        let entries = result.unwrap();
+        assert!(entries.iter().all(|entry| entry.name != "inaccessible"));
+        assert!(entries.iter().any(|entry| entry.name == "safe"));
     }
 
     #[test]

@@ -2497,8 +2497,14 @@ fn process_registry() -> &'static Mutex<HashSet<u32>> {
 
 pub(crate) fn kill_group(pid: u32) {
     #[cfg(unix)]
-    unsafe {
-        libc::kill(-(pid as i32), libc::SIGKILL);
+    {
+        // kill(-1, SIGKILL) can target every permitted process on Unix.
+        // Reject pid 0/1 and overflowing u32 values before negation.
+        let Ok(group) = i32::try_from(pid) else { return };
+        if group <= 1 { return; }
+        unsafe {
+            libc::kill(-group, libc::SIGKILL);
+        }
     }
     #[cfg(windows)]
     {
@@ -2884,6 +2890,13 @@ async fn run_process_with_tools(
     let mut stopped = false;
     let mut input_open = true;
     let mut deadline = tokio::time::Instant::now() + Duration::from_secs(90);
+    // A provider can exit while a detached helper still holds a copy of its
+    // stdout pipe. stdout.read() then never gets EOF and a session looks
+    // permanently busy. Inspect the owned leader's status on a bounded timer,
+    // allowing already-buffered final JSON frames a short time to drain.
+    let mut exit_probe = tokio::time::interval(Duration::from_millis(200));
+    exit_probe.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut leader_exited_at: Option<tokio::time::Instant> = None;
     let result=async {
         write_json(&mut stdin,&protocol.initial()).await?;
         if protocol.config.provider == "antigravity" {
@@ -2891,6 +2904,15 @@ async fn run_process_with_tools(
         }
         loop {
             tokio::select! {
+                _=exit_probe.tick()=>{
+                    if child.try_wait().map_err(|e| format!("Agent process inspection failed: {e}"))?.is_some() {
+                        let since = leader_exited_at.get_or_insert_with(tokio::time::Instant::now);
+                        if since.elapsed() >= Duration::from_secs(1) {
+                            if stopped { break Ok(()); }
+                            break Err("Agent process exited while a background child kept its output stream open; stopping the owned process group".into());
+                        }
+                    }
+                },
                 action=input.recv(),if input_open && !stopped=>{
                     match action {
                         Some(RunInput::Goal{request,reply})=>{let step=protocol.goal_control(request,reply);if apply_step(&mut protocol,step,&sink,&mut stdin,&mut jobs,&mut queued).await? {return Ok(());}},
@@ -4199,6 +4221,104 @@ mod tests {
     }
 
     #[cfg(unix)]
+    fn test_owned_process_is_running(pid: i32) -> bool {
+        let output = std::process::Command::new("ps")
+            .args(["-o", "state=", "-p", &pid.to_string()])
+            .output()
+            .expect("ps is required for the real Unix process lifecycle test");
+        // After SIGKILL an orphan can be a zombie awaiting reaping, but
+        // that does not count as a running process.
+        let state = String::from_utf8_lossy(&output.stdout);
+        state.trim().chars().next().is_some_and(|status| status != 'Z')
+    }
+
+    #[cfg(unix)]
+    async fn test_wait_until_process_stopped(pid: i32) -> bool {
+        for _ in 0..75 {
+            if !test_owned_process_is_running(pid) { return true; }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        !test_owned_process_is_running(pid)
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn successful_provider_parent_exit_cleans_up_owned_background_descendant() {
+        use tokio::io::AsyncReadExt;
+        let _serial = concurrent_process_tests::process_test_lock().lock().await;
+        for _run in 0..3 {
+            // The top-level provider exits successfully, but its background
+            // descendant remains in the same process group.
+            let mut child = Command::new("sh")
+                .args(["-c", r#"sleep 30 >/dev/null 2>&1 & printf '%s\n' "$!""#])
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .process_group(0)
+                .kill_on_drop(true)
+                .spawn()
+                .unwrap();
+            let group = ProcessGroup::register(child.id());
+            let mut bytes = Vec::new();
+            tokio::time::timeout(
+                Duration::from_secs(3),
+                child.stdout.take().unwrap().read_to_end(&mut bytes),
+            ).await.unwrap().unwrap();
+            tokio::time::timeout(Duration::from_secs(3), child.wait())
+                .await.unwrap().unwrap();
+            let pid = String::from_utf8(bytes).unwrap().trim().parse::<i32>().unwrap();
+            assert!(pid > 1);
+            // Verify that the descendant really would have leaked before the
+            // group guard is dropped, not merely that no process was launched.
+            assert!(test_owned_process_is_running(pid));
+            drop(group);
+            assert!(test_wait_until_process_stopped(pid).await,
+                "provider background child remained alive after group cleanup");
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn cancelled_provider_task_cleans_up_its_owned_process_group() {
+        let _serial = concurrent_process_tests::process_test_lock().lock().await;
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+        let task = tokio::spawn(async move {
+            let mut child = Command::new("sleep")
+                .arg("30")
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .process_group(0)
+                .kill_on_drop(true)
+                .spawn().unwrap();
+            let pid = child.id().unwrap();
+            let group = ProcessGroup::register(Some(pid));
+            let _ = sender.send(pid);
+            // Cancellation must drop both the child and ProcessGroup guard.
+            let _ = child.wait().await;
+            drop(group);
+        });
+        let pid = tokio::time::timeout(Duration::from_secs(3), receiver)
+            .await.unwrap().unwrap() as i32;
+        assert!(test_owned_process_is_running(pid));
+        task.abort();
+        let _ = task.await;
+        assert!(test_wait_until_process_stopped(pid).await,
+            "cancelled provider left a live process behind");
+        assert!(!process_registry().lock().unwrap().contains(&(pid as u32)));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn group_cleanup_rejects_invalid_or_dangerous_unix_process_group_ids() {
+        // Exact boundary condition of the guard in kill_group, not a test
+        // which sends signals to arbitrary PIDs.
+        assert!(i32::try_from(0u32).unwrap() <= 1);
+        assert!(i32::try_from(1u32).unwrap() <= 1);
+        assert!(i32::try_from(u32::MAX).is_err());
+    }
+
+    #[cfg(unix)]
     #[tokio::test]
     async fn forced_shutdown_terminates_owned_provider_group() {
         let _serial = concurrent_process_tests::process_test_lock().lock().await;
@@ -4222,6 +4342,69 @@ mod tests {
             .unwrap()
             .contains(&group.0.unwrap()));
         drop(group);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn exited_provider_with_inherited_stdout_does_not_hang_and_reaps_descendant() {
+        let _serial = concurrent_process_tests::process_test_lock().lock().await;
+        let root = std::env::temp_dir().join(format!(
+            "nexora-provider-exit-{}",
+            uuid::Uuid::new_v4()
+        ));
+        std::fs::create_dir(&root).unwrap();
+        let pid_path = root.join("descendant.pid");
+        // Child inherits stdout/stderr from the provider, keeping the IPC
+        // pipes open after its parent exits successfully. No real CLI, API
+        // token, network request or user project is involved.
+        let mut command = Command::new("sh");
+        command
+            .arg("-c")
+            .arg("sleep 30 & echo $! > \"$1\"")
+            .arg("nexora-test")
+            .arg(&pid_path);
+        let (_sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+        let sink: Sink = Arc::new(|_| {});
+        let started = tokio::time::Instant::now();
+        let outcome = tokio::time::timeout(
+            Duration::from_secs(5),
+            run_process(config("kimi"), sink, receiver, command, Vec::new()),
+        )
+        .await
+        .expect("provider cleanup exceeded five seconds")
+        .expect_err("unexpected successful provider protocol");
+        assert!(
+            outcome.contains("background child kept its output stream open")
+                || outcome.contains("Broken pipe")
+                || outcome.contains("broken pipe"),
+            "unexpected error: {outcome}"
+        );
+        assert!(started.elapsed() < Duration::from_secs(5));
+        let descendant: i32 = std::fs::read_to_string(&pid_path)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        assert!(descendant > 1);
+        let mut active = true;
+        for _ in 0..60 {
+            let state = std::process::Command::new("ps")
+                .args(["-o", "state=", "-p", &descendant.to_string()])
+                .output()
+                .unwrap();
+            let state = String::from_utf8_lossy(&state.stdout);
+            active = !state.trim().is_empty() && !state.trim_start().starts_with('Z');
+            if !active {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        if active {
+            // Do not leak the test-owned orphan on failure.
+            unsafe { libc::kill(descendant, libc::SIGKILL); }
+        }
+        assert!(!active, "exited provider leaked an active descendant");
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     /// Explicitly opt in: this runs two small billable/subscription requests.
