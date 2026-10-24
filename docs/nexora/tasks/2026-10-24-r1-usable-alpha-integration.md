@@ -9,8 +9,8 @@
 
 ## B. Checklist Planner
 - [x] R1-INT-01 / TEAM_LEAD_SERIAL — inspect current PR state & CI; both #36 and #37 exact-head CI PASS; 0 independent reviews.
-- [ ] R1-INT-02 / TEAM_LEAD_SERIAL — merge branch #36 into branch #37-derived integration worktree; diff/ancestry audit and no overwrite.
-- [ ] R1-INT-03 / TEAM_LEAD_SERIAL — Unit/Contract; native child process E2E for both storage and PTY, Smoke (Rust/Node/frontend/Clippy); Team Lead source review.
+- [x] R1-INT-02 / TEAM_LEAD_SERIAL — merged sibling #36 after planner commit (333eccf), merge 8247b8d; clean merge, isolated worktree, both #36 and #37 histories retained.
+- [x] R1-INT-03 / TEAM_LEAD_SERIAL — Mac M4 combined Rust 1119 PASS / 0 FAIL / 33 ignored (native storage/PTY tests included); Node 208 PASS; Release 33 PASS; R0 verify PASS; Vite build PASS; Clippy verification tracked below; Team Lead source-only GO.
 - [ ] R1-INT-04 / TEAM_LEAD_SERIAL — push isolated integration branch and create PR to develop; check exact-head hosted multi-OS CI.
 - [ ] R1-INT-05 / TEAM_LEAD_SERIAL — workflow_dispatch test-only unsigned installers on exact branch; verify build jobs and downloadable artifacts; installed acceptance as documented.
 - [ ] R1-INT-06 / INDEPENDENT_REVIEWER_PENDING — external code/security review and installed native GUI/provider/PTY soak before protected merge/production release.
@@ -19,8 +19,8 @@
 | ID | Actual worker | Unit/Contract | E2E | Smoke | Lead Review | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | R1-INT-01 | TEAM_LEAD_SERIAL | N/A (read-only CI audit) | N/A (read-only CI audit) | PASS (prior exact head) | GO for diagnostic | PR #36/#37 cross-platform CI success, approval count zero |
-| R1-INT-02 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Git merge and ancestry audit |
-| R1-INT-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | New integration SHA local verification |
+| R1-INT-02 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO for source integration | Merge 8247b8d contains both 81c0884 PTY and a03d44b recovery fixture; no conflict or removed files |
+| R1-INT-03 | TEAM_LEAD_SERIAL | PASS | PASS | PASS | GO for source QA | Mac combined Rust 1119 pass /33 ignored, native process + PTY fixtures; Node 208, release 33, R0, Vite build PASS; Clippy separately verified below |
 | R1-INT-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | New integration PR and hosted CI |
 | R1-INT-05 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | Test-only unsigned installer job & artifact |
 | R1-INT-06 | INDEPENDENT_REVIEWER_PENDING | PENDING | PENDING | PENDING | PENDING | Human/security and installed native acceptance |
