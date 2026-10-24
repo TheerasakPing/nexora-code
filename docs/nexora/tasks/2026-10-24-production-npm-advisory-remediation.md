@@ -26,3 +26,11 @@
 | SEC-07 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | PENDING | release sign-off |
 
 **GO/NO-GO:** critical/high known vulnerabilities block Production; signing/human/native GUI gates remain independently blocking.
+
+## Source execution evidence (before hosted CI)
+- npm audit pre-fix: critical DOMPurify, high Vite and source-map-js, low KaTeX.
+- npm audit fix updated DOMPurify 3.4.17, Vite 7.3.7, source-map-js 1.2.2.
+- explicit KaTeX 0.19.1 (from 0.16.47) for low advisory; math rendering imports API remained `renderToString`; visual E2E still pending.
+- `npm audit --audit-level=high`: **0 vulnerabilities** locally; CI unsigned installer workflow now fail-closed on this gate.
+- After dependency changes on Mac: `npm ci` PASS, Vite/TypeScript production build PASS, Node 210/210 PASS, release contracts 35/35 PASS. Rust and Clippy run separately; hosted exact PR SHA pending.
+- This is an advisory snapshot, not a claim that future vulnerabilities or human supply-chain review cannot find new issues.

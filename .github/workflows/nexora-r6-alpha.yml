@@ -58,10 +58,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libxdo-dev build-essential pkg-config squashfs-tools libfuse2 xvfb dbus-x11 xdg-utils
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libxdo-dev build-essential pkg-config squashfs-tools libfuse2 xvfb dbus-x11 xdg-utils xdotool
       - run: npm ci
       - name: Source quality gate (same SHA and OS as installer)
         run: |
+          npm audit --audit-level=high
           npm run test:nexora:r0
           npm run build
           npm test

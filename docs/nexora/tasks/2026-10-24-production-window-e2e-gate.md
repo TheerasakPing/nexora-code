@@ -26,3 +26,10 @@
 | GUI-07 | HUMAN_SECURITY_REVIEW_PENDING | PENDING | PENDING | PENDING | PENDING | independent approval/keys |
 
 **Release verdict at start: NO-GO**, until independent review, production signing and native full functional acceptance.
+
+## Source implementation evidence (before hosted CI)
+- Windows hosted-window probe: installed app PID, nonzero native handle, expected window title, two-second recheck, root/taskkill cleanup; wrapper will fail if no window.
+- Linux hosted-window probe: private Xvfb/DBus display, named visible window >= 860×580, geometry stability after two seconds, isolated setsid app group bounded TERM/KILL cleanup.
+- Local contract test 14 cases: 13 PASS, 1 Linux behavioral fixture SKIPPED on Mac (must run on Linux hosted).
+- Read-only Codex QA flagged a Linux P1 cleanup issue; isolated POSIX process group and bounded shutdown added. Windows descendants on root crash remain runner-contained, not equivalent to production leak acceptance.
+- Full native GUI feature interactions on Windows11/Linux Wayland/real provider remain PENDING, even after hosted Xvfb/Windows Server window smoke.
