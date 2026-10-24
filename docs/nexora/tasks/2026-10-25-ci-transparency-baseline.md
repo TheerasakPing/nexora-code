@@ -5,7 +5,7 @@
 
 ## Checklist planner (committed before source edits)
 - [x] TRANS-01 / TEAM_LEAD_SERIAL — compare local vs hosted media diagnostics and UI smoke; inspect accessibility APIs and macOS defaults; root cause confirmed hosted reducedTransparency=TRUE.
-- [ ] TRANS-02 / TEAM_LEAD_SERIAL — scope CI-only preference normalization to disposable hosted macOS runner, not production source or user Mac; verify same browser sees reducedTransparency=FALSE or fail.
+- [x] TRANS-02 / TEAM_LEAD_SERIAL — scope CI-only preference normalization to disposable hosted macOS runner, not production source or user Mac; verify same browser sees reducedTransparency=FALSE or fail.
 - [ ] TRANS-03 / TEAM_LEAD_SERIAL — rerun pinned wallpaper smoke + 4 shards, record actual passed/failed counts.
 - [ ] TRANS-04 / TEAM_LEAD_SERIAL — inspect residual functional failures, TypeScript/Node/Release and smoke; lead code review and QA matrix.
 - [ ] TRANS-05 / HUMAN_REVIEW_PENDING — independent human review, installed Windows11/Linux/macOS feature E2E and production publisher signing remain separate NO-GO.
@@ -17,3 +17,8 @@
 | TRANS-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | TRANS-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | TRANS-05 | HUMAN_REVIEW_PENDING | PENDING | PENDING native | PENDING | NO-GO |
+
+## Lead source-review checkpoint
+- Disposable GH-hosted macOS runner preference keys `com.apple.universalaccess reduceTransparency` and `com.apple.Accessibility ReduceTransparencyEnabled` written FALSE; cfprefsd refreshed before Chrome launch.
+- The exact Chrome page diagnostic now **fails closed** if `matchMedia(prefers-reduced-transparency: reduce)` remains true. This distinguishes a CI machine prerequisite failure from product behavior and preserves real user accessibility.
+- YAML parse + 4-shard/retries=0 contract PASS, `git diff --check` PASS. No runtime source changes. Full hosted Mac E2E and smoke remain PENDING until same-HEAD result.

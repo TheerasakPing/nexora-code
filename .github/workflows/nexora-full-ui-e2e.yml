@@ -37,6 +37,14 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Set normal-transparency baseline on disposable hosted Mac
+        run: |
+          # macOS image defaults to Reduce Transparency=ON. Test wallpaper-enabled
+          # UX under an explicitly normal preference, never on a user Mac.
+          defaults write com.apple.universalaccess reduceTransparency -bool false
+          defaults write com.apple.Accessibility ReduceTransparencyEnabled -bool false
+          killall cfprefsd || true
+          defaults read com.apple.universalaccess reduceTransparency
       - name: Use real installed Google Chrome on macOS
         run: |
           CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -52,13 +60,17 @@ jobs:
           const browser = await chromium.launch({ executablePath: process.env.PANDACODE_TEST_CHROME });
           try {
             const page = await browser.newPage();
-            console.log('CI_BROWSER_MEDIA_DIAGNOSTICS', await page.evaluate(() => ({
+            const media = await page.evaluate(() => ({
               platform: navigator.platform,
               hidden: document.hidden,
               reducedTransparency: matchMedia('(prefers-reduced-transparency: reduce)').matches,
               increasedContrast: matchMedia('(prefers-contrast: more)').matches,
               reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-            })));
+            }));
+            console.log('CI_BROWSER_MEDIA_DIAGNOSTICS', media);
+            if (media.reducedTransparency) {
+              throw new Error('CI macOS still has Reduce Transparency enabled: cannot run normal-wallpaper test baseline');
+            }
             await page.close();
           } finally {
             await browser.close();
