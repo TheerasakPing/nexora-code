@@ -239,7 +239,7 @@ test.describe('streamed responses', () => {
           expect(Math.abs((await text.boundingBox())!.x - groupLeft)).toBeLessThanOrEqual(1);
         }
       }
-      await page.screenshot({ path: `/private/tmp/pandacode-chronological-tools-${view}-${browserName}.png` });
+      await page.screenshot({ path: test.info().outputPath(`pandacode-chronological-tools-${view}-${browserName}.png`) });
       await finish(page, id);
       await expect(transcript(page).locator('.tool-group-label')).toHaveText(['5 tools', '1 tool', '1 tool']);
       await expect.poll(() => transcript(page).locator('.turn-activity-body .message-content, .turn-activity-body .tool-group').evaluateAll(nodes => nodes.map(node => node.matches('.tool-group')
