@@ -43,8 +43,11 @@ jobs:
           # UX under an explicitly normal preference, never on a user Mac.
           defaults write com.apple.universalaccess reduceTransparency -bool false
           defaults write com.apple.Accessibility ReduceTransparencyEnabled -bool false
-          killall cfprefsd || true
-          defaults read com.apple.universalaccess reduceTransparency
+          # Do not kill cfprefsd immediately after writing; on the hosted
+          # runner that discarded the newly written key before it flushed.
+          defaults read com.apple.Accessibility ReduceTransparencyEnabled || true
+          # The next Chrome step checks the EFFECTIVE media query and fails
+          # if macOS still requests reduced transparency.
       - name: Use real installed Google Chrome on macOS
         run: |
           CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
