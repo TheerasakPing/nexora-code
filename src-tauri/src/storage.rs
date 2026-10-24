@@ -2666,6 +2666,27 @@ mod tests {
         std::fs::remove_dir_all(dir).unwrap();
     }
 
+    // Guard only test-owned OS children. Unwinding from an assertion or an
+    // unreadable ready marker must never leave a parked child running.
+    struct R1FixtureChild(std::process::Child);
+    impl std::ops::Deref for R1FixtureChild {
+        type Target = std::process::Child;
+        fn deref(&self) -> &Self::Target { &self.0 }
+    }
+    impl std::ops::DerefMut for R1FixtureChild {
+        fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+    }
+    impl Drop for R1FixtureChild {
+        fn drop(&mut self) {
+            // Do not signal an already-reaped PID: another process could have
+            // been assigned that numeric identifier in the meantime.
+            if matches!(self.0.try_wait(), Ok(None)) {
+                let _ = self.0.kill();
+                let _ = self.0.wait();
+            }
+        }
+    }
+
     // This function is invoked by a *separate copy* of the current test
     // executable. It deliberately stays alive with SQLite open so the parent
     // can simulate actual OS process death, not just close/reopen an SQLite
@@ -2728,7 +2749,7 @@ mod tests {
             if cycle % 2 == 1 {
                 cmd.env("NEXORA_R1_TEST_CRASH_WAITING", "1");
             }
-            let mut child = cmd.spawn().unwrap();
+            let mut child = R1FixtureChild(cmd.spawn().unwrap());
             let deadline = Instant::now() + Duration::from_secs(12);
             while !ready.exists() && Instant::now() < deadline {
                 if let Some(status) = child.try_wait().unwrap() {
@@ -2832,14 +2853,16 @@ mod tests {
             std::fs::create_dir_all(&dir).unwrap();
             let db = dir.join("fixture.db");
             let ready = db.with_extension("ready");
-            let mut child = Command::new(std::env::current_exe().unwrap())
-                .args(["--exact", "storage::tests::r1_multi_session_crash_writer_child_fixture", "--nocapture"])
-                .env("NEXORA_R1_MULTI_CRASH_DB", &db)
-                .stdin(Stdio::null())
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .spawn()
-                .unwrap();
+            let mut child = R1FixtureChild(
+                Command::new(std::env::current_exe().unwrap())
+                    .args(["--exact", "storage::tests::r1_multi_session_crash_writer_child_fixture", "--nocapture"])
+                    .env("NEXORA_R1_MULTI_CRASH_DB", &db)
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .spawn()
+                    .unwrap(),
+            );
             let deadline = Instant::now() + Duration::from_secs(12);
             while !ready.exists() && Instant::now() < deadline {
                 if let Some(status) = child.try_wait().unwrap() {
