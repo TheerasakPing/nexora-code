@@ -5,7 +5,7 @@
 
 ## Checklist Planner (commit before workflow edits)
 - [x] CHROME-01 / TEAM_LEAD_SERIAL — investigate hosted shard failures; verify local Mac Chrome pinned wallpaper smoke 1/1 PASS.
-- [ ] CHROME-02 / TEAM_LEAD_SERIAL — align hosted macOS browser selection with local Chrome and add explicit wallpaper smoke; fail closed if missing.
+- [x] CHROME-02 / TEAM_LEAD_SERIAL — align hosted macOS browser selection with local Chrome and add explicit wallpaper smoke; fail closed if missing.
 - [ ] CHROME-03 / TEAM_LEAD_SERIAL — hosted 4-shard CI; report Chrome smoke and 744-case true PASS/FAIL without skipping assertions.
 - [ ] CHROME-04 / TEAM_LEAD_SERIAL — inspect residual errors, run release/Node/TypeScript smoke; Team Lead review real diff.
 - [ ] CHROME-05 / HUMAN_REVIEW_PENDING — independent security review and native 3-OS signed production acceptance remain blocked.
@@ -16,3 +16,9 @@
 | CHROME-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | hosted run |
 | CHROME-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | test logs |
 | CHROME-05 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | NO-GO | human/3-OS |
+
+## Implementation evidence before new hosted run
+- Workflow now requires executable installed Google Chrome at official macOS application path and logs its version. No silent Chromium fallback; missing browser fails the job.
+- CI logs only anonymous browser rendering preferences (reduced transparency, contrast, motion, visibility state, platform) to diagnose wallpaper; no tokens/private content.
+- Isolated pinned wallpaper smoke must PASS before running full 744 cases. Four independent shards, two workers each, retries=0 unchanged.
+- Local Mac 1-case wallpaper smoke PASS. YAML parser validation PASS. Hosted same-head outcome **PENDING**.
