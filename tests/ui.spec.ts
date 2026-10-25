@@ -800,9 +800,16 @@ test('preserves composer focus and selection when a reasoning save finishes afte
   await expect.poll(() => page.evaluate(() => typeof (window as any).__pandacodeReleaseEffort)).toBe('function');
   await page.locator('.task-item[data-id="session-2"]').click();
   await page.locator('.task-item[data-id="session-1"]').click();
+  // Wait for this task's history and enabled composer before establishing the
+  // selected range. Otherwise the prior navigation's late render can replace
+  // the textarea while the reasoning save is still deliberately held.
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
+  await expect(page.getByRole('log', { name: 'Conversation', exact: true })).toContainText('Search feels a little slow');
+  await expect(prompt(page)).toBeEnabled();
   await prompt(page).fill('Keep my selection while I edit this draft');
-  await prompt(page).evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(8, 17));
   await expect(prompt(page)).toBeFocused();
+  await prompt(page).evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(8, 17));
+  expect(await prompt(page).evaluate((element: HTMLTextAreaElement) => [element.selectionStart, element.selectionEnd])).toEqual([8, 17]);
   await page.evaluate(() => { (window as any).__pandacodeHoldEffort = false; (window as any).__pandacodeReleaseEffort(); });
   await expect(modelTrigger(page)).toContainText('High');
   await expect(prompt(page)).toHaveValue('Keep my selection while I edit this draft');
@@ -2306,6 +2313,9 @@ test('a rejected first prompt leaves the new task unlisted and restores its text
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
+  // Browser Preview starts asynchronously after reload; wait for the actual
+  // seeded task list before creating a new unsent draft.
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
   const sessionId = (await prompt(page).getAttribute('data-session-id'))!;
