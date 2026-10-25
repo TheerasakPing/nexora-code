@@ -8,6 +8,13 @@ fn memory() -> &'static std::sync::Mutex<std::collections::HashMap<String, Strin
 }
 
 pub(crate) fn set(service: &str, account: &str, value: &str) -> crate::Result<()> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = (service, account, value);
+        return Err("Credential storage is disabled in the isolated beta build.".into());
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     let value = value.trim();
     if value.is_empty() || value.len() > 4096 || value.chars().any(char::is_control) {
         return Err("That secret looks empty or malformed.".into());
@@ -30,9 +37,17 @@ pub(crate) fn set(service: &str, account: &str, value: &str) -> crate::Result<()
         let _ = (service, account, value);
         Err("Secure storage is not available on this platform.".into())
     }
+    }
 }
 
 pub(crate) fn get(service: &str, account: &str) -> Option<String> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = (service, account);
+        None
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     #[cfg(test)]
     {
         memory().lock().unwrap().get(&format!("{service}/{account}")).cloned()
@@ -58,9 +73,16 @@ pub(crate) fn get(service: &str, account: &str) -> Option<String> {
         let _ = (service, account);
         None
     }
+    }
 }
 
 pub(crate) fn remove(service: &str, account: &str) {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = (service, account);
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     #[cfg(test)]
     {
         memory().lock().unwrap().remove(&format!("{service}/{account}"));
@@ -79,11 +101,19 @@ pub(crate) fn remove(service: &str, account: &str) {
     {
         let _ = (service, account);
     }
+    }
 }
 
 /// Credential-management revocation MUST surface OS deletion failures.
 /// The older fire-and-forget remove() remains for noncritical legacy use.
 pub(crate) fn remove_checked(service: &str, account: &str) -> crate::Result<()> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = (service, account);
+        Err("Credential storage is disabled in the isolated beta build.".into())
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     #[cfg(test)]
     {
         memory().lock().map_err(|_| "Secure-store test double unavailable.")?
@@ -105,5 +135,19 @@ pub(crate) fn remove_checked(service: &str, account: &str) -> crate::Result<()> 
     {
         let _ = (service, account);
         Err("OS secure storage is unavailable.".into())
+    }
+    }
+}
+
+#[cfg(all(test, feature = "beta-isolation"))]
+mod beta_tests {
+    use super::*;
+
+    #[test]
+    fn beta_store_fails_closed_without_mutating_any_store() {
+        assert!(set("legacy.service", "account", "secret").is_err());
+        assert_eq!(get("legacy.service", "account"), None);
+        remove("legacy.service", "account");
+        assert!(remove_checked("legacy.service", "account").is_err());
     }
 }

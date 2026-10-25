@@ -1,7 +1,7 @@
 //! Legacy Keychain reads run in a short-lived process whose UI is disabled.
 //! The application process never changes the global Keychain interaction flag.
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "beta-isolation")))]
 mod mac {
     use base64::{engine::general_purpose::STANDARD, Engine};
     use serde::{Deserialize, Serialize};
@@ -308,15 +308,25 @@ mod mac {
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "beta-isolation")))]
 pub(crate) use mac::{read_claude, read_glm};
 
+#[cfg(all(target_os = "macos", feature = "beta-isolation"))]
+pub(crate) fn read_claude(_service: &str) -> Result<Option<Vec<u8>>, ()> {
+    Err(())
+}
+
+#[cfg(all(target_os = "macos", feature = "beta-isolation"))]
+pub(crate) fn read_glm() -> Result<Option<Vec<u8>>, ()> {
+    Err(())
+}
+
 pub fn handle_usage_keychain_helper() -> bool {
-    #[cfg(target_os = "macos")]
+    #[cfg(all(target_os = "macos", not(feature = "beta-isolation")))]
     {
         mac::handle()
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(any(not(target_os = "macos"), feature = "beta-isolation"))]
     {
         false
     }
