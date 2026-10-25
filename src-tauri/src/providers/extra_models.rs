@@ -85,11 +85,12 @@ fn parse_plain(bytes: &[u8]) -> Result<Vec<ModelInfo>, String> {
 }
 
 pub(super) async fn opencode(path: &Path) -> Result<Vec<ModelInfo>, String> {
-    match discover(path, &["models", "--verbose"], parse).await {
+    // Prefer the current OpenCode plain ID listing. Retain the older verbose
+    // format as fallback on an immediate error, not on a hung CLI.
+    match discover(path, &["models"], parse_plain).await {
         Ok(models) => Ok(models),
-        // A hung CLI would hang again; only a rejected flag or new output format falls back.
         Err(error) if error.contains("timed out") => Err(error),
-        Err(_) => discover(path, &["models"], parse_plain).await,
+        Err(_) => discover(path, &["models", "--verbose"], parse).await,
     }
 }
 
@@ -113,7 +114,7 @@ async fn discover(
         .map_err(|_| "Could not start OpenCode model discovery")?;
     let group = ProcessGroup::register(child.id());
     let mut bytes = Vec::new();
-    let result = tokio::time::timeout(Duration::from_secs(15), async {
+    let result = tokio::time::timeout(Duration::from_secs(35), async {
         child
             .stdout
             .take()
