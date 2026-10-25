@@ -22,6 +22,10 @@ pub struct McpServer {
     pub description: String,
     pub enabled: bool,
     pub transport: Transport,
+    // Reference to a separate OS secure-store item, not a credential or
+    // authorization grant. The renderer never receives the secret value.
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "credentialRef")]
+    pub credential_ref: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -143,13 +147,50 @@ impl Registry {
             .map_err(|_| "MCP registry is unavailable.")?;
         let mut entries = self.read()?;
         if let Some(index) = entries.iter().position(|item| item.name == server.name) {
+            if entries[index].credential_ref != server.credential_ref {
+                return Err("Use the native MCP credential manager to change vault references.".into());
+            }
+            if entries[index].credential_ref.is_some() &&
+               entries[index].transport != server.transport {
+                return Err("Revoke the MCP credential before changing its HTTP endpoint.".into());
+            }
             entries[index] = server;
+        } else if server.credential_ref.is_some() {
+            return Err("MCP credentials must be provisioned through the native vault manager.".into());
         } else if entries.len() < MAX_SERVERS {
             entries.push(server);
         } else {
             return Err("MCP server limit reached.".into());
         }
         entries.sort_by(|a, b| a.name.cmp(&b.name));
+        self.write(&entries)?;
+        Ok(entries)
+    }
+
+    /// Atomic compare-and-swap link/unlink of a reference after a native
+    /// operator-approved OS vault operation. The renderer cannot call this.
+    pub(crate) fn set_credential_ref(
+        &self, approved: &McpServer, next: Option<String>,
+    ) -> Result<Vec<McpServer>, String> {
+        if next.as_deref().is_some_and(|reference|
+            !valid_credential_ref(&approved.name, reference)
+        ) {
+            return Err("Invalid server-scoped vault reference".into());
+        }
+        let _guard = self.lock.lock().map_err(|_| "MCP registry unavailable.")?;
+        let mut entries = self.read()?;
+        let server = entries.iter_mut().find(|entry| entry.name == approved.name)
+            .ok_or("MCP server not found")?;
+        // Compare the *entire* saved configuration under the same file lock
+        // used for the atomic Registry write. Endpoint swaps are never linked
+        // to a prior operator's approved token.
+        if server != approved {
+            return Err("MCP server configuration changed; reload before retrying".into());
+        }
+        if !matches!(server.transport, Transport::StreamableHttp { .. }) {
+            return Err("OS vault Bearer tokens are only supported for HTTP MCP".into());
+        }
+        server.credential_ref = next;
         self.write(&entries)?;
         Ok(entries)
     }
@@ -165,6 +206,9 @@ impl Registry {
         entries.retain(|item| item.name != name);
         if entries.len() == before {
             return Err("MCP server was not found.".into());
+        }
+        if self.read()?.iter().any(|item| item.name == name && item.credential_ref.is_some()) {
+            return Err("Revoke the MCP vault credential before removing this server.".into());
         }
         self.write(&entries)?;
         Ok(entries)
@@ -206,8 +250,21 @@ fn printable(value: &str, max: usize) -> bool {
     value.len() <= max && !value.chars().any(char::is_control)
 }
 
-fn validate(server: &McpServer) -> Result<(), String> {
+pub(crate) fn valid_credential_ref(server: &str, reference: &str) -> bool {
+    let prefix = format!("vault:v1:{server}:");
+    reference.strip_prefix(&prefix).is_some_and(|id| {
+        id.len() == 36
+            && uuid::Uuid::parse_str(id).ok().is_some_and(|uuid| uuid.get_version_num() == 4)
+    })
+}
+
+pub(crate) fn validate(server: &McpServer) -> Result<(), String> {
     validate_name(&server.name)?;
+    if server.credential_ref.as_deref().is_some_and(|reference| {
+        !valid_credential_ref(&server.name, reference)
+    }) {
+        return Err("MCP credential reference must be a server-bound vault:v1 UUID; never store raw secrets.".into());
+    }
     if !printable(&server.description, 500) {
         return Err("MCP server description is invalid.".into());
     }
@@ -251,10 +308,25 @@ fn validate(server: &McpServer) -> Result<(), String> {
                 [
                     "--token",
                     "--api-key",
+                    "--apikey",
                     "--password",
                     "--secret",
+                    "--access-token",
+                    "--auth",
+                    "--header",
+                    "--env",
+                    "--proxy-authorization",
                     "authorization:",
+                    "proxy-authorization:",
                     "bearer ",
+                    "basic ",
+                    "x-api-key:",
+                    "api_key=",
+                    "apikey=",
+                    "token=",
+                    "password=",
+                    "secret=",
+                    "client_secret=",
                 ]
                 .iter()
                 .any(|pattern| lowered.contains(pattern))
@@ -363,6 +435,7 @@ mod tests {
             name: name.into(),
             description: "Example MCP server".into(),
             enabled: false,
+            credential_ref: None,
             transport: Transport::Stdio {
                 command: "npx".into(),
                 args: vec![
@@ -413,6 +486,13 @@ mod tests {
             "Authorization: Bearer secret",
             "--password",
             "--token",
+            "--header",
+            "--env",
+            "x-api-key: top-secret",
+            "api_key=top-secret",
+            "client_secret=top-secret",
+            "Bearer secret",
+            "--access-token",
         ] {
             item.transport = Transport::Stdio {
                 command: "npx".into(),
@@ -502,6 +582,105 @@ mod tests {
         assert!(reg.upsert(bad).is_err());
         assert_eq!(fs::read(&reg.file).unwrap(), before);
         fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn credential_references_are_scoped_and_never_inline_secrets() {
+        let folder = temp();
+        let reg = Registry::new(&folder);
+        let mut item = McpServer {
+            name: "filesystem".into(), description: String::new(), enabled: false,
+            credential_ref: None, transport: Transport::StreamableHttp {
+                url: "https://example.org/mcp".into(),
+            },
+        };
+        let reference = format!("vault:v1:filesystem:{}", uuid::Uuid::new_v4());
+        reg.upsert(item.clone()).unwrap();
+        reg.set_credential_ref(&item, Some(reference.clone())).unwrap();
+        item.credential_ref = Some(reference.clone());
+        assert_eq!(reg.list().unwrap()[0].credential_ref.as_deref(), Some(reference.as_str()));
+        let stored = fs::read_to_string(&reg.file).unwrap();
+        assert!(stored.contains("credentialRef"));
+        assert!(!stored.contains("api-key"));
+
+        for bad in [
+            "password=abc".to_owned(),
+            "vault:v1:other:".to_owned() + &uuid::Uuid::new_v4().to_string(),
+            "vault:v1:filesystem:not-a-uuid".into(),
+            "vault:v1:filesystem:12345678-1234-1234-1234-123456789abc".into(),
+        ] {
+            item.credential_ref = Some(bad);
+            assert!(reg.upsert(item.clone()).is_err());
+            assert_eq!(fs::read_to_string(&reg.file).unwrap(), stored);
+        }
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn saved_http_endpoint_cannot_change_while_vault_credential_is_linked() {
+        let folder = temp();
+        let reg = Registry::new(&folder);
+        let mut original = McpServer {
+            name:"guarded".into(), description:String::new(), enabled:true,
+            credential_ref:None,
+            transport:Transport::StreamableHttp{url:"https://safe.example/mcp".into()},
+        };
+        reg.upsert(original.clone()).unwrap();
+        let token = format!("vault:v1:guarded:{}", uuid::Uuid::new_v4());
+        reg.set_credential_ref(&original, Some(token.clone())).unwrap();
+        original.credential_ref = Some(token);
+        let mut swapped = original.clone();
+        swapped.transport = Transport::StreamableHttp{
+            url:"https://attacker.example/mcp".into(),
+        };
+        assert!(reg.upsert(swapped).is_err());
+        assert!(reg.remove("guarded").is_err());
+        assert_eq!(reg.list().unwrap()[0].transport, original.transport);
+        reg.set_credential_ref(&original,None).unwrap();
+        assert!(reg.remove("guarded").is_ok());
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn vault_link_compare_and_swap_rejects_endpoint_changed_while_approval_waited() {
+        let folder = temp();
+        let reg = Registry::new(&folder);
+        let original = McpServer {
+            name:"guarded".into(),description:String::new(),enabled:true,
+            credential_ref:None,
+            transport:Transport::StreamableHttp{url:"https://safe.example/mcp".into()},
+        };
+        reg.upsert(original.clone()).unwrap();
+        let mut swapped=original.clone();
+        swapped.transport=Transport::StreamableHttp{url:"https://attacker.example/mcp".into()};
+        reg.upsert(swapped).unwrap();
+        let token = format!("vault:v1:guarded:{}", uuid::Uuid::new_v4());
+        assert!(reg.set_credential_ref(&original,Some(token)).is_err());
+        assert!(reg.list().unwrap()[0].credential_ref.is_none());
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn vault_reference_is_atomic_server_scoped_and_regular_editor_cannot_override() {
+        let folder = temp();
+        let reg = Registry::new(&folder);
+        let mut item = stdio("fixture");
+        reg.upsert(item.clone()).unwrap();
+        let reference = format!("vault:v1:fixture:{}", uuid::Uuid::new_v4());
+        // stdio cannot take vault auth tokens.
+        assert!(reg.set_credential_ref(&item, Some(reference.clone())).is_err());
+        item.credential_ref = Some(reference);
+        assert!(reg.upsert(item.clone()).is_err());
+        assert!(reg.list().unwrap()[0].credential_ref.is_none());
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn v1_inventory_without_credential_reference_still_reads_and_serializes() {
+        let encoded = serde_json::to_string(&stdio("legacy")).unwrap();
+        assert!(!encoded.contains("credentialRef"));
+        let decoded: McpServer = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded.credential_ref, None);
     }
 
     #[test]

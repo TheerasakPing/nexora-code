@@ -51,3 +51,29 @@ test('Mac installer discloses Gatekeeper rejection and embeds visible instructio
     assert.doesNotMatch(script, /sudo\s+/);
   }
 });
+
+test('alpha packaging re-runs when app source changes and passes same-SHA quality gates before publishing', () => {
+  const action = read('.github/workflows/nexora-r6-alpha.yml');
+  for (const path of ['src/**', 'src-tauri/src/**', 'src-tauri/capabilities/**', 'src-tauri/Cargo.lock']) {
+    assert.ok(action.includes(`- '${path}'`), `missing source trigger ${path}`);
+  }
+  for (const gate of ['npm run build', 'npm test', 'npm run test:release', 'cargo test --locked', 'cargo clippy --locked']) {
+    assert.ok(action.includes(gate), `missing installer source gate ${gate}`);
+    assert.ok(action.indexOf(gate) < action.indexOf('actions/upload-artifact@v4'), `artifact uploaded before ${gate}`);
+  }
+  assert.match(action, /components: clippy/);
+  assert.match(action, /TAURI_SIGNING_PRIVATE_KEY: ''/);
+  assert.match(action, /APPLE_SIGNING_IDENTITY: '-'/);
+});
+
+test('Mac DMG staging and independent verifier reject non-ad-hoc signatures', () => {
+  const build = read('scripts/nexora/build-mac-preview-dmg.sh');
+  const verify = read('scripts/nexora/verify-mac-preview-dmg.sh');
+  assert.match(build, /codesign --force --deep --sign -/);
+  for (const script of [build, verify]) {
+    assert.match(script, /codesign -dv --verbose=4/);
+    assert.match(script, /Signature=adhoc/);
+    assert.match(script, /Authority=/);
+    assert.match(script, /codesign --verify --deep --strict/);
+  }
+});

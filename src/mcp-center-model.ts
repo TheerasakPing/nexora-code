@@ -7,6 +7,8 @@ export interface McpServer {
   name: string;
   description: string;
   enabled: boolean;
+  /** Opaque server-scoped OS-vault reference, never a plaintext secret. */
+  credentialRef?: string;
   transport: McpTransport;
 }
 
@@ -17,6 +19,7 @@ export interface McpDraft {
   command: string;
   argsJson: string;
   url: string;
+  credentialRef?: string;
 }
 
 /** The backend is authoritative; this catches input errors before IPC. */
@@ -26,6 +29,13 @@ export function parseMcpDraft(draft: McpDraft, enabled = false): McpServer {
   if (!/^[a-z][a-z0-9_-]{0,63}$/.test(name)) {
     throw new Error('Server name must start with a lowercase letter and use only a-z, 0-9, _ or -.');
   }
+  const credentialRef = draft.credentialRef;
+  if (credentialRef !== undefined &&
+      (!/^vault:v1:[a-z][a-z0-9_-]{0,63}:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(credentialRef) ||
+       credentialRef.split(':')[2] !== name)) {
+    throw new Error('Credential must be an opaque server-scoped vault reference, not a secret.');
+  }
+  const optionalCredential = credentialRef === undefined ? {} : { credentialRef };
   if (description.length > 500 || /[\x00-\x1f\x7f]/.test(description)) {
     throw new Error('Description is too long or contains control characters.');
   }
@@ -51,7 +61,7 @@ export function parseMcpDraft(draft: McpDraft, enabled = false): McpServer {
     if (args.some(value => /--(?:token|api-key|password|secret)|authorization:|bearer /i.test(value))) {
       throw new Error('Never put credentials in MCP arguments. Credential vault support is pending.');
     }
-    return { name, description, enabled, transport: { kind: 'stdio', command, args } };
+    return { name, description, enabled, ...optionalCredential, transport: { kind: 'stdio', command, args } };
   }
   if (draft.kind === 'streamable_http') {
     const url = draft.url.trim();
@@ -63,7 +73,7 @@ export function parseMcpDraft(draft: McpDraft, enabled = false): McpServer {
         (parsed.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname))) {
       throw new Error('Use HTTPS (or loopback HTTP) without embedded credentials or query parameters.');
     }
-    return { name, description, enabled, transport: { kind: 'streamable_http', url } };
+    return { name, description, enabled, ...optionalCredential, transport: { kind: 'streamable_http', url } };
   }
   throw new Error('Choose a supported MCP transport.');
 }
@@ -82,5 +92,6 @@ export function asDraft(server: McpServer): McpDraft {
     command: server.transport.kind === 'stdio' ? server.transport.command : '',
     argsJson: server.transport.kind === 'stdio' ? JSON.stringify(server.transport.args, null, 2) : '[]',
     url: server.transport.kind === 'streamable_http' ? server.transport.url : '',
+    credentialRef: server.credentialRef,
   };
 }

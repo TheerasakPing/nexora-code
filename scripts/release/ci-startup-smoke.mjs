@@ -49,6 +49,16 @@ export function linuxStartupCommand(installer) {
   return { command: 'xvfb-run', args: ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', installer] };
 }
 
+export function linuxWindowCommand(installer) {
+  // A second, private X display is shared by the app and xdotool probe.
+  return { command: 'xvfb-run', args: ['--auto-servernum', '--server-args=-screen 0 1440x940x24', 'dbus-run-session', '--', 'bash', join(root, 'scripts/release/ci-linux-visible-window.sh'), installer] };
+}
+
+export function windowsWindowCommand(app) {
+  // Invoke a file with literal arguments; never interpolate app paths in PowerShell.
+  return { command: 'powershell.exe', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', join(root, 'scripts/release/ci-windows-visible-window.ps1'), '-AppPath', app] };
+}
+
 export function validatePackageSize(size) {
   if (!Number.isSafeInteger(size) || size < 1 || size > 200 * 1024 * 1024) throw new Error('The packaged installer exceeds the release size limit (1 byte–200 MiB).');
 }
@@ -151,6 +161,8 @@ async function main() {
       await chmod(installer, 0o755);
       const { command, args } = linuxStartupCommand(installer);
       await observeProcess(command, args, { env, cwd: directory, durationMs: 15_000 });
+      const windowSmoke = linuxWindowCommand(installer);
+      await observeProcess(windowSmoke.command, windowSmoke.args, { env, cwd: directory, durationMs: 50_000, expectExit: true });
     } else {
       const destination = join(directory, 'installed');
       // WebView2 bootstrap may download its runtime on a clean runner.
@@ -158,9 +170,12 @@ async function main() {
       const names = await readdir(destination);
       const binaries = names.filter(name => name.toLowerCase() === 'nexora-code.exe');
       if (names.length > 100 || binaries.length !== 1) throw new Error('NSIS did not install the expected app executable.');
-      await observeProcess(join(destination, binaries[0]), [], { env, cwd: directory, durationMs: 30_000 });
+      const installedApp = join(destination, binaries[0]);
+      await observeProcess(installedApp, [], { env, cwd: directory, durationMs: 30_000 });
+      const windowSmoke = windowsWindowCommand(installedApp);
+      await observeProcess(windowSmoke.command, windowSmoke.args, { env, cwd: directory, durationMs: 55_000, expectExit: true });
     }
-    console.log(`${target}: packaged app stayed alive during the startup check (no GUI or agent behavior asserted).`);
+    console.log(`${target}: packaged app startup and owned native window smoke passed (WebView contents and agent behavior NOT asserted).`);
   } finally {
     await cleanupSmokeDirectory(directory);
   }

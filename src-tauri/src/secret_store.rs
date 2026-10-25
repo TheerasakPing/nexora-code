@@ -80,3 +80,30 @@ pub(crate) fn remove(service: &str, account: &str) {
         let _ = (service, account);
     }
 }
+
+/// Credential-management revocation MUST surface OS deletion failures.
+/// The older fire-and-forget remove() remains for noncritical legacy use.
+pub(crate) fn remove_checked(service: &str, account: &str) -> crate::Result<()> {
+    #[cfg(test)]
+    {
+        memory().lock().map_err(|_| "Secure-store test double unavailable.")?
+            .remove(&format!("{service}/{account}"));
+        Ok(())
+    }
+    #[cfg(all(not(test), target_os = "macos"))]
+    {
+        security_framework::passwords::delete_generic_password(service, account)
+            .map_err(|_| "Could not revoke credential in macOS Keychain.".into())
+    }
+    #[cfg(all(not(test), any(target_os = "linux", target_os = "windows")))]
+    {
+        keyring::Entry::new(service, account)
+            .and_then(|entry| entry.delete_credential())
+            .map_err(|_| "Could not revoke credential in OS secure storage.".into())
+    }
+    #[cfg(all(not(test), not(any(target_os = "macos", target_os = "linux", target_os = "windows"))))]
+    {
+        let _ = (service, account);
+        Err("OS secure storage is unavailable.".into())
+    }
+}

@@ -11,6 +11,11 @@ on:
       - 'scripts/nexora/verify-mac-preview-dmg.sh'
       - 'src-tauri/tauri*.conf.json'
       - 'src-tauri/Cargo.toml'
+      - 'src-tauri/Cargo.lock'
+      - 'src-tauri/src/**'
+      - 'src-tauri/capabilities/**'
+      - 'src-tauri/icons/**'
+      - 'src/**'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
@@ -47,16 +52,23 @@ jobs:
           node-version: '22'
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - name: Linux Tauri and AppImage dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libxdo-dev build-essential pkg-config squashfs-tools libfuse2 xvfb dbus-x11 xdg-utils
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libxdo-dev build-essential pkg-config squashfs-tools libfuse2 xvfb dbus-x11 xdg-utils xdotool
       - run: npm ci
-      - name: Check identity and release contracts
+      - name: Source quality gate (same SHA and OS as installer)
         run: |
+          npm audit --audit-level=high
           npm run test:nexora:r0
+          npm run build
+          npm test
           npm run test:release
+          cargo test --locked --manifest-path src-tauri/Cargo.toml --lib
+          cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
       - name: Build Mac ARM64 optimized preview DMG without Finder/AppleScript
         if: runner.os == 'macOS'
         run: bash scripts/nexora/build-mac-preview-dmg.sh

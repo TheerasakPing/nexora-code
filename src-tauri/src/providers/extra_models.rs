@@ -84,12 +84,19 @@ fn parse_plain(bytes: &[u8]) -> Result<Vec<ModelInfo>, String> {
     Ok(models)
 }
 
+// Avoid retrying a process that exceeded the deadline; fallback is meant
+// only for an immediate CLI error or incompatible output format.
+fn should_try_verbose_fallback(error: &str) -> bool {
+    !error.contains("timed out")
+}
+
 pub(super) async fn opencode(path: &Path) -> Result<Vec<ModelInfo>, String> {
-    match discover(path, &["models", "--verbose"], parse).await {
+    // Prefer the current OpenCode plain ID listing. Retain the older verbose
+    // format as fallback on an immediate error, not on a hung CLI.
+    match discover(path, &["models"], parse_plain).await {
         Ok(models) => Ok(models),
-        // A hung CLI would hang again; only a rejected flag or new output format falls back.
-        Err(error) if error.contains("timed out") => Err(error),
-        Err(_) => discover(path, &["models"], parse_plain).await,
+        Err(error) if !should_try_verbose_fallback(&error) => Err(error),
+        Err(_) => discover(path, &["models", "--verbose"], parse).await,
     }
 }
 
@@ -113,7 +120,7 @@ async fn discover(
         .map_err(|_| "Could not start OpenCode model discovery")?;
     let group = ProcessGroup::register(child.id());
     let mut bytes = Vec::new();
-    let result = tokio::time::timeout(Duration::from_secs(15), async {
+    let result = tokio::time::timeout(Duration::from_secs(35), async {
         child
             .stdout
             .take()
@@ -150,6 +157,15 @@ async fn discover(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn discovery_timeout_never_triggers_another_slow_cli_probe() {
+        assert!(!should_try_verbose_fallback("OpenCode model discovery timed out"));
+        assert!(should_try_verbose_fallback("OpenCode could not load models"));
+        assert!(should_try_verbose_fallback("Invalid OpenCode model catalog"));
+        assert!(parse_plain(b"provider/model\n").is_ok());
+    }
+
     #[test]
     fn supports_the_current_catalog_size() {
         let catalog: String = (0..2012)

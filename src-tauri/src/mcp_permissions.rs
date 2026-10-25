@@ -86,6 +86,7 @@ mod tests {
             name: "safe_server".to_owned(),
             description: String::new(),
             enabled,
+            credential_ref: None,
             transport: Transport::Stdio {
                 command: "npx".to_owned(),
                 args: vec![],

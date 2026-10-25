@@ -47,3 +47,19 @@ test('remote URL rejects cleartext egress, URL credentials, query and fragments'
 test('description control characters are rejected', () => {
   assert.throws(() => parseMcpDraft({ ...stdio, description: 'hello\nworld' }), /Description/);
 });
+
+test('opaque server-bound credential references survive disabled config editing', () => {
+  const credentialRef = 'vault:v1:local_fs:123e4567-e89b-42d3-a456-426614174000';
+  const config = parseMcpDraft({ ...stdio, credentialRef });
+  assert.equal(config.credentialRef, credentialRef);
+  assert.deepEqual(parseMcpDraft(asDraft(config)), config);
+  assert.equal(parseMcpDraft({ ...stdio, credentialRef }, true).enabled, true);
+  for (const bad of [
+    'plaintext-password',
+    'vault:v1:other:123e4567-e89b-42d3-a456-426614174000',
+    'vault:v1:local_fs:not-a-uuid',
+    'vault:v1:local_fs:123e4567-e89b-12d3-a456-426614174000',
+  ]) {
+    assert.throws(() => parseMcpDraft({ ...stdio, credentialRef: bad }), /credential|Credential/);
+  }
+});

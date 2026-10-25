@@ -32,6 +32,11 @@ EXE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$PLIST")"
 [[ -f "$APP/Contents/MacOS/$EXE" ]] || { echo "ERROR: missing app executable" >&2; exit 4; }
 lipo -archs "$APP/Contents/MacOS/$EXE" | grep -qw arm64 || { echo "ERROR: not ARM64" >&2; exit 4; }
 /usr/bin/codesign --verify --deep --strict "$APP"
+signature_details="$(/usr/bin/codesign -dv --verbose=4 "$APP" 2>&1)"
+if ! grep -q '^Signature=adhoc$' <<< "$signature_details" || grep -q '^Authority=' <<< "$signature_details"; then
+  echo "ERROR: DMG app is not strictly ad-hoc signed" >&2
+  exit 4
+fi
 # Codesign integrity validation is not Apple Gatekeeper distribution trust.
 # Never silently suggest that passing `codesign --verify` means installable.
 if /usr/sbin/spctl --assess --type execute --verbose=2 "$APP" >/dev/null 2>&1; then

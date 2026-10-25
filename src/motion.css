@@ -168,3 +168,18 @@ html[data-theme] dialog .command-search{padding:1px 12px}
 html[data-theme] dialog .command-search input{padding:8px 0;font-size:.94rem;min-height:0}
 html[data-theme] dialog .command-results>button{min-height:30px;padding:5px 10px}
 html[data-theme] dialog .import-search{height:30px}
+
+/* Quiet orbit light while the coding agent is running (Stop remains clickable). */
+.composer-running .send-button.stop-button{position:relative;isolation:isolate}
+.composer-running .send-button.stop-button::before{
+  content:"";position:absolute;inset:-3px;border-radius:7px;pointer-events:none;
+  border:2px solid transparent;
+  background:conic-gradient(from 0deg,transparent 0deg,transparent 245deg,rgb(var(--accent-rgb) / .18) 270deg,rgb(var(--accent-rgb) / .95) 312deg,#fff 327deg,transparent 355deg) border-box;
+  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:nexora-send-working-orbit 5.5s linear infinite;
+}
+@keyframes nexora-send-working-orbit{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .composer-running .send-button.stop-button::before{animation:none;border-color:rgb(var(--accent-rgb) / .6);background:none;-webkit-mask:none;mask:none}
+}

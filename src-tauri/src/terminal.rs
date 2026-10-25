@@ -1020,13 +1020,13 @@ mod tests {
         id: String,
         pid: u32,
         exited: mpsc::Receiver<()>,
+        reaped: Arc<AtomicBool>,
     }
     impl Drop for TestShell {
         fn drop(&mut self) {
-            // Failed assertions must not leave their intentionally stubborn shell running.
-            unsafe {
-                libc::kill(-(self.pid as i32), libc::SIGKILL);
-            }
+            // Use the production registry's owned Terminal destructor, not a
+            // raw numeric PID that may have been reused after the waiter reaped.
+            let _ = close(&self.terms, &self.id);
         }
     }
 
@@ -1039,6 +1039,9 @@ mod tests {
         drop(pty.slave);
         let mut reader = pty.master.try_clone_reader().unwrap();
         let closed = Arc::new(AtomicBool::new(false));
+        let reaped = Arc::new(AtomicBool::new(false));
+        let waiter_reaped = reaped.clone();
+        let waiter_closed = closed.clone();
         #[cfg(target_os = "linux")]
         let writer: Box<dyn Write + Send> =
             Box::new(LinuxPtyWriter::new(pty.master.as_ref(), closed.clone()).unwrap());
@@ -1071,6 +1074,10 @@ mod tests {
                 }
             }
             let _ = child.wait();
+            // Mirror the native reader's handoff immediately after reaping:
+            // Terminal::drop must never signal a now-recycled shell PID.
+            waiter_closed.store(true, Ordering::SeqCst);
+            waiter_reaped.store(true, Ordering::SeqCst);
             let _ = exit_tx.send(());
         });
         let id = "terminal-under-test".to_string();
@@ -1094,6 +1101,7 @@ mod tests {
             id,
             pid,
             exited,
+            reaped,
         }
     }
 
@@ -1159,6 +1167,124 @@ mod tests {
         assert!(!result.running);
         close(&shell.terms, &shell.id).unwrap();
         shell.exited.recv_timeout(Duration::from_secs(3)).unwrap();
+    }
+
+    #[test]
+    fn eight_shared_pty_sessions_close_concurrently_without_orphans() {
+        use std::{
+            collections::HashSet,
+            sync::Barrier,
+            thread,
+            time::{Duration, Instant},
+        };
+        // These are native PTYs and *real* OS shell children, not mocked IO.
+        // Mimic the application's one shared terminal registry by moving all
+        // independently started fixtures into a single registry.
+        let terms: Terminals = Arc::new(Mutex::new(HashMap::new()));
+        let mut sessions = Vec::new();
+        let mut pids = HashSet::new();
+        for index in 0..8 {
+            let script = if index % 2 == 0 {
+                "printf ready; exec sleep 30"
+            } else {
+                "printf ready; read line"
+            };
+            let mut session = shell(script);
+            assert!(pids.insert(session.pid), "two PTYs inherited one PID");
+            let terminal = session
+                .terms
+                .lock()
+                .unwrap()
+                .remove(&session.id)
+                .expect("the fixture must own its terminal");
+            session.id = format!("test-pty-{index}");
+            session.terms = terms.clone();
+            assert!(terms.lock().unwrap().insert(session.id.clone(), terminal).is_none());
+            sessions.push(session);
+        }
+        assert_eq!(terms.lock().unwrap().len(), 8);
+
+        let barrier = Arc::new(Barrier::new(9));
+        let (tx, rx) = mpsc::sync_channel(8);
+        let started = Instant::now();
+        let mut callers = Vec::new();
+        for session in &sessions {
+            let barrier = barrier.clone();
+            let tx = tx.clone();
+            let terms = terms.clone();
+            let id = session.id.clone();
+            callers.push(thread::spawn(move || {
+                barrier.wait();
+                let _ = tx.send(close(&terms, &id));
+            }));
+        }
+        drop(tx);
+        barrier.wait();
+        for _ in 0..8 {
+            rx.recv_timeout(Duration::from_secs(5))
+                .expect("concurrent terminal close is blocked")
+                .expect("a live terminal could not be closed");
+        }
+        for caller in callers {
+            caller.join().expect("terminal close caller panicked");
+        }
+        assert!(terms.lock().unwrap().is_empty(), "closed terminals still occupy the registry");
+        for session in &mut sessions {
+            session
+                .exited
+                .recv_timeout(Duration::from_secs(5))
+                .expect("closed native PTY shell was not reaped");
+            assert!(
+                session.reaped.load(Ordering::SeqCst),
+                "fixture did not publish actual OS child reap"
+            );
+            assert!(
+                write(&terms, &session.id, "echo should-not-run\n").is_err(),
+                "closed terminal accepted new input"
+            );
+        }
+        assert!(
+            started.elapsed() < Duration::from_secs(8),
+            "eight concurrent terminal closes exceeded shutdown budget"
+        );
+    }
+
+    #[test]
+    fn native_pty_write_racing_close_finishes_and_rejects_later_input() {
+        use std::sync::Barrier;
+        let session = shell("printf ready; read line");
+        let terms = session.terms.clone();
+        let id = session.id.clone();
+        let barrier = Arc::new(Barrier::new(3));
+        let (tx, rx) = mpsc::sync_channel(2);
+        let writer = {
+            let (terms, id, barrier, tx) = (terms.clone(), id.clone(), barrier.clone(), tx.clone());
+            std::thread::spawn(move || {
+                barrier.wait();
+                let _ = tx.send(("write", write(&terms, &id, "fixture-input\n")));
+            })
+        };
+        let closer = {
+            let (terms, id, barrier) = (terms.clone(), id.clone(), barrier.clone());
+            std::thread::spawn(move || {
+                barrier.wait();
+                let _ = tx.send(("close", close(&terms, &id)));
+            })
+        };
+        barrier.wait();
+        let a = rx.recv_timeout(Duration::from_secs(5)).expect("writer/close race hung");
+        let b = rx.recv_timeout(Duration::from_secs(5)).expect("writer/close race hung");
+        let outcomes = [a, b];
+        assert_eq!(outcomes.iter().filter(|(name, _)| *name == "close").count(), 1);
+        assert!(outcomes.iter().find(|(name, _)| *name == "close").unwrap().1.is_ok());
+        // A racing write may finish before close, or fail after close; both
+        // are valid. No write may succeed once closure has returned.
+        assert!(write(&terms, &id, "late-input\n").is_err());
+        assert!(terms.lock().unwrap().is_empty());
+        writer.join().unwrap();
+        closer.join().unwrap();
+        session.exited.recv_timeout(Duration::from_secs(5)).expect("racing PTY child not reaped");
+        assert!(session.reaped.load(Ordering::SeqCst));
     }
 
     #[test]

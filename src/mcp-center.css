@@ -23,3 +23,23 @@
 /* Override transport field grids when hidden (attribute specificity matters). */
 .mcp-center-form [data-nexora-stdio-fields][hidden],
 .mcp-center-form [data-nexora-http-fields][hidden] { display:none; }
+
+/* Read-only MCP catalog never contains executable controls. */
+.mcp-center-inspector { border:1px solid var(--border); border-radius:10px; padding:12px; margin:12px 0; }
+.mcp-center-inspector[hidden] { display:none; }
+.mcp-center-inspector h4 { margin:0 0 8px; }
+.mcp-center-inspector h4 small { font-size:.75em; font-weight:normal; color:var(--muted); }
+.mcp-center-inspector ul { list-style:disc; padding-left:20px; margin:5px 0 10px; }
+.mcp-center-inspector li { overflow-wrap:anywhere; padding:3px 0; }
+.mcp-center-inspector li small { color:var(--muted); margin-left:6px; }
+.mcp-center-entry-actions button:disabled { opacity:.5; cursor:not-allowed; }
+
+.mcp-center-manual-tool { border-left:2px solid var(--border); padding:8px 10px; margin-top:5px; }
+.mcp-center-manual-tool label { display:block; font-size:.79rem; font-weight:600; }
+.mcp-center-manual-tool textarea { width:100%; background:var(--panel, transparent); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:8px; margin:5px 0; font:inherit; font-family:monospace; }
+.mcp-center-manual-tool pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:7px; padding:8px; }
+.mcp-center-manual-tool pre[hidden] { display:none; }
+
+.mcp-center-vault { border:1px solid var(--border); border-radius:10px; padding:12px; margin:12px 0; }
+.mcp-center-vault[hidden] { display:none; }
+.mcp-center-vault input[type=password] { width:100%; margin:7px 0; padding:8px; border:1px solid var(--border); border-radius:7px; }
