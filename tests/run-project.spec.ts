@@ -293,6 +293,6 @@ test.describe('project run', () => {
       return issues;
     });
     expect(overlaps).toEqual([]);
-    await page.screenshot({ path: `/private/tmp/pandacode-project-run-${testInfo.project.name || testInfo.config.projects[0].use.browserName || 'chrome'}-${width}.png`, animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath(`pandacode-project-run-${testInfo.project.name || testInfo.config.projects[0].use.browserName || 'chrome'}-${width}.png`), animations: 'disabled' });
   });
 });

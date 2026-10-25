@@ -94,7 +94,7 @@ test('preview opens the GitHub issue tracker without sending customer or workspa
   await open(page, 'preview');
   await support(page).click();
   await expect.poll(() => page.evaluate(() => (window as any).__supportFixture.opened)).toEqual([
-    ['https://github.com/aicodeking/pandacode/issues', '_blank', 'noopener,noreferrer'],
+    ['https://github.com/TheerasakPing/nexora-code/issues', '_blank', 'noopener,noreferrer'],
   ]);
 });
 
@@ -126,15 +126,18 @@ test('Settings shows an About section with the version and GitHub links', async 
   await expect(about.locator('.settings-about-version')).toHaveText('Version Preview');
   const urls = await about.locator('[data-action="open-url"]').evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.url));
   expect(urls).toEqual(expect.arrayContaining([
+    'https://github.com/TheerasakPing/nexora-code',
+    'https://github.com/TheerasakPing/nexora-code/issues',
+    'https://github.com/TheerasakPing/nexora-code/releases',
+    'https://github.com/TheerasakPing/nexora-code/blob/main/LICENSE',
+    // Preserve fork attribution: upstream source remains discoverable.
     'https://github.com/aicodeking/pandacode',
-    'https://github.com/aicodeking/pandacode/issues',
-    'https://github.com/aicodeking/pandacode/releases',
   ]));
   await expect(about.getByRole('button', { name: 'Releases', exact: true })).toBeVisible();
   await expect(about.getByRole('button', { name: 'PandaCode License' })).toBeVisible();
   await expect(settings).not.toContainText('License & updates');
   await about.getByRole('button', { name: 'Releases', exact: true }).click();
   await expect.poll(() => page.evaluate(() => (window as any).__supportFixture.opened)).toEqual([
-    ['https://github.com/aicodeking/pandacode/releases', '_blank', 'noopener,noreferrer'],
+    ['https://github.com/TheerasakPing/nexora-code/releases', '_blank', 'noopener,noreferrer'],
   ]);
 });

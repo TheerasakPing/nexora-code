@@ -65,7 +65,7 @@ test.describe('task deletion', () => {
     await openDelete(page);
     await expect(confirmation(page)).toContainText(title);
     await expect(confirmation(page).getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
-    await page.screenshot({ path: `/private/tmp/pandacode-delete-task-${browserName}.png`, animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath(`pandacode-delete-task-${browserName}.png`), animations: 'disabled' });
     await confirmation(page).getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(confirmation(page)).toBeHidden();
     expect(await calls(page, 'delete_session')).toEqual([]);
@@ -76,6 +76,7 @@ test.describe('task deletion', () => {
     await page.setViewportSize({ width: 460, height: 740 });
     await page.addInitScript(() => localStorage.setItem('pandacode.uiScale', '1.4'));
     await page.reload();
+    await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
     await openDelete(page);
     const bounds = (await confirmation(page).boundingBox())!;
     expect(bounds.x).toBeGreaterThanOrEqual(0);
@@ -84,7 +85,7 @@ test.describe('task deletion', () => {
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(740);
     expect(await confirmation(page).evaluate(node => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
     await expect(confirmation(page).getByRole('button', { name: 'Delete task', exact: true })).toBeVisible();
-    await page.screenshot({ path: `/private/tmp/pandacode-delete-task-${browserName}-140pct.png`, animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath(`pandacode-delete-task-${browserName}-140pct.png`), animations: 'disabled' });
     await confirmation(page).getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(await calls(page, 'delete_session')).toEqual([]);
   });

@@ -1,5 +1,5 @@
-# Full Browser Preview functional regression suite. No native users/providers/credentials.
-name: Nexora full UI Browser E2E
+# Full Browser Preview macOS UX regression suite. No native users/providers/credentials.
+name: Nexora full UI Browser E2E macOS
 on:
   pull_request:
     paths:
@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   browser:
-    name: Full UI E2E shard ${{ matrix.shard }}/4
-    runs-on: ubuntu-22.04
+    name: Full macOS UI E2E shard ${{ matrix.shard }}/4
+    runs-on: macos-15
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -27,7 +27,7 @@ jobs:
         shard: [1, 2, 3, 4]
     env:
       CI: 'true'
-      PW_WORKERS: '2'
+      PW_WORKERS: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -37,11 +37,52 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Set normal-transparency baseline on disposable hosted Mac
+        run: |
+          # macOS image defaults to Reduce Transparency=ON. Test wallpaper-enabled
+          # UX under an explicitly normal preference, never on a user Mac.
+          defaults write com.apple.universalaccess reduceTransparency -bool false
+          defaults write com.apple.Accessibility ReduceTransparencyEnabled -bool false
+          # Do not kill cfprefsd immediately after writing; on the hosted
+          # runner that discarded the newly written key before it flushed.
+          defaults read com.apple.Accessibility ReduceTransparencyEnabled || true
+          # The next Chrome step checks the EFFECTIVE media query and fails
+          # if macOS still requests reduced transparency.
+      - name: Use real installed Google Chrome on macOS
+        run: |
+          CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          test -x "$CHROME" || { echo "ERROR: reference Google Chrome missing from macOS hosted runner"; exit 2; }
+          "$CHROME" --version
+          echo "PANDACODE_TEST_CHROME=$CHROME" >> "$GITHUB_ENV"
       - name: Build and typecheck frontend
         run: npm run build
-      - name: Browser Preview full suite shard (no retry, no skipped specs)
-        run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=2 --retries=0 --reporter=line
+      - name: Log non-sensitive macOS browser rendering preferences
+        run: |
+          node --input-type=module - <<'JS'
+          import { chromium } from '@playwright/test';
+          const browser = await chromium.launch({ executablePath: process.env.PANDACODE_TEST_CHROME });
+          try {
+            const page = await browser.newPage();
+            const media = await page.evaluate(() => ({
+              platform: navigator.platform,
+              hidden: document.hidden,
+              reducedTransparency: matchMedia('(prefers-reduced-transparency: reduce)').matches,
+              increasedContrast: matchMedia('(prefers-contrast: more)').matches,
+              reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+            }));
+            console.log('CI_BROWSER_MEDIA_DIAGNOSTICS', media);
+            if (media.reducedTransparency) {
+              throw new Error('CI macOS still has Reduce Transparency enabled: cannot run normal-wallpaper test baseline');
+            }
+            await page.close();
+          } finally {
+            await browser.close();
+          }
+          JS
+      - name: Wallpaper image load and UI smoke (zero retry)
+        run: npx playwright test tests/wallpapers.spec.ts --grep 'wallpapers load one scene shared' --workers=1 --retries=0 --reporter=line
+      - name: macOS Browser Preview full suite shard (isolated worker, zero retries)
+        run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=1 --retries=0 --reporter=line
       - name: Preserve screenshot and trace on failure
         if: failure()
         uses: actions/upload-artifact@v4

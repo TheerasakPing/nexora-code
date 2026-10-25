@@ -848,7 +848,7 @@ html[data-native-platform=macos] .github-view .gh-repos-head{padding-left:calc(8
 .github-view .sidebar-resize-handle{display:none}
 #github-hub{flex:1;min-width:0;min-height:0}
 #github-hub[hidden]{display:none}
-@container workspace-header (max-width:420px){.header-actions{gap:1px}.header-actions .icon-button{width:24px}.header-divider{margin:0 1px}}
+@container workspace-header (max-width:420px){.header-actions{gap:0}.workspace-header .header-actions>.view-switch{margin-right:0}.header-actions .icon-button{width:24px}.header-actions .header-divider{margin:0}}
 
 /* An update is downloaded: one quiet, clickable line in the status bar. */
 .update-status{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:var(--accent-dim);color:var(--accent-ink);font-size:.72rem;font-weight:600}
