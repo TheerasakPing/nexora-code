@@ -64,6 +64,7 @@ test('Resume at reset continues the task when the limit resets', async ({ page }
   await expect(page.getByRole('button', { name: 'Stop task', exact: true })).toBeVisible();
   const resetsAt = await page.evaluate(() => Date.now() + 60_000);
   await hitLimit(page, resetsAt);
+  await expect(banner(page)).toContainText('Usage limit reached');
   // The switch reflects the saved setting, which arrives after the simulated IPC delay.
   await banner(page).getByRole('checkbox', { name: 'Resume at reset' }).click();
   await page.clock.runFor(500);

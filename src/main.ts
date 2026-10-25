@@ -20,6 +20,7 @@ import { updateTeamProgress } from './team-progress';
 import { classicTeamSetup, isTeam, namedTeams, teamDetail, TEAM_MODE_EVENT } from './team-mode';
 import { renderCoordination } from './coordination-message';
 import { renderTurnChanges, changeRequest, captureChangeCards, restoreChangeCards } from './turn-changes';
+import { openChoiceMenu } from './choice-menu';
 import { mountWallpapers } from './wallpapers';
 import type { AgentEvent, BrowserAttachment, ContextUsage, FileEntry, GitStatus, Message, MessagePage, Mode, Project, Provider, ProviderId, ProviderModel, Session, TaskLink, ToolActivity, TurnChanges } from './types';
 import type { BrowserPanel } from './browser';
@@ -2809,14 +2810,16 @@ async function createTask(projectId = state.projectId): Promise<void> {
   if (generation !== state.generation) { renderNavigation(); return; }
   state.query = ''; closeModal(); await selectSession(created.id, true);
 }
-type ChoiceOptions = Omit<Parameters<typeof import('./choice-menu').openChoiceMenu>[0], 'anchor' | 'onClose'>;
+type ChoiceOptions = Omit<Parameters<typeof openChoiceMenu>[0], 'anchor' | 'onClose'>;
 async function showChoices(anchor: HTMLElement, options: ChoiceOptions): Promise<void> {
   if (pendingMenuOpen?.anchor === anchor) { cancelPendingMenu(); return; }
   if (choiceMenuCleanup && choiceMenuAnchor === anchor) { closeChoiceMenu(); return; }
   closeMenus();
   const { epoch, release } = beginMenuOpen(anchor);
   const generation = state.generation;
-  const { openChoiceMenu } = await import('./choice-menu').finally(release);
+  // Menu module is already present: no async chunk load can race the initial
+  // click with session hydration, focus changes or sidebar redraws.
+  release();
   if (epoch !== menuEpoch || generation !== state.generation || !anchor.isConnected) return;
   choiceMenuAnchor = anchor;
   choiceMenuCleanup = openChoiceMenu({ ...options, anchor, onClose: () => { choiceMenuCleanup = undefined; choiceMenuAnchor = undefined; } });

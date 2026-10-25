@@ -233,6 +233,7 @@ async function installHistoryFixture(page: Page, total: number, formatted = fals
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await chooseProjectFilter(page, 'pandacode');
   await expect(page.locator('#transcript .message-content')).toHaveCount(Math.min(total, 100));
   await expect.poll(() => page.locator('#transcript').evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThan(2);
@@ -1897,6 +1898,7 @@ async function showTurnFixture(page: Page, entries: Array<{ role: string; conten
     await route.fulfill({ response, body: previewBody(source.replace(marker, `messages['session-4'] = ${JSON.stringify(fixture)}; const providers =`)) });
   });
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await chooseProjectFilter(page, 'pandacode');
 }
 
@@ -2404,6 +2406,7 @@ test('renaming and changing a model do not make an old response active', async (
 test('keeps an observed streaming response active when metadata reloads before persistence', async ({ page }) => {
   await page.clock.install();
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
   await prompt(page).fill('Stream while the response timestamp awaits persistence');
@@ -2481,7 +2484,11 @@ test('removes the old project inspector actions while the new task history loads
 
 test('renders provider logos in task rows, composer, messages, picker, and settings', async ({ page }) => {
   await expect(page.locator('#composer .provider-logo[data-provider="claude"]')).toBeVisible();
-  await expect(page.locator('.agent-message .provider-logo[data-provider="claude"]:visible').first()).toBeVisible();
+  // The default Claude sample collapses intermediary replies into its tool
+  // activity row. Verify a visible completed Codex answer instead.
+  await page.locator('.task-item[data-id="session-4"]').click();
+  await expect(page.locator('.agent-message .provider-logo[data-provider="codex"]:visible').first()).toBeVisible();
+  await page.locator('.task-item[data-id="session-1"]').click();
   for (const provider of ['claude', 'codex', 'kimi']) {
     await expect(page.locator(`#navigation .provider-logo[data-provider="${provider}"]`).first()).toBeVisible();
   }

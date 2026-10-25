@@ -76,6 +76,7 @@ test.describe('task deletion', () => {
     await page.setViewportSize({ width: 460, height: 740 });
     await page.addInitScript(() => localStorage.setItem('pandacode.uiScale', '1.4'));
     await page.reload();
+    await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
     await openDelete(page);
     const bounds = (await confirmation(page).boundingBox())!;
     expect(bounds.x).toBeGreaterThanOrEqual(0);
