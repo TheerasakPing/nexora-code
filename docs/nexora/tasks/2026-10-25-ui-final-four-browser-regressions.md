@@ -24,3 +24,7 @@
 - Concurrent completion test matched persisted final assistant message **and** transient empty streaming placeholder in strict mode. Target non-streaming saved response; retain exact final response text and subsequent approval ownership checks.
 - `npm run build`: PASS after installing cached local dependencies in isolated worktree (TypeScript + Vite); `npx playwright test --list`: **744 tests / 57 files unchanged**; portable screenshot contract 1/1 PASS; `git diff --check`: PASS.
 - Mac-focused four-case E2E, full 744 hosted CI and cross OS acceptance PENDING at source edit; do not mark 744 PASS before exact SHA check. Local worktree dependency symlink is excluded from commit.
+
+## FOLLOWUP FOUR-04 root cause before modification
+- Real isolated Mac Chrome E2E of the four corrected cases: **3 PASS / 1 FAIL** (Inspector only). The snapshot shows the inspector toggle may be already active after reload, yet the test blindly clicks it; the tested `#inspector-content .change-row` exists in DOM but is not visible because the toggle closed its parent. The test must check `#inspector.hidden` and click toggle **only if hidden**, assert inspector visible and changes tab displayed, then click exact visible file.
+- [ ] FOUR-04B TEAM_LEAD_SERIAL: guard inspector toggle against already-open state, check meaningful visible panel; run focused 1-case and 4-case E2E, then hosted 744 regression. Keep task-scoped change loading and stale action disappearance assertions.
