@@ -1807,6 +1807,11 @@ test('caps long live tool activity without dropping the output being read', asyn
   });
   await page.clock.install();
   await page.reload();
+  // The preview can render its sidebar before the selected task and project
+  // finish hydrating. Clicking New task earlier makes createTask reject the
+  // click because no project is loaded, rather than exercising live tools.
+  await expect(page.locator('.task-item.selected .task-title')).toHaveText('Make search feel instant');
+  await expect(openTaskProject(page)).toHaveText('orbit');
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
