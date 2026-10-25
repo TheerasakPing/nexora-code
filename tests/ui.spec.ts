@@ -326,10 +326,16 @@ for (const view of ['conversation', 'board'] as const) {
   test(`keeps ${view} streaming and the reading position while earlier history is loaded`, async ({ page }) => {
     await installHistoryFixture(page, 151);
     if (view === 'board') {
+      const initialPageRequests = await page.evaluate(() => (window as any).__historyFixture.calls.filter((call: any) => call.sessionId === 'session-4' && !call.beforeId).length);
       await page.getByRole('button', { name: 'Board view', exact: true }).click();
       await page.getByRole('button', { name: 'Open task: Explore the project', exact: true }).click();
+      await expect(page.locator('.board-card-open[data-id="session-4"]')).toHaveAttribute('aria-current', 'true');
+      await expect(page.locator('#transcript .message-content')).toHaveCount(100);
+      await expect.poll(() => page.evaluate(() => (window as any).__historyFixture.calls.filter((call: any) => call.sessionId === 'session-4' && !call.beforeId).length)).toBeGreaterThan(initialPageRequests);
     }
     await scrollHistoryTop(page);
+    await expect.poll(async () => (await olderRequests(page)).length).toBe(1);
+    expect(await olderRequests(page)).toEqual([{ sessionId: 'session-4', beforeId: 653 }]);
     await expect(page.locator('#transcript .message-content')).toHaveCount(151);
     await page.evaluate(() => {
       const fixture = (window as any).__historyFixture;
@@ -1801,6 +1807,11 @@ test('caps long live tool activity without dropping the output being read', asyn
   });
   await page.clock.install();
   await page.reload();
+  // The preview can render its sidebar before the selected task and project
+  // finish hydrating. Clicking New task earlier makes createTask reject the
+  // click because no project is loaded, rather than exercising live tools.
+  await expect(page.locator('.task-item.selected .task-title')).toHaveText('Make search feel instant');
+  await expect(openTaskProject(page)).toHaveText('orbit');
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
