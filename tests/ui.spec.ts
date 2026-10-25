@@ -1348,6 +1348,12 @@ test('keeps the saved approval behaviour and draft when saving a different mode 
   await expect(trigger).toHaveText('Standard');
   await expect.poll(() => savedPermission(page)).toBe('ask');
   await expect(prompt(page)).toHaveValue('Preserve the draft when permissions cannot be saved');
+  // A failed save intentionally leaves this same menu open with its error,
+  // allowing correction without losing the user's draft or focus.
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('menuitemradio', { name: 'Standard', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
   await trigger.click();
   await expect(menu.getByRole('menuitemradio', { name: 'Standard', exact: true })).toHaveAttribute('aria-checked', 'true');
 });

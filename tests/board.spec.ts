@@ -334,6 +334,9 @@ test.describe('project board', () => {
       ]) sessions.push({ ...sessions[1], ...fixture, taskDescription: 'Saved task details', createdAt: now - 691200000, updatedAt: now - 691200000, lastResponseAt: null, archived: false });
     `);
     await page.reload();
+    // The filtered menu must be opened after asynchronous preview session
+    // hydration, not during the sidebar's first render after reload.
+    await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
     await page.locator('#project-filter').click();
     await page.getByRole('dialog', { name: 'Filter projects', exact: true }).getByRole('menuitemradio', { name: 'pandacode', exact: true }).click();
     await expect(page.locator('#sidebar-note .filter-note')).toHaveText('4 more in other projectsShow all');
