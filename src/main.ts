@@ -262,7 +262,7 @@ const $app = document.querySelector<HTMLDivElement>('#app')!;
 $app.innerHTML = `<div class="workspace">
   <aside id="workspace-sidebar" class="sidebar" aria-label="Projects and tasks">
     <div class="brand" data-tauri-drag-region><img class="brand-logo" src="/nexora-mark.svg" width="29" height="29" alt="" draggable="false"/><span class="brand-name" data-tauri-drag-region>Nexora <strong>Code</strong></span></div>
-    <div class="sidebar-actions"><button class="new-task-button" data-action="new-task">${icon('plus')}<span>New task</span><kbd>${shortcut('N')}</kbd></button><button class="search-trigger" data-action="search">${icon('search')}<span>Search</span><kbd>${shortcut('K')}</kbd></button></div>
+    <div class="sidebar-actions"><button class="new-task-button" data-action="new-task" disabled>${icon('plus')}<span>New task</span><kbd>${shortcut('N')}</kbd></button><button class="search-trigger" data-action="search">${icon('search')}<span>Search</span><kbd>${shortcut('K')}</kbd></button></div>
     <div class="sidebar-projects"><button id="project-filter" class="project-filter" data-action="filter-projects" aria-label="Filter projects" aria-haspopup="dialog" aria-expanded="false"><span data-filter-label>All projects</span>${icon('down')}</button>${button('import-conversations', 'Import conversations', 'download', 'import-trigger')}${button('add-project', 'Open project', 'plus')}</div>
     <div id="navigation" class="navigation"></div>
     <div id="sidebar-note" class="sidebar-note" hidden></div>
@@ -3582,6 +3582,9 @@ async function boot(): Promise<void> {
   const first = state.sessions.find(s => !s.archived && s.projectId === state.projectId); if (first) await selectSession(first.id); else { render(); await refreshInspector(); }
   if (state.view !== 'conversation') { state.boardPanel = false; renderInspector(); renderBoardView(); }
   if (!preview && !state.providers.some(p => p.installed)) notify('Open Settings to check your installed agent CLIs.');
+  // The shell renders before asynchronous startup completes. Never allow New Task
+  // to run before projects/providers load, or the click can be silently lost.
+  document.querySelector<HTMLButtonElement>('.new-task-button')!.disabled = false;
 }
 // Nexora Code's own updates: checked on GitHub Releases, installed when no agent is working.
 const updates = startAppUpdates({ busy: () => state.sessions.some(task => isRunning(task.id)), notify });

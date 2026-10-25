@@ -177,6 +177,29 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.markdown pre code')).toContainText('createSearchIndex');
 });
 
+test('holds New task until asynchronous boot completes, preventing a lost click', async ({ page }) => {
+  await page.addInitScript(() => { (window as any).__holdBootProjects = true; });
+  await page.route('**/src/preview.ts*', async route => {
+    const response = await route.fetch();
+    const source = await response.text();
+    const marker = /case ['"]list_projects['"]\s*:/;
+    expect(source).toMatch(marker);
+    const body = source.replace(marker, `$& if (window.__holdBootProjects) await new Promise(resolve => { window.__releaseBootProjects = resolve; });`);
+    await route.fulfill({ response, body: previewBody(body) });
+  });
+  await page.reload();
+  const create = page.locator('.new-task-button');
+  await expect(create).toBeDisabled();
+  await expect.poll(() => page.evaluate(() => typeof (window as any).__releaseBootProjects)).toBe('function');
+  await page.evaluate(() => {
+    (window as any).__holdBootProjects = false;
+    (window as any).__releaseBootProjects();
+  });
+  await expect(create).toBeEnabled();
+  await create.click();
+  await expect(newTaskHeading(page)).toHaveAccessibleName('What should we build in orbit?');
+});
+
 test('identifies sample data and renders the desktop workspace without runtime errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
