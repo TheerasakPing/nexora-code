@@ -70,11 +70,17 @@ jobs:
           cargo test --locked --manifest-path src-tauri/Cargo.toml --lib
           cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
       - name: Build Mac ARM64 optimized preview DMG without Finder/AppleScript
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && github.head_ref != 'feat/20261025-mac-beta-isolated' && github.ref_name != 'feat/20261025-mac-beta-isolated'
         run: bash scripts/nexora/build-mac-preview-dmg.sh
       - name: Verify Mac preview volume and checksum
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && github.head_ref != 'feat/20261025-mac-beta-isolated' && github.ref_name != 'feat/20261025-mac-beta-isolated'
         run: bash scripts/nexora/verify-mac-preview-dmg.sh
+      - name: Build isolated Mac Beta (source opt-in, no legacy credentials)
+        if: runner.os == 'macOS' && (github.head_ref == 'feat/20261025-mac-beta-isolated' || github.ref_name == 'feat/20261025-mac-beta-isolated')
+        run: |
+          node --test scripts/nexora/beta-config-contract.test.mjs
+          node scripts/nexora/build-mac-beta.mjs
+          bash scripts/nexora/package-mac-beta-ci.sh
       - name: Build other native unsigned installers and local checksums
         if: runner.os != 'macOS'
         run: node scripts/release/build.mjs ${{ matrix.target }}

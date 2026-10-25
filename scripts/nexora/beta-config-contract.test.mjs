@@ -69,3 +69,16 @@ test('early beta preparation does not use global CLI PATH, and legacy Keychain p
   assert.match(provider,/#\[cfg\(all\(target_os = "macos", not\(feature = "beta-isolation"\)\)\)\]\s*pub\(crate\) fn glm_key_for_usage/);
   assert.match(provider,/#\[cfg\(all\(feature = "beta-isolation", target_os = "macos"\)\)\]\s*pub\(crate\) fn glm_key_for_usage/);
 });
+
+test('Mac CI routes isolated beta builds through mandatory feature and preserves legacy release route', async () => {
+  const workflow=await readFile(new URL('../../.github/workflows/nexora-r6-alpha.yml',import.meta.url),'utf8');
+  assert.match(workflow, /Build isolated Mac Beta/);
+  assert.match(workflow, /node scripts\/nexora\/build-mac-beta\.mjs/);
+  assert.match(workflow, /bash scripts\/nexora\/package-mac-beta-ci\.sh/);
+  assert.match(workflow, /runner\.os == 'macOS'/);
+  const pkg=await readFile(new URL('./package-mac-beta-ci.sh',import.meta.url),'utf8');
+  assert.match(pkg, /com\.theerasakping\.nexoracode\.beta/);
+  assert.match(pkg, /codesign --verify --deep --strict/);
+  assert.match(pkg, /lipo -archs/);
+  assert.match(pkg, /ditto -c -k/);
+});
