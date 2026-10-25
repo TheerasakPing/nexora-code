@@ -6,6 +6,17 @@ use std::{collections::HashSet, path::Path, process::Stdio, time::Duration};
 use tokio::io::AsyncReadExt;
 
 const LIMIT: usize = 16 * 1024 * 1024;
+
+// Keep the standard build wording stable. An isolated Beta intentionally has
+// no access to the user's existing OpenCode config or provider credentials.
+fn opencode_timeout_message() -> &'static str {
+    if cfg!(feature = "beta-isolation") {
+        "OpenCode models unavailable in isolated Beta: the separate HOME does not import your OpenCode login or model cache. Check the Beta-only OpenCode setup and network connection, then refresh models. Existing OpenCode credentials are not imported."
+    } else {
+        "OpenCode model discovery timed out"
+    }
+}
+
 fn parse(bytes: &[u8]) -> Result<Vec<ModelInfo>, String> {
     if bytes.len() > LIMIT {
         return Err("OpenCode model metadata exceeded its limit".into());
@@ -139,7 +150,7 @@ async fn discover(
         parse(&bytes)
     })
     .await
-    .unwrap_or_else(|_| Err("OpenCode model discovery timed out".into()));
+    .unwrap_or_else(|_| Err(opencode_timeout_message().into()));
     bytes.fill(0);
     drop(group);
     let _ = child.start_kill();
@@ -150,6 +161,19 @@ async fn discover(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn timeout_message_respects_beta_credential_isolation() {
+        let message = opencode_timeout_message();
+        if cfg!(feature = "beta-isolation") {
+            assert!(message.contains("isolated Beta"));
+            assert!(message.contains("not imported"));
+            assert!(!message.contains("API_KEY"));
+        } else {
+            assert_eq!(message, "OpenCode model discovery timed out");
+        }
+    }
+
     #[test]
     fn supports_the_current_catalog_size() {
         let catalog: String = (0..2012)
