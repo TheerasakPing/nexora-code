@@ -332,7 +332,10 @@ test('concurrency approval expiration removes only its owning task and a late ex
     fixture.tasks['session-1'].push('Task one finished.'); fixture.tasks['session-1'].done();
   });
   await expect(page.getByRole('button', { name: 'Stop task', exact: true })).toBeHidden();
-  await expect(transcript(page).locator('.agent-message .message-content')).toHaveText('Task one finished.');
+  // Saved answer and an empty transient live streaming placeholder can both
+  // exist briefly while finishResponse reconciles native history. Verify the
+  // persisted reply exactly once without treating that placeholder as a reply.
+  await expect(transcript(page).locator('.agent-message .message-content:not(.streaming-content)')).toHaveText('Task one finished.');
   await page.evaluate(() => (window as any).__concurrent.tasks['session-1'].cancelApproval());
   await settlePaint(page);
   await expect(page.getByRole('button', { name: 'Stop task', exact: true })).toBeHidden();

@@ -2045,9 +2045,12 @@ async function startControlledStatusStream(page: Page, withoutContextMetadata = 
   });
   await page.clock.install();
   await page.reload();
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
   await page.locator('.new-task-button').click();
+  // New task creation uses preview IPC, so only pause the clock after its
+  // UI has finished initialising rather than blocking the creation turn.
   await expect(newTaskHeading(page)).toBeVisible();
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   const sessionId = (await prompt(page).getAttribute('data-session-id'))!;
   await prompt(page).fill('Show the actual provider activity as it arrives');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
@@ -2474,7 +2477,9 @@ test('removes the old project inspector actions while the new task history loads
   await page.reload();
   await page.locator('#inspector-toggle').click();
   await expect(page.locator('.change-row')).toHaveCount(3);
-  await page.locator('[data-action="open-diff"]').first().click();
+  // A collapsed transcript can contain an unrelated hidden open-diff control;
+  // this scenario exercises the visible inspector file action.
+  await page.locator('#inspector-content .change-row [data-action="open-diff"]').first().click();
   await expect(page.locator('.diff-viewer')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Stage file', exact: true })).toBeVisible();
   await chooseProjectFilter(page, 'pandacode');
