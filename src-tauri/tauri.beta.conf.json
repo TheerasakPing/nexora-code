@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nexora Code Beta",
+  "version": "0.1.0",
+  "identifier": "com.theerasakping.nexoracode.beta",
+  "build": {
+    "devUrl": null,
+    "beforeDevCommand": null
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Nexora Code Beta",
+        "width": 1440,
+        "height": 940,
+        "minWidth": 860,
+        "minHeight": 580,
+        "backgroundColor": "#1c1c1b",
+        "theme": "Dark",
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 14,
+          "y": 29.5
+        }
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "macOS": {
+      "signingIdentity": "-"
+    }
+  }
+}

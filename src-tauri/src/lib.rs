@@ -2846,6 +2846,8 @@ async fn list_local_servers() -> Result<Vec<local_servers::LocalServer>> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 /// Process-wide setup that must happen before any thread or child process starts.
 pub fn prepare_environment() {
+    // A beta smoke must not widen PATH to invoke the current user's coding CLIs.
+    #[cfg(not(feature = "beta-isolation"))]
     providers::widen_process_path();
 }
 
@@ -2856,6 +2858,14 @@ pub fn run() {
         // R0: own signing keys not provisioned; updater disabled
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            // Fail closed before touching database, caches, credentials or services if
+            // a beta-labelled bundle was built without its isolation feature.
+            let beta_identifier = app.config().identifier == "com.theerasakping.nexoracode.beta";
+            if beta_identifier != cfg!(feature = "beta-isolation") {
+                return Err(std::io::Error::other(
+                    "Nexora Code Beta identity and beta-isolation feature must match.",
+                ).into());
+            }
             if let Ok(cache) = app.path().app_cache_dir() {
                 turn_changes::cleanup_cache(&cache.join("turn-captures"));
             }
@@ -2882,6 +2892,7 @@ pub fn run() {
             app.manage(browser::BrowserState::default());
             app.manage(simulator::Simulators::default());
             app.manage(vm::Vms::default());
+            #[cfg(not(feature = "beta-isolation"))]
             vm::watch_idle(app.handle().clone());
             app.manage(file_preview::FilePreviews::default());
             app.manage(agent_tools::UiRequests::default());
@@ -2889,6 +2900,7 @@ pub fn run() {
             app.manage(mcp_registry::Registry::new(&dir));
             app.manage(mcp_inspector::InspectionGate::default());
             architect::watchdog::watch(app.handle().clone());
+            #[cfg(not(feature = "beta-isolation"))]
             bots::start(app.handle());
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {

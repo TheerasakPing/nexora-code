@@ -97,7 +97,12 @@ fn glm_usage_access() -> Result<std::sync::MutexGuard<'static, ()>> {
 
 /// Usage checks must never open an unlock or credential-access dialog. Keep
 /// normal agent launch/settings behavior in `glm_key` unchanged.
-#[cfg(target_os = "macos")]
+#[cfg(all(feature = "beta-isolation", target_os = "macos"))]
+pub(crate) fn glm_key_for_usage() -> Result<Option<String>> {
+    Err("Usage credentials are disabled in the isolated beta build.".into())
+}
+
+#[cfg(all(target_os = "macos", not(feature = "beta-isolation")))]
 pub(crate) fn glm_key_for_usage() -> Result<Option<String>> {
     let _access = glm_usage_access()?;
     crate::usage_keychain::read_glm()
@@ -106,14 +111,14 @@ pub(crate) fn glm_key_for_usage() -> Result<Option<String>> {
         .transpose()
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", not(feature = "beta-isolation")))]
 pub(crate) fn glm_key_for_usage() -> Result<Option<String>> {
     let _access = glm_usage_access()?;
     // Credential Manager's read is noninteractive.
     glm_key()
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(all(not(feature = "beta-isolation"), not(any(target_os = "macos", target_os = "windows"))))]
 pub(crate) fn glm_key_for_usage() -> Result<Option<String>> {
     // keyring's Secret Service backend unconditionally unlocks matching locked
     // items during get_password(). It has no noninteractive read option, so the
@@ -131,6 +136,13 @@ pub fn deepseek_key() -> Result<Option<String>> {
 
 #[cfg(target_os = "macos")]
 pub fn stored_key(credential: Credential) -> Result<Option<String>> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = credential;
+        return Err("Saved provider credentials are disabled in the isolated beta build.".into());
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     use security_framework::passwords::{generic_password, PasswordOptions};
     match generic_password(PasswordOptions::new_generic_password(SERVICE, credential.account)) {
         Ok(bytes) => String::from_utf8(bytes)
@@ -141,6 +153,7 @@ pub fn stored_key(credential: Credential) -> Result<Option<String>> {
             "Could not access the {} key in Keychain. Unlock your login Keychain and try again.",
             credential.label
         )),
+    }
     }
 }
 #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -222,6 +235,13 @@ fn native_key_removal_result(credential: Credential, result: keyring::Result<()>
 
 /// Save a key in the platform store; platforms without one point at the environment variable.
 fn save_key(credential: Credential, key: &str) -> Result<()> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = (credential, key);
+        return Err("Saving provider credentials is disabled in the isolated beta build.".into());
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     let key = validate_key(key)?;
     #[cfg(target_os = "macos")]
     return security_framework::passwords::set_generic_password(SERVICE, credential.account, key.as_bytes())
@@ -233,8 +253,16 @@ fn save_key(credential: Credential, key: &str) -> Result<()> {
         let _ = key;
         Err(format!("Set {} in the app's environment on this platform.", credential.env))
     }
+    }
 }
 fn remove_key(credential: Credential) -> Result<()> {
+    #[cfg(feature = "beta-isolation")]
+    {
+        let _ = credential;
+        return Err("Removing provider credentials is disabled in the isolated beta build.".into());
+    }
+    #[cfg(not(feature = "beta-isolation"))]
+    {
     #[cfg(target_os = "macos")]
     if let Err(error) = security_framework::passwords::delete_generic_password(SERVICE, credential.account) {
         if error.code() != -25300 {
@@ -244,6 +272,7 @@ fn remove_key(credential: Credential) -> Result<()> {
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     remove_native_key(credential)?;
     Ok(())
+    }
 }
 
 #[derive(Serialize)]
@@ -287,29 +316,48 @@ fn configuration() -> Result<Configuration> {
             .map_err(|e| e.to_string())?;
         (runtime.settings.executable_paths.clone(), runtime.settings.mimo_endpoint.clone(), runtime.settings.claude_connection_mode)
     };
-    #[cfg(target_os = "macos")]
+    #[cfg(feature = "beta-isolation")]
+    let (glm_key_saved, mimo_key_saved, deepseek_key_saved, credential_storage_error) =
+        (false, false, false, Some("Saved credentials are disabled in the isolated beta build.".to_owned()));
+    #[cfg(all(not(feature = "beta-isolation"), target_os = "macos"))]
     let (glm_key_saved, mimo_key_saved, deepseek_key_saved, credential_storage_error) =
         (glm_key()?.is_some(), mimo_key()?.is_some(), deepseek_key()?.is_some(), None);
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(all(not(feature = "beta-isolation"), not(target_os = "macos")))]
     let (glm_key_saved, mimo_key_saved, deepseek_key_saved, credential_storage_error) = {
         let (glm, glm_error) = credential_status(glm_key());
         let (mimo, mimo_error) = credential_status(mimo_key());
         let (deepseek, deepseek_error) = credential_status(deepseek_key());
         (glm, mimo, deepseek, glm_error.or(mimo_error).or(deepseek_error))
     };
+    #[cfg(not(feature = "beta-isolation"))]
     let from_environment = |name: &str| std::env::var(name).is_ok_and(|key| validate_key(&key).is_ok());
     Ok(Configuration {
         executable_paths: paths,
         glm_key_saved,
-        glm_key_from_environment: from_environment(GLM_KEY.env),
+        glm_key_from_environment: {
+            #[cfg(feature = "beta-isolation")]
+            { false }
+            #[cfg(not(feature = "beta-isolation"))]
+            { from_environment(GLM_KEY.env) }
+        },
         mimo_key_saved,
-        mimo_key_from_environment: from_environment(MIMO_KEY.env),
+        mimo_key_from_environment: {
+            #[cfg(feature = "beta-isolation")]
+            { false }
+            #[cfg(not(feature = "beta-isolation"))]
+            { from_environment(MIMO_KEY.env) }
+        },
         deepseek_key_saved,
-        deepseek_key_from_environment: from_environment(DEEPSEEK_KEY.env),
+        deepseek_key_from_environment: {
+            #[cfg(feature = "beta-isolation")]
+            { false }
+            #[cfg(not(feature = "beta-isolation"))]
+            { from_environment(DEEPSEEK_KEY.env) }
+        },
         mimo_endpoint,
         mimo_endpoints: mimo_endpoints(),
         claude_connection_mode,
-        secure_storage_available: cfg!(any(
+        secure_storage_available: !cfg!(feature = "beta-isolation") && cfg!(any(
             target_os = "macos",
             target_os = "linux",
             target_os = "windows"
@@ -617,6 +665,17 @@ pub async fn provider_set_mimo_endpoint(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "beta-isolation")]
+    #[test]
+    fn beta_provider_credentials_fail_closed() {
+        let message = "Saved provider credentials are disabled in the isolated beta build.";
+        assert_eq!(stored_key(GLM_KEY).unwrap_err(), message);
+        assert_eq!(stored_key(MIMO_KEY).unwrap_err(), message);
+        assert_eq!(stored_key(DEEPSEEK_KEY).unwrap_err(), message);
+        assert!(save_key(GLM_KEY, "fixture-secret").unwrap_err().contains("disabled"));
+        assert!(remove_key(GLM_KEY).unwrap_err().contains("disabled"));
+    }
 
     #[test]
     fn configuration_keeps_storage_errors_recoverable_without_serializing_keys() {

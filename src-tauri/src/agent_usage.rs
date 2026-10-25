@@ -521,6 +521,10 @@ pub(crate) async fn agent_usage(
     provider: String,
     refresh: bool,
 ) -> crate::Result<Usage> {
+    if cfg!(feature = "beta-isolation") {
+        let _ = (window, provider, refresh);
+        return Err("Agent usage credential probes are disabled in isolated Beta.".into());
+    }
     if window.label() != "main" {
         return Err("Usage limits are available only in the main application window.".into());
     }

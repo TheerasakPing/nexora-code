@@ -1,3 +1,8 @@
+[features]
+# Opt-in engineering Beta: block legacy credential-store access and autostart.
+# Beta-vs-production bundle identity is also enforced by the setup() runtime guard.
+beta-isolation = []
+
 [package]
 name = "pandacode"
 version = "0.1.0"
