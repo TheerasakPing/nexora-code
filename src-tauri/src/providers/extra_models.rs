@@ -84,12 +84,18 @@ fn parse_plain(bytes: &[u8]) -> Result<Vec<ModelInfo>, String> {
     Ok(models)
 }
 
+// Avoid retrying a process that exceeded the deadline; fallback is meant
+// only for an immediate CLI error or incompatible output format.
+fn should_try_verbose_fallback(error: &str) -> bool {
+    !error.contains("timed out")
+}
+
 pub(super) async fn opencode(path: &Path) -> Result<Vec<ModelInfo>, String> {
     // Prefer the current OpenCode plain ID listing. Retain the older verbose
     // format as fallback on an immediate error, not on a hung CLI.
     match discover(path, &["models"], parse_plain).await {
         Ok(models) => Ok(models),
-        Err(error) if error.contains("timed out") => Err(error),
+        Err(error) if !should_try_verbose_fallback(&error) => Err(error),
         Err(_) => discover(path, &["models", "--verbose"], parse).await,
     }
 }
@@ -151,6 +157,15 @@ async fn discover(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn discovery_timeout_never_triggers_another_slow_cli_probe() {
+        assert!(!should_try_verbose_fallback("OpenCode model discovery timed out"));
+        assert!(should_try_verbose_fallback("OpenCode could not load models"));
+        assert!(should_try_verbose_fallback("Invalid OpenCode model catalog"));
+        assert!(parse_plain(b"provider/model\n").is_ok());
+    }
+
     #[test]
     fn supports_the_current_catalog_size() {
         let catalog: String = (0..2012)
