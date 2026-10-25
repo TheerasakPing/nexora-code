@@ -82,3 +82,13 @@ test('Mac CI routes isolated beta builds through mandatory feature and preserves
   assert.match(pkg, /lipo -archs/);
   assert.match(pkg, /ditto -c -k/);
 });
+
+test('OpenCode auth can persist only within private beta HOME, never original HOME', async () => {
+  const shell=await readFile(new URL('./launch-mac-beta.sh', import.meta.url),'utf8');
+  assert.match(shell,/nexora-code-beta-home\.\$\(\/usr\/bin\/id -u\)/);
+  assert.match(shell,/stat -f '%u'/);
+  assert.match(shell,/stat -f '%Lp'/);
+  assert.match(shell,/!= 700/);
+  assert.match(shell,/\/usr\/bin\/env -i/);
+  assert.doesNotMatch(shell,/cp .*\.config\/opencode|cp .*\.local\/share\/opencode/);
+});

@@ -21,9 +21,17 @@ fi
 # provider environment are also replaced. No legacy Claude/Pi token files.
 # Fresh HOME outside the login user's home. No inherited CLAUDE_CONFIG_DIR,
 # PI_CODING_AGENT_DIR, provider API keys, or other credential overrides.
-sandbox_home="$(/usr/bin/mktemp -d '/private/tmp/nexora-code-beta-home.XXXXXXXX')"
-if [[ ! -d "$sandbox_home" || -L "$sandbox_home" ]]; then
-  echo 'BLOCKED: could not create an isolated beta HOME' >&2; exit 3
+sandbox_home="/private/tmp/nexora-code-beta-home.$(/usr/bin/id -u)"
+if [[ -L "$sandbox_home" ]]; then
+  echo 'BLOCKED: Beta HOME may not be a symbolic link' >&2; exit 3
+fi
+if [[ ! -e "$sandbox_home" ]]; then
+  /usr/bin/install -d -m 700 "$sandbox_home"
+fi
+if [[ ! -d "$sandbox_home" || -L "$sandbox_home" ||
+      "$(/usr/bin/stat -f '%u' "$sandbox_home")" != "$(/usr/bin/id -u)" ||
+      "$(/usr/bin/stat -f '%Lp' "$sandbox_home")" != 700 ]]; then
+  echo 'BLOCKED: Beta HOME must be a private directory owned by the current user (0700)' >&2; exit 3
 fi
 /usr/bin/env -i \
   HOME="$sandbox_home" USER="$(id -un)" LOGNAME="$(id -un)" \
