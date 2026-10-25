@@ -143,10 +143,21 @@ test('keeps reports, frames, and watch leases isolated when changing tasks', asy
   // until the user explicitly opens that task's browser panel.
   await expect(page.getByRole('textbox', { name: 'Browser URL', exact: true })).toBeHidden();
   expect(await watched(page, 'other-run', true)).toBe(false);
-  await openBrowser(page, false);
+  // Opening the new task's Browser auto-selects its already-running Jev
+  // report. While that live viewer is present the normal URL textbox is
+  // intentionally hidden, so assert the real task-owned live experience.
+  await page.getByRole('button', { name: 'Open browser', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Browser', exact: true })).toBeVisible();
+  await expect(live(page)).toBeVisible();
   await expect.poll(() => watched(page, 'other-run', true)).toBe(true);
   await expect(live(page)).toContainText('Other task only');
   expect((await calls(page, 'jev_watch_run')).filter(call => call.args.runId === 'other-run').every(call => call.args.sessionId === 'session-4')).toBe(true);
+  // The user can return to their Browser and stop receiving the Jev stream
+  // without leaking or reactivating the prior task's watch.
+  await live(page).getByRole('button', { name: 'Return to browser', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Browser URL', exact: true })).toBeVisible();
+  await expect.poll(() => watched(page, 'other-run', false)).toBe(true);
+  expect((await calls(page, 'jev_watch_run')).filter(call => call.args.runId === 'run-1' && call.args.watching === true)).toHaveLength(1);
 });
 
 test('lets the user choose between simultaneous runs and rejects frames from the other run', async ({ page }) => {

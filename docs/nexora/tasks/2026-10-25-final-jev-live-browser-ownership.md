@@ -6,7 +6,7 @@
 
 ## Checklist planner — commit BEFORE modifying test/runtime
 - [x] JEV-LAST-01 / TEAM_LEAD_SERIAL — download hosted failure screenshot/context, compare source BrowserPanel and JevLiveView state machine.
-- [ ] JEV-LAST-02 / TEAM_LEAD_SERIAL — update only Jev switch test: after Open browser accept the correct *live Jev view*, verify lease and report are for the new task, use Return to browser to prove URL view is available and lease closes, maintain old-task isolation assertions.
+- [x] JEV-LAST-02 / TEAM_LEAD_SERIAL — update only Jev switch test: after Open browser accept the correct *live Jev view*, verify lease and report are for the new task, use Return to browser to prove URL view is available and lease closes, maintain old-task isolation assertions.
 - [ ] JEV-LAST-03 / TEAM_LEAD_SERIAL — run focused Jev and whole 6+ Jev Browser tests Mac Chrome, zero retries; Node/Release/Build/Smoke as feasible.
 - [ ] JEV-LAST-04 / TEAM_LEAD_SERIAL — push PR #44 and confirm 4 hosted 186-case shards 744/744, all same-head gate checks; inspect Team Lead QA before merge.
 - [ ] JEV-LAST-05 / HUMAN_REVIEW_PENDING — do not assert independent human approval, signed/notarized production or installed Win11/Ubuntu/Wayland native provider E2E without real proof.
@@ -17,3 +17,9 @@
 | JEV-LAST-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | JEV-LAST-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | JEV-LAST-05 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | NO-GO |
+
+## Task-scoped Jev UI implementation and verification
+- When opening task-4 Browser, `mountJevLive` legitimately auto-selects its existing active report and hides the ordinary URL input. Trace showed visible Jev Live Region with "Other task only", not missing Browser panel. Updated one test to assert task-owned Jev viewer, old-task unwatch, new-task watch and report ownership, then click Return to browser and assert restored URL control/new-task unwatch; added guard against rewatching old task.
+- On Mac M4 Chrome focused original failure 1/1 PASS (7.7s, 0 retries). Under parallel local heavy JS build + Node/Release, full file Jev E2E 8/10, with two **different cases failing before Jev-specific assertions** because initial .task-item.selected missing. Do not claim 10/10 PASS. Hosted exact SHA run is required to establish full 744 regression.
+- Same worktree `npm run build` PASS, `npm test` 210/210 PASS, `npm run test:release` 36/37 PASS (1 existing platform SKIP), full unchanged 744 tests / 57 files.
+- No changes to production Browser/Jev runtime, security controls, IPC, test selection or retry settings. Human reviewer and production signing still PENDING.
