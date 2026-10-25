@@ -150,7 +150,9 @@ test.describe('project board', () => {
     await expect(column(page, 'In progress').getByRole('button', { name: `Open task: ${title}`, exact: true })).toBeVisible();
     await expect(details(page).getByRole('button', { name: 'Stop task', exact: true })).toBeVisible();
     const started = await savedTask(page, title);
-    expect(started.lastPromptAt).toBeGreaterThan(Date.now() - 10_000);
+    // Board shows optimistic In progress before start_task persists metadata.
+    // The saved timestamp must still become recent; a missing write fails.
+    await expect.poll(async () => (await savedTask(page, title)).lastPromptAt).toBeGreaterThan(Date.now() - 10_000);
     await expect(page.locator(`.task-item[data-activity="active"][data-id="${started.id}"]`)).toHaveCount(1);
     await expect(column(page, 'Review').getByRole('button', { name: `Open task: ${title}`, exact: true })).toBeVisible();
     const task = await savedTask(page, title);
