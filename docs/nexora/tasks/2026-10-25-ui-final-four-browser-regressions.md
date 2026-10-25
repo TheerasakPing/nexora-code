@@ -37,4 +37,9 @@
 
 ## QA reviewer P2 correction — no duplicate nonempty live response
 - Independent read-only AI reviewer identified P2 at `tests/concurrency.spec.ts:338`: filtering transient `.streaming-content` from the persisted saved-reply selector permits an unintended nonempty duplicate live response without detection. Source review feedback grounded in DOM coexistence trace; no human review implied.
-- [ ] FOUR-05B TEAM_LEAD_SERIAL — retain exact **single** persisted reply assertion and also assert *every* concurrent transient streaming-content text is empty at end-of-run. Preserve expiration/ownership checks. Re-run targeted real Mac test and full 744 hosted E2E; no Test skip or retry.
+- [x] FOUR-05B TEAM_LEAD_SERIAL — retain exact **single** persisted reply assertion and also assert *every* concurrent transient streaming-content text is empty at end-of-run. Preserve expiration/ownership checks. Re-run targeted real Mac test and full 744 hosted E2E; no Test skip or retry.
+
+## P2 closure verification (AI reviewer feedback)
+- Before running local Playwright, initial attempt failed `npx: unknown command test` because the isolated worktree did not have node_modules attached; this was an **environment setup failure, not a test result**.
+- After linking previously installed workspace dependencies, real Mac Chrome isolated concurrency expiration E2E **1/1 PASS in 6.3s, retries=0**. The test now requires one exact non-streaming saved reply **and** every concurrent streaming placeholder to contain no non-whitespace text, so it cannot hide a second nonempty reply.
+- No assertions, cases, security guards or production runtime features removed. 744-suite exact-head hosted CI and native release acceptance PENDING.

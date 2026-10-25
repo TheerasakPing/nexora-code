@@ -336,6 +336,10 @@ test('concurrency approval expiration removes only its owning task and a late ex
   // exist briefly while finishResponse reconciles native history. Verify the
   // persisted reply exactly once without treating that placeholder as a reply.
   await expect(transcript(page).locator('.agent-message .message-content:not(.streaming-content)')).toHaveText('Task one finished.');
+  // The finishing stream may leave an empty DOM placeholder briefly, but a
+  // second nonempty live reply would be a duplicate and must fail this test.
+  const transientText = await transcript(page).locator('.agent-message .message-content.streaming-content').allTextContents();
+  expect(transientText.every(text => text.trim() === '')).toBe(true);
   await page.evaluate(() => (window as any).__concurrent.tasks['session-1'].cancelApproval());
   await settlePaint(page);
   await expect(page.getByRole('button', { name: 'Stop task', exact: true })).toBeHidden();
