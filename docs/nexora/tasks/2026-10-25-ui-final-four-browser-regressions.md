@@ -34,3 +34,7 @@
 - Mac Chrome focused E2E on four previously failing cases: `npx playwright test tests/board.spec.ts tests/concurrency.spec.ts tests/ui.spec.ts --grep 'archives completed tasks after a week|concurrency approval expiration removes only its owning task|a very long command keeps the approval bar|removes the old project inspector actions' --workers=1 --retries=0`: **4/4 PASS** in 12.9s, 0 retries, 0 skips.
 - Independent actual OS/browser smoke evidence for these four fixes, **not** hosted full 744 acceptance, signing nor human review.
 - Same worktree TypeScript+Vite `npm run build` PASS, unchanged Playwright inventory 744 tests/57 files, screenshot path contract PASS before final inspector follow-up.
+
+## QA reviewer P2 correction — no duplicate nonempty live response
+- Independent read-only AI reviewer identified P2 at `tests/concurrency.spec.ts:338`: filtering transient `.streaming-content` from the persisted saved-reply selector permits an unintended nonempty duplicate live response without detection. Source review feedback grounded in DOM coexistence trace; no human review implied.
+- [ ] FOUR-05B TEAM_LEAD_SERIAL — retain exact **single** persisted reply assertion and also assert *every* concurrent transient streaming-content text is empty at end-of-run. Preserve expiration/ownership checks. Re-run targeted real Mac test and full 744 hosted E2E; no Test skip or retry.
