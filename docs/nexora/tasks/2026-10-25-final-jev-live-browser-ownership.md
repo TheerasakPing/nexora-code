@@ -28,5 +28,10 @@
 - Read-only AI reviewer found two P2 source assertions in our last Jev task-switch test:
   1. Expecting exactly one historical session-1 `watching=true` conflicts with native 5-second lease renewals when UI/load is slow; instead checkpoint the count **after receiving old-task unwatch** and require no *subsequent* old-task renewal.
   2. Seeing one `other-run watching=false` when Return to browser is clicked is not sufficient if a leaked timer sends `watching=true` again. After Return, observe beyond the 5-second renewal interval and require no new watch for either run.
-- [ ] JEV-LAST-02B / TEAM_LEAD_SERIAL — test old-session leases and new-session renewal quiescence with bounded fixture observation, preserve all task-ownership assertions, re-run one-case Mac E2E and exact-head hosted 744. No production runtime changes.
+- [x] JEV-LAST-02B / TEAM_LEAD_SERIAL — test old-session leases and new-session renewal quiescence with bounded fixture observation, preserve all task-ownership assertions, re-run one-case Mac E2E and exact-head hosted 744. No production runtime changes.
 - AI reviewer is not an independent human reviewer. No signing or native provider production acceptance established.
+
+## Last lease QA accepted on connected Mac
+- Source-only AI QA found two P2 gaps in our earlier E2E; new test captures old-task watch renewal count **after** confirmed release and requires it never increase; captures new-task watch count after Return to browser, then waits 5200ms past the 5000ms renewal period, asserting neither task's watch count increases.
+- Scoped 30s timeout to exactly this single test because exercising a real 5.2s renewal interval is a required invariant; no extra retries or skipped cases. Also asserts the new task did receive a watch while the live panel was open.
+- Focused real Mac Chrome E2E **1/1 PASS** in 11.2s, zero retries. Previous full Jev file local run 9/10 (one separate cold-boot missing selected session); not counted as all-green. Same source runtime unchanged; hosted full 744 exact-head revalidation mandatory.

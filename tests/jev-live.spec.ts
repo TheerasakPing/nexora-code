@@ -125,6 +125,9 @@ test('auto-watches a running agent task, streams frames and actions, and preserv
 });
 
 test('keeps reports, frames, and watch leases isolated when changing tasks', async ({ page }) => {
+  // This test observes a full five-second renewal interval after returning
+  // to the Browser; the longer deadline is specific to that real timer.
+  test.setTimeout(30_000);
   await installProbe(page); await openBrowser(page);
   await emit(page, 'jev-run', report({ id: 'other-run', sessionId: 'session-4', goal: 'Other task only' }));
   await expect(live(page)).toBeHidden();
@@ -138,6 +141,8 @@ test('keeps reports, frames, and watch leases isolated when changing tasks', asy
   await page.locator('.task-item[data-id="session-4"]').click();
   await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-4');
   await expect.poll(() => watched(page, 'run-1', false)).toBe(true);
+  const activeWatches = async (id: string) => (await calls(page, 'jev_watch_run')).filter(call => call.args.runId === id && call.args.watching === true).length;
+  const oldTaskWatchesAfterRelease = await activeWatches('run-1');
   // Inspector/browser visibility belongs to each task. The newly selected
   // task did not have its browser open, so do not subscribe to its Jev run
   // until the user explicitly opens that task's browser panel.
@@ -157,7 +162,14 @@ test('keeps reports, frames, and watch leases isolated when changing tasks', asy
   await live(page).getByRole('button', { name: 'Return to browser', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Browser URL', exact: true })).toBeVisible();
   await expect.poll(() => watched(page, 'other-run', false)).toBe(true);
-  expect((await calls(page, 'jev_watch_run')).filter(call => call.args.runId === 'run-1' && call.args.watching === true)).toHaveLength(1);
+  const newTaskWatchesAfterReturn = await activeWatches('other-run');
+  expect(newTaskWatchesAfterReturn).toBeGreaterThan(0);
+  expect(await activeWatches('run-1')).toBe(oldTaskWatchesAfterRelease);
+  // A cancelled interval must stay cancelled past the next nominal renewal,
+  // for both the previously selected task and the just-closed live viewer.
+  await page.waitForTimeout(5_200);
+  expect(await activeWatches('run-1')).toBe(oldTaskWatchesAfterRelease);
+  expect(await activeWatches('other-run')).toBe(newTaskWatchesAfterReturn);
 });
 
 test('lets the user choose between simultaneous runs and rejects frames from the other run', async ({ page }) => {
