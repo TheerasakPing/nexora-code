@@ -23,3 +23,10 @@
 - On Mac M4 Chrome focused original failure 1/1 PASS (7.7s, 0 retries). Under parallel local heavy JS build + Node/Release, full file Jev E2E 8/10, with two **different cases failing before Jev-specific assertions** because initial .task-item.selected missing. Do not claim 10/10 PASS. Hosted exact SHA run is required to establish full 744 regression.
 - Same worktree `npm run build` PASS, `npm test` 210/210 PASS, `npm run test:release` 36/37 PASS (1 existing platform SKIP), full unchanged 744 tests / 57 files.
 - No changes to production Browser/Jev runtime, security controls, IPC, test selection or retry settings. Human reviewer and production signing still PENDING.
+
+## QA reviewer P2 follow-up — before patch
+- Read-only AI reviewer found two P2 source assertions in our last Jev task-switch test:
+  1. Expecting exactly one historical session-1 `watching=true` conflicts with native 5-second lease renewals when UI/load is slow; instead checkpoint the count **after receiving old-task unwatch** and require no *subsequent* old-task renewal.
+  2. Seeing one `other-run watching=false` when Return to browser is clicked is not sufficient if a leaked timer sends `watching=true` again. After Return, observe beyond the 5-second renewal interval and require no new watch for either run.
+- [ ] JEV-LAST-02B / TEAM_LEAD_SERIAL — test old-session leases and new-session renewal quiescence with bounded fixture observation, preserve all task-ownership assertions, re-run one-case Mac E2E and exact-head hosted 744. No production runtime changes.
+- AI reviewer is not an independent human reviewer. No signing or native provider production acceptance established.
