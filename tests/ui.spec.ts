@@ -2784,7 +2784,6 @@ for (const delayedCommand of ['add_project', 'list_projects']) {
 for (const config of [
   { module: 'model-picker', trigger: 'Choose harness and model', dialog: 'Harness and model' },
   { module: 'project-picker', trigger: 'Change task project', dialog: 'Choose project' },
-  { module: 'choice-menu', trigger: 'Filter projects', dialog: 'Filter projects' },
 ]) {
   for (const dismissal of ['Escape', 'outside pointer', 'same trigger']) {
     test(`dismisses the pending ${config.module} import with ${dismissal} without stealing focus`, async ({ page }) => {
@@ -2824,6 +2823,30 @@ for (const config of [
       await expect(trigger).toBeFocused();
     });
   }
+}
+
+// The shared choice menu is deliberately imported at boot; its first click
+// must be immediately actionable. The two other pickers still test genuinely
+// delayed async module downloads in the loop above.
+for (const dismissal of ['Escape', 'outside pointer', 'same trigger']) {
+  test(`dismisses an eagerly loaded choice menu with ${dismissal} without stealing focus`, async ({ page }) => {
+    const trigger = projectFilter(page);
+    const menu = page.getByRole('dialog', { name: 'Filter projects', exact: true });
+    await trigger.click();
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitemradio', { name: 'pandacode', exact: true })).toBeVisible();
+    if (dismissal === 'outside pointer') await prompt(page).click();
+    else if (dismissal === 'same trigger') await trigger.click();
+    else await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(page.locator('.floating-menu')).toHaveCount(0);
+    await expect(dismissal === 'outside pointer' ? prompt(page) : trigger).toBeFocused();
+    await trigger.click();
+    await expect(menu).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+  });
 }
 
 test('restores the last active project and creates new conversations there', async ({ page }) => {
