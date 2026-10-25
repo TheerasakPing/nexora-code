@@ -27,4 +27,10 @@
 
 ## FOLLOWUP FOUR-04 root cause before modification
 - Real isolated Mac Chrome E2E of the four corrected cases: **3 PASS / 1 FAIL** (Inspector only). The snapshot shows the inspector toggle may be already active after reload, yet the test blindly clicks it; the tested `#inspector-content .change-row` exists in DOM but is not visible because the toggle closed its parent. The test must check `#inspector.hidden` and click toggle **only if hidden**, assert inspector visible and changes tab displayed, then click exact visible file.
-- [ ] FOUR-04B TEAM_LEAD_SERIAL: guard inspector toggle against already-open state, check meaningful visible panel; run focused 1-case and 4-case E2E, then hosted 744 regression. Keep task-scoped change loading and stale action disappearance assertions.
+- [x] FOUR-04B TEAM_LEAD_SERIAL: guard inspector toggle against already-open state, check meaningful visible panel; run focused 1-case and 4-case E2E, then hosted 744 regression. Keep task-scoped change loading and stale action disappearance assertions.
+
+## Verified Mac focused E2E — exact source after inspector fix
+- Follow-up: inspector's restored open state made blind #inspector-toggle click close the panel, while a stale `.change-row` remained hidden in DOM. Now wait for `session-1` sidebar row, open inspector **only if `#inspector.hidden`**, assert inspector and inspector content visible, then interact with the scoped actual changed-file control.
+- Mac Chrome focused E2E on four previously failing cases: `npx playwright test tests/board.spec.ts tests/concurrency.spec.ts tests/ui.spec.ts --grep 'archives completed tasks after a week|concurrency approval expiration removes only its owning task|a very long command keeps the approval bar|removes the old project inspector actions' --workers=1 --retries=0`: **4/4 PASS** in 12.9s, 0 retries, 0 skips.
+- Independent actual OS/browser smoke evidence for these four fixes, **not** hosted full 744 acceptance, signing nor human review.
+- Same worktree TypeScript+Vite `npm run build` PASS, unchanged Playwright inventory 744 tests/57 files, screenshot path contract PASS before final inspector follow-up.

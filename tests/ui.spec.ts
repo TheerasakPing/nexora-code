@@ -2475,8 +2475,16 @@ test('removes the old project inspector actions while the new task history loads
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
-  await page.locator('#inspector-toggle').click();
-  await expect(page.locator('.change-row')).toHaveCount(3);
+  const inspector = page.locator('#inspector');
+  // Thread panel state can be restored already open. Blindly toggling would
+  // close it and leave stale-but-hidden change rows in the DOM.
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
+  if (await inspector.evaluate(el => (el as HTMLElement).hidden)) {
+    await page.locator('#inspector-toggle').click();
+  }
+  await expect(inspector).toBeVisible();
+  await expect(page.locator('#inspector-content')).toBeVisible();
+  await expect(page.locator('#inspector-content .change-row')).toHaveCount(3);
   // A collapsed transcript can contain an unrelated hidden open-diff control;
   // this scenario exercises the visible inspector file action.
   await page.locator('#inspector-content .change-row [data-action="open-diff"]').first().click();
