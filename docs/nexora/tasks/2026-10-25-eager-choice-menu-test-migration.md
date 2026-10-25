@@ -14,3 +14,9 @@
 | MENU-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | MENU-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | MENU-05 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | NO-GO |
+
+## Follow-up BEFORE menu-runtime fix (same-trigger behavior)
+- Local Mac real Chrome focused 3-case eager-menu E2E: Escape PASS, outside pointer PASS, same-trigger FAIL. Repro: second click on already-open Filter projects button re-opens a popover instead of closing it.
+- Root cause audited in `src/choice-menu.ts`: native focusout listener closes panel immediately when focus returns to the anchor, before the button's click event can execute the app-level toggle. The pointerdown outside guard already excludes the anchor; keyboard Tab and Escape separately handle closure.
+- [ ] MENU-03A TEAM_LEAD_SERIAL — keep popover open on focusout *to its own anchor* so following click runs the single toggle close path. Other focusout targets still close as before.
+- [ ] MENU-03B TEAM_LEAD_SERIAL — rerun all 3 eager-menu E2E, 6 async picker E2E, 33 target and full Mac 744; no skipped/fake results.
