@@ -1250,9 +1250,10 @@ test('changes permissions and opens task actions with anchored keyboard menus', 
   await expect(page.locator('.user-message,.agent-message')).toHaveText(history);
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const actions = page.getByRole('dialog', { name: 'Task actions', exact: true });
-  await expect(actions.getByRole('menuitem', { name: 'Rename task', exact: true })).toBeFocused();
+  // The first action is Pin task; keyboard navigation moves to Rename task.
+  await expect(actions.getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Home');
+  await expect(actions.getByRole('menuitem', { name: 'Rename task', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(actions).toHaveCount(0);
   const rename = page.locator('#dialog');
@@ -2381,6 +2382,8 @@ test('renaming and changing a model do not make an old response active', async (
   await taskRow(page, 'session-4', 'inactive').click();
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const renameAction = page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Rename task', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   await expect(renameAction).toBeFocused();
   await renameAction.press('Enter');
   const dialog = page.getByRole('dialog');
@@ -2422,6 +2425,8 @@ test('keeps an observed streaming response active when metadata reloads before p
   expect(observedResponseAt).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const renameAction = page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Rename task', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   await expect(renameAction).toBeFocused();
   await renameAction.press('Enter');
   const dialog = page.getByRole('dialog');

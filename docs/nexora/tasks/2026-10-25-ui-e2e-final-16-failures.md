@@ -29,3 +29,9 @@
 | LAST16-06 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | 744-run |
 | LAST16-07 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING | CI/PR |
 | LAST16-08 | HUMAN_REVIEW_PENDING | PENDING | PENDING | PENDING | NO-GO | human+signing |
+
+## Executed stage 1 evidence
+- Two Support E2E cases had stale `aicodeking/pandacode/issues` and `releases` expectations; production About/Support intentionally links `TheerasakPing/nexora-code` plus upstream attribution link. Updated assertions to check correct new repo, license, releases, issues AND preserve upstream attribution, without disabling browser privacy assertions. Local `npx playwright test tests/support.spec.ts --workers=2 --retries=0`: **7/7 PASS**.
+- Task Actions popover source `src/main.ts` now lists `Pin task` as first keyboard item and `Rename task` second. Updated three E2E cases to assert Pin receives initial focus, ArrowDown focuses Rename, Enter activates Rename; preserve keyboard access assertions. Local rerun 1/3 PASS; two other test setups failed with missing seeded selected task (boot flake) before reaching menu, so **not yet accepted**; hosted full-suite rerun required.
+- Two custom simulator probe specs navigate without waiting for initial selected task unlike the shared `open()` fixture, causing startup races; now wait for visible selected task before tab interaction. Change to helper also checks semantic inspector.hidden, not stale CSS visibility. Local run still in progress at documentation cut; **do not declare PASS**.
+- Remaining new-task state, Jev, VM, browser wallpaper CSS and narrow layout still pending; do not skip. No production source mutations in this stage.

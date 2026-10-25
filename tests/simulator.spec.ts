@@ -25,8 +25,17 @@ async function open(page: Page): Promise<void> {
 }
 /** The phone tab in the right sidebar opens the simulator. */
 async function showSimulator(page: Page): Promise<void> {
-  if (!(await page.locator('#inspector').isVisible())) await page.locator('#inspector-toggle').click();
-  await page.locator('.inspector-tabs [data-action="tab-simulator"]').click();
+  const tab = page.locator('.inspector-tabs [data-action="tab-simulator"]');
+  // The inspector container can still report visible during close/layout;
+  // the actual tab must be actionable before interacting with it.
+  // Inspect the actual hidden state: the container's flex CSS can make
+  // locator.isVisible() unreliable while the app marks it hidden.
+  if (await page.locator('#inspector').evaluate(el => (el as HTMLElement).hidden)) {
+    await page.locator('#inspector-toggle').click();
+  }
+  await expect(page.locator('#inspector')).not.toHaveAttribute('hidden');
+  await expect(tab).toBeVisible();
+  await tab.click();
 }
 /** The display after facing forward: the screen is centered in the stage. */
 async function stage(page: Page) {
@@ -184,6 +193,9 @@ test('Android can be set up in one click when the SDK is missing', async ({ page
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  // The custom-route tests must wait for the same initialized sample session
+  // as open(), not click inspector controls before app bootstrap.
+  await expect(page.locator('.task-item.selected')).toBeVisible();
   await showSimulator(page);
   const panel = page.locator('#simulator-panel');
   await panel.getByRole('button', { name: 'Choose simulator' }).click();
@@ -309,6 +321,9 @@ test('Add iPhone Duo is disabled without Xcode 27.1', async ({ page }) => {
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  // The custom-route tests must wait for the same initialized sample session
+  // as open(), not click inspector controls before app bootstrap.
+  await expect(page.locator('.task-item.selected')).toBeVisible();
   await showSimulator(page);
   await page.locator('#simulator-panel').getByRole('button', { name: 'Choose simulator' }).click();
   const add = page.getByRole('menuitemradio', { name: /Add iPhone Duo/ });
