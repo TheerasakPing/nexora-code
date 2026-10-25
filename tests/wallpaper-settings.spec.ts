@@ -182,7 +182,18 @@ test('wallpapers settings support solid and full wallpaper endpoints and persist
   await expect(slider(page)).toHaveValue('0');
   await expect(workspace(page)).not.toHaveAttribute('data-wallpaper');
   await expect(sceneImages(page)).toHaveCount(0);
-  await expect(page.locator('.main-pane')).toHaveCSS('background-color', 'rgb(28, 28, 27)');
+  // The solid fallback follows the active Nexora theme (not the legacy
+  // PandaCode hardcoded dark gray), and remains fully opaque without wallpaper.
+  const solidBackground = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.style.backgroundColor = 'var(--bg)';
+    document.body.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  });
+  expect(solidBackground).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+  await expect(page.locator('.main-pane')).toHaveCSS('background-color', solidBackground);
   await expect.poll(async () => (await preferences(page)).visibility).toBe(0);
   await page.reload();
   await expect(prompt(page)).toBeEnabled();

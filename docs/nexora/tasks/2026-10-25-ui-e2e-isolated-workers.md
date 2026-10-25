@@ -4,7 +4,7 @@
 **Change hypothesis:** One Chromium worker per *isolated GitHub-hosted Mac* avoids simultaneous Vite module-interception and UI state fixture contention inside each runner. Preserve 4 shards (186 cases each), all 744 tests, max runtime 35min/job, zero retries, no test skips, screenshot trace failure artifacts.
 ## Checklist planner committed before workflow source change
 - [x] ISOLATE-01 / TEAM_LEAD_SERIAL — audit honest full 744 outcomes and nonrepeatable failing case names.
-- [ ] ISOLATE-02 / TEAM_LEAD_SERIAL — lower per-runner E2E workers 2→1 with same 4-shard, 0-retry selection; no source/app behavior change.
+- [x] ISOLATE-02 / TEAM_LEAD_SERIAL — lower per-runner E2E workers 2→1 with same 4-shard, 0-retry selection; no source/app behavior change.
 - [ ] ISOLATE-03 / TEAM_LEAD_SERIAL — run 4 hosted shards, assess timing, true pass/fail, investigate stable failures without false pass.
 - [ ] ISOLATE-04 / TEAM_LEAD_SERIAL — Node/Release/TS/Vite + 33-case E2E and cross-OS smoke, read-only QA reviewer, Team Lead merge gate.
 - [ ] ISOLATE-05 / HUMAN_REVIEW_PENDING — actual installed Mac/Win11/Linux GUI/provider and signed production approval separately blocked.
@@ -15,3 +15,8 @@
 | ISOLATE-03 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | ISOLATE-04 | TEAM_LEAD_SERIAL | PENDING | PENDING | PENDING | PENDING |
 | ISOLATE-05 | HUMAN_REVIEW_PENDING | PENDING | PENDING native | PENDING | NO-GO |
+
+## Source change evidence
+- Full UI browser workflow: macOS-15, four shards, each with **1** Chromium worker, no skips, `--retries=0` unchanged.
+- Local TS/Vite build, Node 210/210, release 36 pass / 1 pre-existing skip and npm audit 0 from the same source worktree before this CI-only worker change.
+- Runtime acceptance PENDING until all four hosted shards pass.

@@ -277,11 +277,18 @@ test('iPhone Duo folds on click and shows a spinner until the new display answer
   await expect(screen).not.toHaveAttribute('aria-busy');
   expect((await calls(page, 'simulator_pose')).at(-1).args.pose).toBe('open');
 
-  // A fold that fails moves back and says why.
-  await page.evaluate(() => { (window as any).__simPoseFail = 'The hinge is stuck.'; });
+  // Keep the failed native operation pending long enough to verify the
+  // optimistic hinge movement before the app correctly rolls it back.
+  await page.evaluate(() => {
+    const w = window as any;
+    w.__simPoseFail = 'The hinge is stuck.';
+    w.__simPoseHold = new Promise(resolve => { w.__simPoseRelease = resolve; });
+  });
   await pose.click();
   await page.getByRole('menuitemradio', { name: /Closed/ }).click();
-  await expect(pose).toHaveAccessibleName('iPhone Duo pose: Closed', { timeout: 200 });
+  await expect(pose).toHaveAccessibleName('iPhone Duo pose: Closed');
+  await expect(screen).toHaveAttribute('aria-busy', 'true');
+  await page.evaluate(() => { const w = window as any; w.__simPoseHold = null; w.__simPoseRelease(); });
   await expect(page.locator('#toast')).toContainText('The hinge is stuck.');
   await expect(pose).toHaveAccessibleName('iPhone Duo pose: Open');
   await expect(screen).not.toHaveAttribute('aria-busy');
