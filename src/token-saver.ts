@@ -114,9 +114,9 @@ export function contextFor(sessionId: string, available: { rtk: boolean }): stri
   return `\n\n${guidance(saver.packs, saver.level, available)}`;
 }
 
-/** Rough combined share of tokens saved, for the meter: savings compound, they don't add. */
+/** Rough combined estimate; Ponytail is zero until measured rather than inventing savings. */
 export function estimate(packs: PackId[], level: Level, available: { rtk: boolean }): number {
-  const share: Record<PackId, number> = { caveman: level === 'lite' ? 0.12 : level === 'full' ? 0.25 : 0.35, 'lean-code': 0.12, 'quiet-tools': 0.15, ponytail: 0.1, rtk: 0.2 };
+  const share: Record<PackId, number> = { caveman: level === 'lite' ? 0.12 : level === 'full' ? 0.25 : 0.35, 'lean-code': 0.12, 'quiet-tools': 0.15, ponytail: 0, rtk: 0.2 };
   const kept = packs.filter(id => id !== 'rtk' || available.rtk).reduce((left, id) => left * (1 - share[id]), 1);
   return Math.round((1 - kept) * 100);
 }

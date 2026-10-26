@@ -67,7 +67,7 @@ test('Ponytail opts in per thread, supports levels, reminders and preserves safe
   updateThread('ponytail-thread', { level: 'ultra' });
   assert.match(contextFor('ponytail-thread', noRtk), /Ponytail Ultra/);
   assert.match(guidance(['ponytail', 'quiet-tools'], 'full', noRtk), /Ponytail Full/);
-  assert.ok(estimate(['ponytail'], 'full', noRtk) > 0);
+  assert.equal(estimate(['ponytail'], 'full', noRtk), 0, 'no unmeasured token-savings claim');
   updateThread('ponytail-thread', { packs: [] });
   assert.match(contextFor('ponytail-thread', noRtk), /: off/);
   setDefaults({ packs: ['ponytail'], level: 'full' });
