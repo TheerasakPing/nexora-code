@@ -11,8 +11,8 @@
 
 | ID | Owner | Deliverable | Status |
 | --- | --- | --- | --- |
-| REL-01 | TEAM_LEAD_SERIAL | Recheck Mac and Windows job results at exact run SHA | PENDING: tunnel unavailable; cannot certify final results |
-| REL-02 | TEAM_LEAD_SERIAL | Verify each downloadable artifact filename, size, checksum and boot smoke report | PENDING |
+| REL-01 | TEAM_LEAD_SERIAL | Recheck Mac and Windows job results at exact run SHA | DONE: all 3 jobs success at 01f94f7 |
+| REL-02 | TEAM_LEAD_SERIAL | Verify published artifact metadata and CI startup/DMG verification | DONE for metadata/CI; independently recomputing downloaded installer checksums PENDING |
 | REL-03 | TEAM_LEAD_SERIAL | Mac installed-app tests: Finder launch, Homebrew PATH, provider discovery, working model, terminal and MCP | BLOCKED: connected Mac unavailable |
 | REL-04 | TEAM_LEAD_SERIAL | Windows 11 x64 installed-app tests: launch, Node discovery, no flashing terminals, model and terminal | BLOCKED: Windows machine unavailable |
 | REL-05 | TEAM_LEAD_SERIAL | Backward-compatible session/database migration and clean rollback rehearsal using disposable copy | PENDING |
@@ -23,8 +23,8 @@
 
 | Task | Unit/contract | E2E | Smoke | Lead review | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| REL-01 | N/A: status audit | PENDING | PENDING | PENDING | inspect [run 40274425475](https://github.com/TheerasakPing/nexora-code/actions/runs/40274425475) |
-| REL-02 | PENDING | PENDING | PENDING | PENDING | compare checksums and actual artifact bytes |
+| REL-01 | N/A: status audit | N/A: workflow review | PASS: all jobs success | PASS: GitHub steps reviewed | inspect [run 40274425475](https://github.com/TheerasakPing/nexora-code/actions/runs/40274425475) |
+| REL-02 | PASS: artifact metadata | PENDING: installed native GUI | PASS: CI Windows startup and Mac DMG verify | PASS: step outcomes verified | External binary checksum recompute pending |
 | REL-03 | N/A: installed-app QA | BLOCKED | BLOCKED | PENDING | real macOS Apple Silicon run required |
 | REL-04 | N/A: installed-app QA | BLOCKED | BLOCKED | PENDING | real Windows 11 x64 run required |
 | REL-05 | PENDING | PENDING | PENDING | PENDING | disposable data fixture only |
@@ -51,3 +51,16 @@ Do not mark a subtask complete without checked unit/contract, E2E and smoke evid
 - No worker-agent execution or independent code review claimed.
 - Next priority: (1) capture final Windows CI and artifact evidence; (2) installed Mac native smoke; (3) Windows native smoke; then migration/security/release approval.
 - Do not merge into protected `main` solely from this documentation.
+
+## New CI evidence — inspected 2026-10-26
+- [x] Release workflow [run 40274425475](https://github.com/TheerasakPing/nexora-code/actions/runs/40274425475): all three completed with **success** at SHA `01f94f759e804cea3104e58ace4730768e2926c3`.
+- [x] Mac ARM64 job `121414023350`: quality gate, DMG build, DMG verify/checksum step and upload all SUCCESS.
+- [x] Windows x64 job `121414023334`: quality gate, installer build, disposable-runner startup smoke and upload all SUCCESS.
+- [x] Linux x64 job `121414023057`: quality gate, installer build, disposable-runner startup smoke and upload all SUCCESS.
+- [x] Windows artifact `12630351458` (ZIP 11,155,937 bytes), GitHub archive digest `sha256:6d43a024df1324bcfa47da3eb6a7984c0b817019d445d17208f39a2089342e0c`.
+- [x] macOS artifact `12629943025` (ZIP 15,288,202 bytes), GitHub archive digest `sha256:351a991748ee590b44deb3bc40c8b1e6ce4d3eb10746880254d9213f1dfe4a9e`.
+- [x] Both artifacts not expired when inspected, expiring 2026-11-02 UTC.
+- [ ] Independent download and bytewise checksum verification of the actual installers. Above SHA-256 values are **GitHub ZIP archive digests**, not necessarily hashes of the nested installers.
+- [ ] Installed interactive native Mac and Windows E2E; GitHub CI smoke cannot replace this.
+- [ ] Signing/notarization, user migration recovery rehearsal and independent human production authorization.
+- **Team Lead:** CI evidence GO for internal unsigned beta distribution; **NO-GO** for publicly advertised signed production release.
