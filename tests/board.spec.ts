@@ -134,7 +134,7 @@ test.describe('project board', () => {
     await expect(details(page).getByRole('button', { name: 'Start task', exact: true })).toBeEnabled();
     await expect.poll(async () => (await details(page).boundingBox())!.x).toBeGreaterThan(500);
     await expect.poll(async () => { const bounds = (await details(page).boundingBox())!; return bounds.x + bounds.width; }).toBeLessThanOrEqual(1441);
-    await page.screenshot({ path: '/private/tmp/pandacode-board-pending.png', animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath('pandacode-board-pending.png'), animations: 'disabled' });
     await details(page).getByRole('button', { name: 'Close task details', exact: true }).click();
     await expect(details(page)).toBeHidden();
     await expect(card(page, task.title)).toBeVisible();
@@ -150,7 +150,9 @@ test.describe('project board', () => {
     await expect(column(page, 'In progress').getByRole('button', { name: `Open task: ${title}`, exact: true })).toBeVisible();
     await expect(details(page).getByRole('button', { name: 'Stop task', exact: true })).toBeVisible();
     const started = await savedTask(page, title);
-    expect(started.lastPromptAt).toBeGreaterThan(Date.now() - 10_000);
+    // Board shows optimistic In progress before start_task persists metadata.
+    // The saved timestamp must still become recent; a missing write fails.
+    await expect.poll(async () => (await savedTask(page, title)).lastPromptAt).toBeGreaterThan(Date.now() - 10_000);
     await expect(page.locator(`.task-item[data-activity="active"][data-id="${started.id}"]`)).toHaveCount(1);
     await expect(column(page, 'Review').getByRole('button', { name: `Open task: ${title}`, exact: true })).toBeVisible();
     const task = await savedTask(page, title);
@@ -161,7 +163,7 @@ test.describe('project board', () => {
     await expect(details(page).locator('.agent-message').first()).toBeVisible();
     await expect(details(page)).toContainText('This is the browser preview.');
     await expect(details(page).getByRole('button', { name: 'Mark complete', exact: true })).toBeEnabled();
-    await page.screenshot({ path: '/private/tmp/pandacode-board-review.png', animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath('pandacode-board-review.png'), animations: 'disabled' });
     await details(page).getByRole('button', { name: 'Mark complete', exact: true }).click();
     await expect(column(page, 'Completed').getByRole('button', { name: `Open task: ${title}`, exact: true })).toBeVisible();
     const completed = await savedTask(page, title);
@@ -319,7 +321,7 @@ test.describe('project board', () => {
     await expect.poll(async () => { const bounds = (await details(page).boundingBox())!; return bounds.x + bounds.width; }).toBeLessThanOrEqual(901);
     await expect(details(page).getByRole('button', { name: 'Start task', exact: true })).toBeVisible();
     await expect(details(page).getByRole('button', { name: 'Close task details', exact: true })).toBeVisible();
-    await page.screenshot({ path: '/private/tmp/pandacode-board-light-compact.png', animations: 'disabled' });
+    await page.screenshot({ path: test.info().outputPath('pandacode-board-light-compact.png'), animations: 'disabled' });
   });
 
   test('archives completed tasks after a week while retaining recent completions and pending tasks', async ({ page }) => {
@@ -332,6 +334,9 @@ test.describe('project board', () => {
       ]) sessions.push({ ...sessions[1], ...fixture, taskDescription: 'Saved task details', createdAt: now - 691200000, updatedAt: now - 691200000, lastResponseAt: null, archived: false });
     `);
     await page.reload();
+    // Archive fixtures can leave the conversation on a completed task without
+    // a selected sidebar row. The visible known task proves hydration instead.
+    await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
     await page.locator('#project-filter').click();
     await page.getByRole('dialog', { name: 'Filter projects', exact: true }).getByRole('menuitemradio', { name: 'pandacode', exact: true }).click();
     await expect(page.locator('#sidebar-note .filter-note')).toHaveText('4 more in other projectsShow all');

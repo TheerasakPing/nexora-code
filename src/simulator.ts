@@ -284,10 +284,10 @@ export function mountSimulator(root: HTMLElement, host: SimulatorHost) {
     try {
       const next = await call('simulator_pose', { udid, pose });
       if (disposed || next.selected !== status?.selected) return;
-      status = next; device?.setPose(next.pose ?? pose, true);
+      status = next; seq = 0; device?.setPose(next.pose ?? pose, true);
     } catch (error) {
       // The old display's newest frame replaces the spinner.
-      if (status?.selected === udid) { status = { ...status, pose: before }; device?.setPose(before, true); seq = 0; }
+      if (status?.selected === udid) { status = { ...status, pose: before }; device?.setPose(before, true); seq = 0; stage.removeAttribute('aria-busy'); device?.setLoading(false); }
       host.notify(error instanceof Error ? error.message : String(error));
     } finally { poseBusy = false; render(); pump(); }
   }

@@ -177,6 +177,29 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.markdown pre code')).toContainText('createSearchIndex');
 });
 
+test('holds New task until asynchronous boot completes, preventing a lost click', async ({ page }) => {
+  await page.addInitScript(() => { (window as any).__holdBootProjects = true; });
+  await page.route('**/src/preview.ts*', async route => {
+    const response = await route.fetch();
+    const source = await response.text();
+    const marker = /case ['"]list_projects['"]\s*:/;
+    expect(source).toMatch(marker);
+    const body = source.replace(marker, `$& if (window.__holdBootProjects) await new Promise(resolve => { window.__releaseBootProjects = resolve; });`);
+    await route.fulfill({ response, body: previewBody(body) });
+  });
+  await page.reload();
+  const create = page.locator('.new-task-button');
+  await expect(create).toBeDisabled();
+  await expect.poll(() => page.evaluate(() => typeof (window as any).__releaseBootProjects)).toBe('function');
+  await page.evaluate(() => {
+    (window as any).__holdBootProjects = false;
+    (window as any).__releaseBootProjects();
+  });
+  await expect(create).toBeEnabled();
+  await create.click();
+  await expect(newTaskHeading(page)).toHaveAccessibleName('What should we build in orbit?');
+});
+
 test('identifies sample data and renders the desktop workspace without runtime errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -194,7 +217,7 @@ test('identifies sample data and renders the desktop workspace without runtime e
   await expect(page.locator('.markdown pre code')).toContainText('createSearchIndex');
   await expect(prompt(page)).toBeEnabled();
   await expect(page.locator('.change-row')).toHaveCount(3);
-  await page.screenshot({ path: '/private/tmp/pandacode-activity.png' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-activity.png') });
   expect(errors).toEqual([]);
 });
 
@@ -233,6 +256,7 @@ async function installHistoryFixture(page: Page, total: number, formatted = fals
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await chooseProjectFilter(page, 'pandacode');
   await expect(page.locator('#transcript .message-content')).toHaveCount(Math.min(total, 100));
   await expect.poll(() => page.locator('#transcript').evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThan(2);
@@ -325,10 +349,16 @@ for (const view of ['conversation', 'board'] as const) {
   test(`keeps ${view} streaming and the reading position while earlier history is loaded`, async ({ page }) => {
     await installHistoryFixture(page, 151);
     if (view === 'board') {
+      const initialPageRequests = await page.evaluate(() => (window as any).__historyFixture.calls.filter((call: any) => call.sessionId === 'session-4' && !call.beforeId).length);
       await page.getByRole('button', { name: 'Board view', exact: true }).click();
       await page.getByRole('button', { name: 'Open task: Explore the project', exact: true }).click();
+      await expect(page.locator('.board-card-open[data-id="session-4"]')).toHaveAttribute('aria-current', 'true');
+      await expect(page.locator('#transcript .message-content')).toHaveCount(100);
+      await expect.poll(() => page.evaluate(() => (window as any).__historyFixture.calls.filter((call: any) => call.sessionId === 'session-4' && !call.beforeId).length)).toBeGreaterThan(initialPageRequests);
     }
     await scrollHistoryTop(page);
+    await expect.poll(async () => (await olderRequests(page)).length).toBe(1);
+    expect(await olderRequests(page)).toEqual([{ sessionId: 'session-4', beforeId: 653 }]);
     await expect(page.locator('#transcript .message-content')).toHaveCount(151);
     await page.evaluate(() => {
       const fixture = (window as any).__historyFixture;
@@ -396,7 +426,7 @@ test('defaults to dark mode and remembers explicit light and dark preferences af
   await page.getByRole('button', { name: 'Choose harness and model', exact: true }).click();
   const menu = page.getByRole('dialog', { name: 'Harness and model', exact: true });
   await expect(menu.getByRole('searchbox', { name: 'Search harnesses and models', exact: true })).toBeFocused();
-  await page.screenshot({ path: '/private/tmp/pandacode-dark-models.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-dark-models.png'), animations: 'disabled' });
   await page.keyboard.press('Escape');
   await toggle.focus();
   await page.keyboard.press('Space');
@@ -511,7 +541,7 @@ test('loads full model names, searches names or IDs, and saves the harness invoc
   await expect(opus).toBeVisible();
   await search.fill('  OPUS  ');
   await expect(opus).toBeVisible();
-  await page.screenshot({ path: '/private/tmp/pandacode-model-names.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-model-names.png'), animations: 'disabled' });
   await search.press('Enter');
   await expect.poll(() => savedSelection(page)).toEqual({ provider: 'claude', model: 'opus' });
   await expect(trigger).toHaveText('Claude Opus 5');
@@ -543,7 +573,7 @@ test('offers only reported reasoning efforts and remembers the selected effort f
   // The context window is shown under the composer, not in this menu.
   await expect(settings).not.toContainText(/context/i);
   await expect(modelPicker(page).getByRole('button', { name: 'Claude Code · Claude Opus 5', exact: true })).toContainText(/1M/i);
-  await page.screenshot({ path: '/private/tmp/pandacode-reasoning-settings.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-reasoning-settings.png'), animations: 'disabled' });
   await page.setViewportSize({ width: 860, height: 600 });
   await expect(slider).toBeInViewport();
   const compactBounds = (await modelPicker(page).boundingBox())!;
@@ -552,7 +582,7 @@ test('offers only reported reasoning efforts and remembers the selected effort f
   expect(compactBounds.x + compactBounds.width).toBeLessThanOrEqual(848);
   expect(compactBounds.y + compactBounds.height).toBeLessThanOrEqual(588);
   await expect(modelPicker(page)).toHaveAttribute('data-popover-state', 'open');
-  await page.screenshot({ path: '/private/tmp/pandacode-reasoning-compact.png', animations: 'allow' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-reasoning-compact.png'), animations: 'allow' });
   await page.setViewportSize({ width: 1440, height: 940 });
   await expect(modelPicker(page)).toHaveCSS('max-height', '916px');
   // Resizing also repositions the anchored menu on an animation frame. Wait
@@ -592,7 +622,7 @@ test('offers only reported reasoning efforts and remembers the selected effort f
   const particle = particles.nth(4);
   const position = await particle.evaluate(element => getComputedStyle(element).transform);
   await expect.poll(() => particle.evaluate(element => getComputedStyle(element).transform)).not.toBe(position);
-  await page.screenshot({ path: '/private/tmp/pandacode-effort-slider-dark.png', animations: 'allow' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-effort-slider-dark.png'), animations: 'allow' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(particle).toHaveCSS('animation-name', 'none');
   await expect(particle).toHaveCSS('opacity', '0.55');
@@ -604,7 +634,7 @@ test('offers only reported reasoning efforts and remembers the selected effort f
   await expect(slider).toHaveAttribute('aria-valuetext', 'High');
   await expect(modelPicker(page)).toHaveAttribute('data-popover-state', 'open');
   await expectColor(highColor);
-  await page.screenshot({ path: '/private/tmp/pandacode-effort-slider-light.png', animations: 'allow' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-effort-slider-light.png'), animations: 'allow' });
   await slider.focus();
   await slider.press('ArrowUp');
   await expect(slider).toBeFocused();
@@ -799,9 +829,20 @@ test('preserves composer focus and selection when a reasoning save finishes afte
   await expect.poll(() => page.evaluate(() => typeof (window as any).__pandacodeReleaseEffort)).toBe('function');
   await page.locator('.task-item[data-id="session-2"]').click();
   await page.locator('.task-item[data-id="session-1"]').click();
+  // Wait for this task's history and enabled composer before establishing the
+  // selected range. Otherwise the prior navigation's late render can replace
+  // the textarea while the reasoning save is still deliberately held.
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
+  await expect(page.getByRole('log', { name: 'Conversation', exact: true })).toContainText('Search feels a little slow');
+  await expect(prompt(page)).toBeEnabled();
   await prompt(page).fill('Keep my selection while I edit this draft');
-  await prompt(page).evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(8, 17));
   await expect(prompt(page)).toBeFocused();
+  // Establish and confirm the range in one browser task: an unrelated late
+  // navigation render must not interleave between two Playwright RPCs.
+  expect(await prompt(page).evaluate((element: HTMLTextAreaElement) => {
+    element.setSelectionRange(8, 17);
+    return [element.selectionStart, element.selectionEnd];
+  })).toEqual([8, 17]);
   await page.evaluate(() => { (window as any).__pandacodeHoldEffort = false; (window as any).__pandacodeReleaseEffort(); });
   await expect(modelTrigger(page)).toContainText('High');
   await expect(prompt(page)).toHaveValue('Keep my selection while I edit this draft');
@@ -1039,7 +1080,7 @@ test('changes terminal colors without replacing its session or the composer draf
   await page.getByRole('button', { name: 'Dark mode', exact: true }).click();
   await expect(viewport).toHaveCSS('background-color', 'rgb(25, 26, 24)');
   await expect(prompt(page)).toHaveValue('Keep this draft while changing appearance');
-  await page.screenshot({ path: '/private/tmp/pandacode-dark-terminal.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-dark-terminal.png'), animations: 'disabled' });
   expect(await page.evaluate(() => {
     const nodes = (window as any).__themeNodes;
     return nodes[0] === document.querySelector('#prompt') && nodes[1] === document.querySelector('.xterm-screen');
@@ -1075,7 +1116,7 @@ test('synchronizes dark mode with native appearance without wallpapers and respe
   await projectFilter(page).click();
   const menu = page.getByRole('dialog', { name: 'Filter projects', exact: true });
   await expect(menu).toHaveCSS('backdrop-filter', 'none');
-  await page.screenshot({ path: '/private/tmp/pandacode-dark-accessible.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-dark-accessible.png'), animations: 'disabled' });
   await page.keyboard.press('Escape');
   const count = await page.evaluate(() => { (window as any).__disposeThemeAppearance(); return (window as any).__themeCalls.length; });
   await page.getByRole('button', { name: 'Dark mode', exact: true }).click();
@@ -1092,7 +1133,7 @@ test('chooses a project filter from its anchored menu using the keyboard', async
   await page.keyboard.press('ArrowDown');
   await expect(all).toBeFocused();
   await expect(all).toHaveAttribute('aria-checked', 'true');
-  await page.screenshot({ path: '/private/tmp/pandacode-filter-menu.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-filter-menu.png'), animations: 'disabled' });
   await page.keyboard.press('End');
   await expect(menu.getByRole('menuitemradio', { name: 'pandacode', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -1239,7 +1280,7 @@ test('changes permissions and opens task actions with anchored keyboard menus', 
   await page.getByRole('button', { name: 'Standard', exact: true }).click();
   const permissions = page.getByRole('dialog', { name: 'Permissions', exact: true });
   await expect(permissions.getByRole('menuitemradio', { name: 'Standard', exact: true })).toBeFocused();
-  await page.screenshot({ path: '/private/tmp/pandacode-permissions-menu.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-permissions-menu.png'), animations: 'disabled' });
   await page.keyboard.press('ArrowDown');
   await expect(permissions.getByRole('menuitemradio', { name: 'Accept edits', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -1250,9 +1291,10 @@ test('changes permissions and opens task actions with anchored keyboard menus', 
   await expect(page.locator('.user-message,.agent-message')).toHaveText(history);
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const actions = page.getByRole('dialog', { name: 'Task actions', exact: true });
-  await expect(actions.getByRole('menuitem', { name: 'Rename task', exact: true })).toBeFocused();
+  // The first action is Pin task; keyboard navigation moves to Rename task.
+  await expect(actions.getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Home');
+  await expect(actions.getByRole('menuitem', { name: 'Rename task', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(actions).toHaveCount(0);
   const rename = page.locator('#dialog');
@@ -1346,6 +1388,12 @@ test('keeps the saved approval behaviour and draft when saving a different mode 
   await expect(trigger).toHaveText('Standard');
   await expect.poll(() => savedPermission(page)).toBe('ask');
   await expect(prompt(page)).toHaveValue('Preserve the draft when permissions cannot be saved');
+  // A failed save intentionally leaves this same menu open with its error,
+  // allowing correction without losing the user's draft or focus.
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('menuitemradio', { name: 'Standard', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
   await trigger.click();
   await expect(menu.getByRole('menuitemradio', { name: 'Standard', exact: true })).toHaveAttribute('aria-checked', 'true');
 });
@@ -1405,7 +1453,7 @@ test('chooses the default agent inside Settings without closing the Settings pag
   await trigger.click();
   const menu = page.getByRole('dialog', { name: 'Default agent', exact: true });
   await expect(menu.getByRole('menuitemradio', { name: 'Claude Code', exact: true })).toBeFocused();
-  await page.screenshot({ path: '/private/tmp/pandacode-settings-menu.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-settings-menu.png'), animations: 'disabled' });
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
   await expect(settings.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
@@ -1441,7 +1489,7 @@ test('keeps the Settings agent menu clickable at the minimum desktop window size
   await settings.getByRole('button', { name: 'Default agent for new tasks', exact: true }).click();
   const menu = page.getByRole('dialog', { name: 'Default agent', exact: true });
   await expect(menu.getByRole('menuitemradio', { name: 'Claude Code', exact: true })).toBeFocused();
-  await page.screenshot({ path: '/private/tmp/pandacode-settings-menu-narrow.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-settings-menu-narrow.png'), animations: 'disabled' });
   const hitTargets = await menu.getByRole('menuitemradio').evaluateAll(elements => elements.map(element => {
     const rect = element.getBoundingClientRect();
     return { inViewport: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight,
@@ -1638,7 +1686,7 @@ test('expands saved tool commands and file contents after reloading the conversa
   await expect(bash.locator('[data-tool-section="output"] pre')).toContainText('Tests: 12 passed, 12 total');
   await expect(bash).toHaveAttribute('data-tool-status', 'completed');
   await bash.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '/private/tmp/pandacode-tool-details.png' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-tool-details.png') });
   await page.reload();
   await expandToolTurn(bash);
   await bash.locator('summary').click();
@@ -1786,6 +1834,11 @@ test('caps long live tool activity without dropping the output being read', asyn
   });
   await page.clock.install();
   await page.reload();
+  // The preview can render its sidebar before the selected task and project
+  // finish hydrating. Clicking New task earlier makes createTask reject the
+  // click because no project is loaded, rather than exercising live tools.
+  await expect(page.locator('.task-item.selected .task-title')).toHaveText('Make search feel instant');
+  await expect(openTaskProject(page)).toHaveText('orbit');
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
@@ -1871,7 +1924,7 @@ test('collapses turn activity into one compact row while keeping the final answe
   expect(bounds.height).toBeGreaterThanOrEqual(24);
   expect(bounds.height).toBeLessThanOrEqual(44);
   expect((await turn.boundingBox())!.height).toBeLessThanOrEqual(52);
-  await page.screenshot({ path: '/private/tmp/pandacode-activity-collapsed.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-activity-collapsed.png'), animations: 'disabled' });
   await summary.focus();
   await page.keyboard.press('Enter');
   await expect(turn).toHaveAttribute('open', '');
@@ -1879,7 +1932,7 @@ test('collapses turn activity into one compact row while keeping the final answe
   await expandToolTurn(toolByName(page, 'Read'));
   await expect(toolByName(page, 'Read').locator('summary')).toBeVisible();
   await expect(toolByName(page, 'Bash').locator('summary')).toBeVisible();
-  await page.screenshot({ path: '/private/tmp/pandacode-activity-expanded.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-activity-expanded.png'), animations: 'disabled' });
   await summary.focus();
   await page.keyboard.press('Space');
   await expect(turn).not.toHaveAttribute('open', '');
@@ -1896,6 +1949,7 @@ async function showTurnFixture(page: Page, entries: Array<{ role: string; conten
     await route.fulfill({ response, body: previewBody(source.replace(marker, `messages['session-4'] = ${JSON.stringify(fixture)}; const providers =`)) });
   });
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await chooseProjectFilter(page, 'pandacode');
 }
 
@@ -2036,9 +2090,12 @@ async function startControlledStatusStream(page: Page, withoutContextMetadata = 
   });
   await page.clock.install();
   await page.reload();
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
   await page.locator('.new-task-button').click();
+  // New task creation uses preview IPC, so only pause the clock after its
+  // UI has finished initialising rather than blocking the creation turn.
   await expect(newTaskHeading(page)).toBeVisible();
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   const sessionId = (await prompt(page).getAttribute('data-session-id'))!;
   await prompt(page).fill('Show the actual provider activity as it arrives');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
@@ -2070,7 +2127,7 @@ test('shows reported context usage while running and keeps late usage from creat
   await emitStatusEvents(page, sessionId, [{ kind: 'usage', text: '', data: { usedTokens: 24000, contextWindow: 200000 } }]);
   await expect(indicator).toHaveText('24K / 200K context');
   await expect(indicator).toHaveAttribute('title', /24,000.*200,000/);
-  await page.screenshot({ path: '/private/tmp/pandacode-context-usage.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-context-usage.png'), animations: 'disabled' });
   await emitStatusEvents(page, sessionId, [
     { kind: 'usage', text: '', data: { usedTokens: -10, contextWindow: 200000 } },
     { kind: 'usage', text: '', data: { usedTokens: 'fake', contextWindow: 200000 } },
@@ -2294,6 +2351,9 @@ test('a rejected first prompt leaves the new task unlisted and restores its text
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
+  // Browser Preview starts asynchronously after reload; wait for the actual
+  // seeded task list before creating a new unsent draft.
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
   const sessionId = (await prompt(page).getAttribute('data-session-id'))!;
@@ -2381,6 +2441,8 @@ test('renaming and changing a model do not make an old response active', async (
   await taskRow(page, 'session-4', 'inactive').click();
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const renameAction = page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Rename task', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   await expect(renameAction).toBeFocused();
   await renameAction.press('Enter');
   const dialog = page.getByRole('dialog');
@@ -2401,6 +2463,7 @@ test('renaming and changing a model do not make an old response active', async (
 test('keeps an observed streaming response active when metadata reloads before persistence', async ({ page }) => {
   await page.clock.install();
   await page.reload();
+  await expect(page.locator('.task-item.selected')).toHaveAttribute('data-id', 'session-1');
   await page.locator('.new-task-button').click();
   await expect(newTaskHeading(page)).toBeVisible();
   await prompt(page).fill('Stream while the response timestamp awaits persistence');
@@ -2422,6 +2485,8 @@ test('keeps an observed streaming response active when metadata reloads before p
   expect(observedResponseAt).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Task actions', exact: true }).click();
   const renameAction = page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Rename task', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Task actions', exact: true }).getByRole('menuitem', { name: 'Pin task', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   await expect(renameAction).toBeFocused();
   await renameAction.press('Enter');
   const dialog = page.getByRole('dialog');
@@ -2458,9 +2523,19 @@ test('removes the old project inspector actions while the new task history loads
     await route.fulfill({ response, body: previewBody(body) });
   });
   await page.reload();
-  await page.locator('#inspector-toggle').click();
-  await expect(page.locator('.change-row')).toHaveCount(3);
-  await page.locator('[data-action="open-diff"]').first().click();
+  const inspector = page.locator('#inspector');
+  // Thread panel state can be restored already open. Blindly toggling would
+  // close it and leave stale-but-hidden change rows in the DOM.
+  await expect(page.locator('.task-item[data-id="session-1"]')).toBeVisible();
+  if (await inspector.evaluate(el => (el as HTMLElement).hidden)) {
+    await page.locator('#inspector-toggle').click();
+  }
+  await expect(inspector).toBeVisible();
+  await expect(page.locator('#inspector-content')).toBeVisible();
+  await expect(page.locator('#inspector-content .change-row')).toHaveCount(3);
+  // A collapsed transcript can contain an unrelated hidden open-diff control;
+  // this scenario exercises the visible inspector file action.
+  await page.locator('#inspector-content .change-row [data-action="open-diff"]').first().click();
   await expect(page.locator('.diff-viewer')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Stage file', exact: true })).toBeVisible();
   await chooseProjectFilter(page, 'pandacode');
@@ -2476,7 +2551,11 @@ test('removes the old project inspector actions while the new task history loads
 
 test('renders provider logos in task rows, composer, messages, picker, and settings', async ({ page }) => {
   await expect(page.locator('#composer .provider-logo[data-provider="claude"]')).toBeVisible();
-  await expect(page.locator('.agent-message .provider-logo[data-provider="claude"]:visible').first()).toBeVisible();
+  // The default Claude sample collapses intermediary replies into its tool
+  // activity row. Verify a visible completed Codex answer instead.
+  await page.locator('.task-item[data-id="session-4"]').click();
+  await expect(page.locator('.agent-message .provider-logo[data-provider="codex"]:visible').first()).toBeVisible();
+  await page.locator('.task-item[data-id="session-1"]').click();
   for (const provider of ['claude', 'codex', 'kimi']) {
     await expect(page.locator(`#navigation .provider-logo[data-provider="${provider}"]`).first()).toBeVisible();
   }
@@ -2554,13 +2633,13 @@ test('opens a new conversation in the active project without listing it', async 
   expect(mainBounds.y + mainBounds.height - composerBounds.y - composerBounds.height).toBeGreaterThanOrEqual(0);
   expect(mainBounds.y + mainBounds.height - composerBounds.y - composerBounds.height).toBeLessThan(90);
   await expect(page.getByRole('button', { name: 'Change task project', exact: true })).toHaveCount(2);
-  await page.screenshot({ path: '/private/tmp/pandacode-new-task.png' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-new-task.png') });
   await page.getByRole('button', { name: 'Choose harness and model', exact: true }).click();
   const picker = page.getByRole('dialog', { name: 'Harness and model', exact: true });
   await expect(picker.getByRole('button', { name: 'Claude Code · Default', exact: true })).toBeVisible();
   await expect(picker.getByRole('button', { name: 'Codex · Default', exact: true })).toBeVisible();
   await expect(picker.getByRole('button', { name: 'Kimi Code · Default', exact: true })).toBeVisible();
-  await page.screenshot({ path: '/private/tmp/pandacode-brand-picker.png' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-brand-picker.png') });
 });
 
 test('changes the empty task project while keeping its draft, harness, model, and identity', async ({ page }) => {
@@ -2617,7 +2696,7 @@ test('searches task projects by keyboard and cancels or reselects without changi
   const search = picker.getByRole('searchbox', { name: 'Search projects', exact: true });
   await expect(search).toBeFocused();
   await expect(picker.getByRole('option', { name: /^orbit — / })).toHaveAttribute('aria-selected', 'true');
-  await page.screenshot({ path: '/private/tmp/pandacode-project-picker.png' });
+  await page.screenshot({ path: test.info().outputPath('pandacode-project-picker.png') });
   await search.fill('panda');
   await expect(picker.getByRole('option')).toHaveCount(1);
   await search.press('Escape');
@@ -2772,7 +2851,6 @@ for (const delayedCommand of ['add_project', 'list_projects']) {
 for (const config of [
   { module: 'model-picker', trigger: 'Choose harness and model', dialog: 'Harness and model' },
   { module: 'project-picker', trigger: 'Change task project', dialog: 'Choose project' },
-  { module: 'choice-menu', trigger: 'Filter projects', dialog: 'Filter projects' },
 ]) {
   for (const dismissal of ['Escape', 'outside pointer', 'same trigger']) {
     test(`dismisses the pending ${config.module} import with ${dismissal} without stealing focus`, async ({ page }) => {
@@ -2812,6 +2890,30 @@ for (const config of [
       await expect(trigger).toBeFocused();
     });
   }
+}
+
+// The shared choice menu is deliberately imported at boot; its first click
+// must be immediately actionable. The two other pickers still test genuinely
+// delayed async module downloads in the loop above.
+for (const dismissal of ['Escape', 'outside pointer', 'same trigger']) {
+  test(`dismisses an eagerly loaded choice menu with ${dismissal} without stealing focus`, async ({ page }) => {
+    const trigger = projectFilter(page);
+    const menu = page.getByRole('dialog', { name: 'Filter projects', exact: true });
+    await trigger.click();
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitemradio', { name: 'pandacode', exact: true })).toBeVisible();
+    if (dismissal === 'outside pointer') await prompt(page).click();
+    else if (dismissal === 'same trigger') await trigger.click();
+    else await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(page.locator('.floating-menu')).toHaveCount(0);
+    await expect(dismissal === 'outside pointer' ? prompt(page) : trigger).toBeFocused();
+    await trigger.click();
+    await expect(menu).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+  });
 }
 
 test('restores the last active project and creates new conversations there', async ({ page }) => {

@@ -12,10 +12,18 @@ async function open(page: Page): Promise<void> {
     await route.fulfill({ response, body: source.replace(/switch\s*\(command\)\s*\{/, `
       window.__simEmit ??= (name, event) => emit(name, event);
       if (command.startsWith('simulator_') && command !== 'simulator_frame') (window.__simCalls ??= []).push({ command, args: structuredClone(args) });
-      if (command === 'simulator_frame') (window.__simFrames = (window.__simFrames ?? 0) + 1);
+      if (command === 'simulator_frame') {
+        window.__simFrames = (window.__simFrames ?? 0) + 1;
+        (window.__simFrameAfters ??= []).push(args.after);
+      }
       if (command === 'simulator_pose' && window.__simPoseHold) await window.__simPoseHold;
       if (command === 'simulator_pose' && window.__simPoseFail) throw new Error(window.__simPoseFail);
-      if (command === 'simulator_frame' && window.__simFrameHold) await window.__simFrameHold;
+      if (command === 'simulator_frame') {
+        if (window.__simFrameHold) await window.__simFrameHold;
+        const data = await previewSimulator.frame(args.udid, Number(args.after ?? 0));
+        (window.__simFrameResults ??= []).push({ after: Number(args.after ?? 0), bytes: data.byteLength });
+        return data;
+      }
       switch (command) {
     `) });
   });
@@ -25,8 +33,17 @@ async function open(page: Page): Promise<void> {
 }
 /** The phone tab in the right sidebar opens the simulator. */
 async function showSimulator(page: Page): Promise<void> {
-  if (!(await page.locator('#inspector').isVisible())) await page.locator('#inspector-toggle').click();
-  await page.locator('.inspector-tabs [data-action="tab-simulator"]').click();
+  const tab = page.locator('.inspector-tabs [data-action="tab-simulator"]');
+  // The inspector container can still report visible during close/layout;
+  // the actual tab must be actionable before interacting with it.
+  // Inspect the actual hidden state: the container's flex CSS can make
+  // locator.isVisible() unreliable while the app marks it hidden.
+  if (await page.locator('#inspector').evaluate(el => (el as HTMLElement).hidden)) {
+    await page.locator('#inspector-toggle').click();
+  }
+  await expect(page.locator('#inspector')).not.toHaveAttribute('hidden');
+  await expect(tab).toBeVisible();
+  await tab.click();
 }
 /** The display after facing forward: the screen is centered in the stage. */
 async function stage(page: Page) {
@@ -184,6 +201,9 @@ test('Android can be set up in one click when the SDK is missing', async ({ page
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  // The custom-route tests must wait for the same initialized sample session
+  // as open(), not click inspector controls before app bootstrap.
+  await expect(page.locator('.task-item.selected')).toBeVisible();
   await showSimulator(page);
   const panel = page.locator('#simulator-panel');
   await panel.getByRole('button', { name: 'Choose simulator' }).click();
@@ -257,19 +277,33 @@ test('iPhone Duo folds on click and shows a spinner until the new display answer
   await expect(pose).toHaveAccessibleName('iPhone Duo pose: Open', { timeout: 200 });
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await expect(pose).toBeDisabled();
+  const framesBeforePose = await page.evaluate(() => ((window as any).__simFrameAfters ?? []).length);
   await page.evaluate(() => { const w = window as any; w.__simPoseHold = null; w.__simPoseRelease(); });
   await expect(pose).toBeEnabled();
+  // The new display request must reach the held mock before we release it.
+  // Otherwise an old in-flight request can race with the new frame pump.
+  await expect.poll(() => page.evaluate((before: number) => ((window as any).__simFrameAfters ?? []).slice(before).some((after: number) => after === 0), framesBeforePose)).toBe(true);
   await page.waitForTimeout(300);
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await page.evaluate(() => { const w = window as any; w.__simFrameHold = null; w.__simFrameRelease(); });
-  await expect(screen).not.toHaveAttribute('aria-busy');
+  // A request is not the same thing as a delivered display image. Wait for
+  // the post-pose JPEG to arrive before checking the rendered spinner.
+  await expect.poll(() => page.evaluate((before: number) => ((window as any).__simFrameResults ?? []).slice(before).some((result: any) => result.after === 0 && result.bytes > 8), 0)).toBe(true);
+  await expect(screen).not.toHaveAttribute('aria-busy', { timeout: 15000 });
   expect((await calls(page, 'simulator_pose')).at(-1).args.pose).toBe('open');
 
-  // A fold that fails moves back and says why.
-  await page.evaluate(() => { (window as any).__simPoseFail = 'The hinge is stuck.'; });
+  // Keep the failed native operation pending long enough to verify the
+  // optimistic hinge movement before the app correctly rolls it back.
+  await page.evaluate(() => {
+    const w = window as any;
+    w.__simPoseFail = 'The hinge is stuck.';
+    w.__simPoseHold = new Promise(resolve => { w.__simPoseRelease = resolve; });
+  });
   await pose.click();
   await page.getByRole('menuitemradio', { name: /Closed/ }).click();
-  await expect(pose).toHaveAccessibleName('iPhone Duo pose: Closed', { timeout: 200 });
+  await expect(pose).toHaveAccessibleName('iPhone Duo pose: Closed');
+  await expect(screen).toHaveAttribute('aria-busy', 'true');
+  await page.evaluate(() => { const w = window as any; w.__simPoseHold = null; w.__simPoseRelease(); });
   await expect(page.locator('#toast')).toContainText('The hinge is stuck.');
   await expect(pose).toHaveAccessibleName('iPhone Duo pose: Open');
   await expect(screen).not.toHaveAttribute('aria-busy');
@@ -309,6 +343,9 @@ test('Add iPhone Duo is disabled without Xcode 27.1', async ({ page }) => {
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  // The custom-route tests must wait for the same initialized sample session
+  // as open(), not click inspector controls before app bootstrap.
+  await expect(page.locator('.task-item.selected')).toBeVisible();
   await showSimulator(page);
   await page.locator('#simulator-panel').getByRole('button', { name: 'Choose simulator' }).click();
   const add = page.getByRole('menuitemradio', { name: /Add iPhone Duo/ });

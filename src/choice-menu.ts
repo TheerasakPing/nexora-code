@@ -215,6 +215,10 @@ export function openChoiceMenu(options: ChoiceMenuOptions): () => void {
     // Enter and Space retain native button activation.
   });
   panel.addEventListener('focusout', event => {
+    // Returning focus to our own trigger precedes its click event. Preserve
+    // the menu until that click reaches showChoices and closes it once;
+    // otherwise focusout closes it early and the same click reopens it.
+    if (event.relatedTarget === anchor) return;
     if (event.relatedTarget instanceof Node && !panel.contains(event.relatedTarget)) close(false);
   });
 
