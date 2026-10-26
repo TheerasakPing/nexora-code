@@ -35,7 +35,7 @@ test('refuses to delete tracked fixture files or symlinked paths', () => fixture
   writeFileSync(join(root, 'coverage', 'keep.txt'), 'tracked fixture');
   execFileSync('git', ['add', 'coverage/keep.txt'], { cwd: root });
   const outside = join(root, 'tests');
-  symlinkSync(outside, join(root, 'test-results'), 'dir');
+  symlinkSync(outside, join(root, 'test-results'), process.platform === 'win32' ? 'junction' : 'dir');
   const result = cleanupTestArtifacts(root, { apply: true });
   assert.deepEqual(result.removed, []);
   assert.equal(result.skipped.length, 2);
