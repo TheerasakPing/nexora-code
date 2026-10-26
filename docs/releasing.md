@@ -1,3 +1,5 @@
+> **Nexora Code fork notice:** This document below is retained upstream PandaCode release guidance and contains upstream repository, tag and updater destinations. **Do not run it to ship Nexora Code.** Use [Nexora Code SOP](nexora/SOP-DEVELOPMENT-RELEASE.md) and [Native macOS Acceptance](nexora/NATIVE-MACOS-ACCEPTANCE.md); protected-branch review, correct artifact identity, native QA, Apple Developer signing and notarization are separate release gates.
+
 # Releasing PandaCode
 
 PandaCode releases are GitHub Releases on
