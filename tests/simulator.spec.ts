@@ -18,7 +18,12 @@ async function open(page: Page): Promise<void> {
       }
       if (command === 'simulator_pose' && window.__simPoseHold) await window.__simPoseHold;
       if (command === 'simulator_pose' && window.__simPoseFail) throw new Error(window.__simPoseFail);
-      if (command === 'simulator_frame' && window.__simFrameHold) await window.__simFrameHold;
+      if (command === 'simulator_frame') {
+        if (window.__simFrameHold) await window.__simFrameHold;
+        const data = await previewSimulator.frame(args.udid, Number(args.after ?? 0));
+        (window.__simFrameResults ??= []).push({ after: Number(args.after ?? 0), bytes: data.byteLength });
+        return data;
+      }
       switch (command) {
     `) });
   });
@@ -281,7 +286,10 @@ test('iPhone Duo folds on click and shows a spinner until the new display answer
   await page.waitForTimeout(300);
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await page.evaluate(() => { const w = window as any; w.__simFrameHold = null; w.__simFrameRelease(); });
-  await expect(screen).not.toHaveAttribute('aria-busy');
+  // A request is not the same thing as a delivered display image. Wait for
+  // the post-pose JPEG to arrive before checking the rendered spinner.
+  await expect.poll(() => page.evaluate((before: number) => ((window as any).__simFrameResults ?? []).slice(before).some((result: any) => result.after === 0 && result.bytes > 8), 0)).toBe(true);
+  await expect(screen).not.toHaveAttribute('aria-busy', { timeout: 15000 });
   expect((await calls(page, 'simulator_pose')).at(-1).args.pose).toBe('open');
 
   // Keep the failed native operation pending long enough to verify the

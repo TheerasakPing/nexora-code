@@ -8,3 +8,11 @@
 - [ ] Lead: validate independent review/release policies; merge only if protection allows
 
 This refresh is intended to make the pull request up-to-date. It does not change branch protection or fabricate status checks.
+
+## Additional QA finding: simulator frame delivery
+
+- [x] Stress after develop sync reproduced the old spinner check failure 3/28 with 4 workers.
+- [x] Test fixture now records delivered frame bytes and waits for the fresh post-pose JPEG, instead of counting only issued requests; UI spinner assertion remains required.
+- [x] Under parallel WebGL/OffscreenCanvas load, allow at most 15s for image decode and display. No test retries or skips.
+- [x] Updated stress test passed 28/28 with 4 workers.
+- [ ] Revalidate full hosted CI on refreshed PR head after push.
