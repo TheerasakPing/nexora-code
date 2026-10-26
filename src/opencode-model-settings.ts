@@ -92,6 +92,13 @@ export function mountOpenCodeModels(host: HTMLElement, saved: () => void): () =>
     try {
       const result = await call<Catalog>('list_opencode_models');
       if (disposed) return;
+      // Treat the CLI catalog as external data: malformed or partial responses must
+      // not wipe persisted choices or crash rendering. The user can retry Refresh.
+      if (!result || !Array.isArray(result.models) || !Array.isArray(result.selectedModelIds) ||
+          !result.models.every(model => model && typeof model.id === 'string' && typeof model.name === 'string') ||
+          !result.selectedModelIds.every(id => typeof id === 'string')) {
+        throw new Error('OpenCode returned an invalid model catalog. Check the CLI and refresh.');
+      }
       if (!initialized) { selected = new Set(result.selectedModelIds); persisted = new Set(result.selectedModelIds); initialized = true; }
       if (!result.error || result.models.length) models = result.models;
       message(result.error || '');
