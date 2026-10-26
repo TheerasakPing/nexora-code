@@ -269,8 +269,12 @@ test('iPhone Duo folds on click and shows a spinner until the new display answer
   await expect(pose).toHaveAccessibleName('iPhone Duo pose: Open', { timeout: 200 });
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await expect(pose).toBeDisabled();
+  const framesBeforePose = await page.evaluate(() => (window as any).__simFrames ?? 0);
   await page.evaluate(() => { const w = window as any; w.__simPoseHold = null; w.__simPoseRelease(); });
   await expect(pose).toBeEnabled();
+  // The new display request must reach the held mock before we release it.
+  // Otherwise an old in-flight request can race with the new frame pump.
+  await expect.poll(() => page.evaluate(() => (window as any).__simFrames ?? 0)).toBeGreaterThan(framesBeforePose);
   await page.waitForTimeout(300);
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await page.evaluate(() => { const w = window as any; w.__simFrameHold = null; w.__simFrameRelease(); });
