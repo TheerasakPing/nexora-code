@@ -46,6 +46,7 @@ async function failuresAndDelay(page: Page): Promise<void> {
       const fixture = window.__openCodeModels;
       fixture.calls.push({ command, args: structuredClone(args) });
       if (fixture.errors[command]) throw new Error(fixture.errors[command]);
+      if (command === 'list_opencode_models' && fixture.malformedCatalog) return { models: null, selectedModelIds: [], error: null };
       if (command === 'save_opencode_models' && fixture.delaySave) {
         await new Promise(resolve => { fixture.releaseSave = resolve; });
         fixture.delaySave = false;
@@ -130,6 +131,21 @@ test('deselecting a model does not change an existing task using it', async ({ p
   await openPicker(page);
   // Clearing the selection makes the whole catalog searchable again.
   await expect(picker(page).getByRole('button', { name: /^OpenCode ·/ })).toHaveCount(8);
+});
+
+test('malformed discovery catalog does not erase the selected draft and remains retryable', async ({ page }) => {
+  await failuresAndDelay(page);
+  await boot(page);
+  await openModels(page);
+  await modelCheckbox(page, 'Big Pickle').check();
+  await page.evaluate(() => { (window as any).__openCodeModels.malformedCatalog = true; });
+  await dialog(page).getByRole('button', { name: 'Refresh models', exact: true }).click();
+  await expect(dialog(page)).toContainText('OpenCode returned an invalid model catalog');
+  await expect(modelCheckbox(page, 'Big Pickle')).toBeChecked();
+  await page.evaluate(() => { (window as any).__openCodeModels.malformedCatalog = false; });
+  await dialog(page).getByRole('button', { name: 'Refresh models', exact: true }).click();
+  await expect(dialog(page)).not.toContainText('OpenCode returned an invalid model catalog');
+  await expect(modelCheckbox(page, 'Big Pickle')).toBeChecked();
 });
 
 test('refresh and save failures keep draft choices available for retry', async ({ page }) => {
