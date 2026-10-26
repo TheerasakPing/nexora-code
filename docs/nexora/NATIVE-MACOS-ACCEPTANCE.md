@@ -14,6 +14,16 @@ The verifier checks the app bundle identifier, arm64 executable, running native 
 
 A safe database snapshot while the app runs must be made via SQLite's online backup API rather than copying the `.sqlite3` alone while a WAL is active. Keep backup files off GitHub, outside the repository and off screenshots. Before upgrade or rollback, verify the backup with `PRAGMA integrity_check` and preserve the original app in a separate path. Never log user session contents, tokens, prompts or keychain entries.
 
+## GUI automation permission preflight
+
+`node scripts/release/verify-installed-macos.mjs` now reports a read-only `runnerAccessibility` gate:
+
+- `AVAILABLE`: System Events reports that the **calling automation context** may use accessibility. This does not prove any native click, app control, Screen Recording authorization, or GUI E2E success.
+- `BLOCKED_ACCESSIBILITY`: System Events explicitly reports accessibility disabled for the caller.
+- `UNVERIFIED`: System Events returned no reliable yes/no answer. Errors are not interpreted as success.
+
+Granting **Nexora Code** accessibility does not grant it to a separate runner (such as Nexora Studio's nested Node runtime, `osascript`, or another caller). macOS may require adding the controlling app/helper and restarting it. Screen & System Audio Recording is a **separate** consent. Do not capture a user screen or reset permissions automatically. Never modify TCC databases or bypass macOS privacy approval.
+
 ## Native GUI acceptance — still requires human/operator access
 
 - [ ] Enable macOS **System Settings → Privacy & Security → Accessibility** for the approved test runner (and Screen Recording when necessary). The operator must grant this; do not change privacy permissions silently.
