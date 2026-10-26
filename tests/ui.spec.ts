@@ -837,8 +837,12 @@ test('preserves composer focus and selection when a reasoning save finishes afte
   await expect(prompt(page)).toBeEnabled();
   await prompt(page).fill('Keep my selection while I edit this draft');
   await expect(prompt(page)).toBeFocused();
-  await prompt(page).evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(8, 17));
-  expect(await prompt(page).evaluate((element: HTMLTextAreaElement) => [element.selectionStart, element.selectionEnd])).toEqual([8, 17]);
+  // Establish and confirm the range in one browser task: an unrelated late
+  // navigation render must not interleave between two Playwright RPCs.
+  expect(await prompt(page).evaluate((element: HTMLTextAreaElement) => {
+    element.setSelectionRange(8, 17);
+    return [element.selectionStart, element.selectionEnd];
+  })).toEqual([8, 17]);
   await page.evaluate(() => { (window as any).__pandacodeHoldEffort = false; (window as any).__pandacodeReleaseEffort(); });
   await expect(modelTrigger(page)).toContainText('High');
   await expect(prompt(page)).toHaveValue('Keep my selection while I edit this draft');
