@@ -30,7 +30,8 @@
     "release:build": "node scripts/release/build.mjs",
     "test:release": "node --test scripts/release/*.test.mjs",
     "screenshots": "playwright test -c scripts/screenshots/playwright.config.ts",
-    "test:nexora:r0": "node scripts/nexora/r0-verify.mjs"
+    "test:nexora:r0": "node scripts/nexora/r0-verify.mjs",
+    "test:native:installed": "node scripts/release/verify-installed-macos.mjs"
   },
   "dependencies": {
     "@pierre/diffs": "1.4.2",
