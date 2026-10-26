@@ -36,16 +36,17 @@ export function createTokenSaver(host: TokenSaverHost) {
   function render(sessionId: string): void {
     if (!panel) return;
     const saver = threadSaver(sessionId), saving = estimate(saver.packs, saver.level, available()), on = new Set(saver.packs);
+    const anyActive = saver.packs.some(id => id !== 'rtk' || tools.rtk);
     const preset = defaults();
     const sameAsDefault = Boolean(preset) && preset!.level === saver.level && preset!.packs.join() === saver.packs.join();
     const row = (id: PackId) => {
       const pack = PACKS.find(item => item.id === id)!, missing = pack.needs === 'rtk' && !tools.rtk, active = on.has(id) && !missing;
       const about = `${pack.summary} Saves ${pack.saves}.${missing ? ` Not installed yet: turning it on installs it (${tools.rtkInstall}).` : id === 'rtk' && tools.rtkVersion ? ` rtk ${tools.rtkVersion} installed.` : ''}`;
-      const levels = id === 'caveman' && active ? `<div class="saver-levels" role="radiogroup" aria-label="Caveman intensity">${LEVELS.map(level => `<button type="button" role="radio" aria-checked="${saver.level === level.id}" data-level="${level.id}" title="${escape(level.hint)}">${level.label}</button>`).join('')}</div>` : '';
+      const levels = (id === 'caveman' || id === 'ponytail') && active ? `<div class="saver-levels" role="radiogroup" aria-label="${pack.title} intensity">${LEVELS.map(level => `<button type="button" role="radio" aria-checked="${saver.level === level.id}" data-level="${level.id}" title="${escape(level.hint)}">${level.label}</button>`).join('')}</div>` : '';
       const install = missing && installing ? '<span class="saver-installing" role="status">Installing…</span>' : '';
       return `<li class="saver-row ${missing ? 'saver-missing' : ''}"><span class="saver-name" id="saver-${id}" data-tip="${escape(about)}">${pack.title}</span><span class="sr-only" id="saver-${id}-about">${escape(about)}</span>${install}<button type="button" role="switch" class="saver-switch" data-pack="${id}" aria-labelledby="saver-${id}" aria-describedby="saver-${id}-about" aria-checked="${active}" ${missing ? 'data-install="rtk"' : ''} ${missing && installing ? 'aria-busy="true" aria-disabled="true"' : ''}></button></li>${levels ? `<li class="saver-levels-row">${levels}</li>` : ''}`;
     };
-    panel.innerHTML = `<header class="saver-head"><strong id="saver-title" data-tip="Applies to this thread. Guidance rides along folded with your next message, then every few messages. Savings are estimates from each project's benchmarks.">Token saver</strong><span class="saver-total" aria-label="${saving ? `About ${saving}% fewer tokens` : 'Off'}">${saving ? `−${saving}%` : 'Off'}</span></header>
+    panel.innerHTML = `<header class="saver-head"><strong id="saver-title" data-tip="Applies to this thread. Guidance rides along folded with your next message, then every few messages. Savings are estimates from each project's benchmarks.">Token saver</strong><span class="saver-total" aria-label="${saving ? `Estimated ${saving}% fewer tokens` : anyActive ? 'Active; savings not measured' : 'Off'}">${saving ? `−${saving}% est.` : anyActive ? 'On' : 'Off'}</span></header>
       <ul class="saver-list">${PACKS.map(pack => row(pack.id)).join('')}</ul>
       <footer class="saver-foot"><label class="saver-default"><input type="checkbox" ${sameAsDefault ? 'checked' : ''} ${saver.packs.length ? '' : 'disabled'}><span>Start new threads like this</span></label><button type="button" class="saver-off" ${saver.packs.length ? '' : 'disabled'}>Turn all off</button></footer>`;
   }

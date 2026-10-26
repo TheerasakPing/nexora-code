@@ -91,3 +91,23 @@ test('turning on a missing tool installs it, and a thread can become the default
   expect(block).toContain('Prefix shell commands with rtk');
   expect(block).toContain('rg -n pattern path');
 });
+
+test('Ponytail is an opt-in saver pack with intensity, persistent defaults and folded guidance', async ({ page }) => {
+  await open(page);
+  await saver(page).click();
+  const panel = page.getByRole('dialog', { name: 'Token saver' });
+  await panel.getByRole('switch', { name: /Ponytail/ }).click();
+  await expect(panel.locator('.saver-total')).toHaveText('On');
+  await expect(panel.getByRole('radiogroup', { name: 'Ponytail intensity' })).toBeVisible();
+  await panel.getByRole('radio', { name: 'Ultra' }).click();
+  await panel.getByRole('checkbox', { name: 'Start new threads like this' }).check();
+  await page.keyboard.press('Escape');
+  await expect(saver(page)).toHaveAttribute('aria-pressed', 'true');
+  await send(page, 'Refactor the helper safely');
+  const first = (await sent(page)).at(-1)!;
+  expect(first).toContain('Ponytail Ultra');
+  expect(first).toContain('security, validation, error paths, data protection and accessibility');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('pandacode.tokenSaver')!).defaults.packs)).toContain('ponytail');
+  await send(page, 'Check again');
+  expect((await sent(page)).at(-1)).toBe('Check again');
+});
