@@ -3025,6 +3025,24 @@ test('switches harness after the first message while preserving conversation and
   await expect(picker).not.toBeVisible();
   await expect(page.locator('#composer .provider-logo[data-provider="codex"]')).toBeVisible();
   await expect(page.locator('.provider-handoff')).toContainText('Conversation carried forward');
+  // Backport of upstream v0.3.48: handoff marker stays centered in the message
+  // column, and the expanded summary has a readable centered width.
+  const handoff = page.locator('.provider-handoff');
+  const alignment = await handoff.evaluate(element => {
+    const rail = element.getBoundingClientRect();
+    const summary = element.querySelector('summary')!.getBoundingClientRect();
+    return Math.abs((summary.left + summary.right) / 2 - (rail.left + rail.right) / 2);
+  });
+  expect(alignment).toBeLessThan(2);
+  await handoff.locator('summary').click();
+  await expect(handoff).toHaveAttribute('open', '');
+  const paragraphStyle = await handoff.locator('p').evaluate(el => ({
+    maxWidth: getComputedStyle(el).maxWidth,
+    marginLeft: getComputedStyle(el).marginLeft,
+    marginRight: getComputedStyle(el).marginRight,
+  }));
+  expect(paragraphStyle.maxWidth).not.toBe('none');
+  expect(Math.abs(parseFloat(paragraphStyle.marginLeft) - parseFloat(paragraphStyle.marginRight))).toBeLessThan(1);
   await expect(page.locator('.agent-message .message-meta strong').last()).toHaveText('Claude Code');
   await expect(prompt(page)).toHaveValue('A follow-up draft');
   await expect(page.locator('.user-message')).toContainText('Keep this conversation with the original harness');

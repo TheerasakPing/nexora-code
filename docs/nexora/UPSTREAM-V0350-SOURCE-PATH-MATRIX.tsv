@@ -1,0 +1,759 @@
+upstream_status	path	scope	fork_overlap	upstream_blob_sha	nexora_develop_blob_sha
+A	.easignore	OTHER_REVIEW	UPSTREAM_ONLY	7e387bbe1a4e8589f8809aa621b28890bc41bf78	
+A	.gitattributes	OTHER_REVIEW	UPSTREAM_ONLY	295e2931d5d3eec9beb78c18963e0e7882a9c8e6	
+M	.github/workflows/release.yml	DOCS_CI_REVIEW	UPSTREAM_ONLY	015fbf470214252aa5f1eb3d49ee8d73d56b7082	
+M	AGENTS.md	OTHER_REVIEW	DIVERGED_CONTENT	a23589c1c4da18d12402d391438ecc4631c5150c	6ad791ad7dd03b6ae8bc9468611b2c96f733710b
+M	README.md	OTHER_REVIEW	DIVERGED_CONTENT	7c38af689421c4d876cead49fd5cb0615cd8a381	89885ea79c412877270d47bb8851ebac686157a7
+A	app.json	OTHER_REVIEW	UPSTREAM_ONLY	b8689550d615d1a561cd0a4e1b85ba2d33a991a1	
+M	docs/agent-tools.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	7febcc5ff943f3afe4546ee175ad4263c7221116	a0451f7b34937c267f549ec4876153a795873f2c
+M	docs/agent-updates.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	bd292b3df72fc7c8fe2f13ee98e0eb03344de579	777d3883160a069a0d73b3e0902faf0f5c326410
+M	docs/agent-usage.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	92e94c5fde96a9514d20f8215f59c1b133835f88	9050fc5fdd6f750ea9da0c0fe7c6986166780d0a
+A	docs/app-store/SUBMITTING.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	e1b30afb5475f21651f7add4332c03dea130d8bb	
+A	docs/app-store/banners/app-store/header-3840x1646.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	bb7173556af2f5526d35764e67049255cae4559c	
+A	docs/app-store/banners/app-store/header-5244x2950.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	7a9610bd520e98fe3b111c1da495e3415ea2fa81	
+A	docs/app-store/banners/app-store/search-results-1920x1280.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	1b0d96aad4ccdcf89a3bc2c3d8ae78ed3bfafe55	
+A	docs/app-store/banners/app-store/search-results-3840x2560.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	af2a2eaa7227f7060eaa3386010cdacb8da3ddcc	
+A	docs/app-store/banners/github-social-1280x640.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	adde0627acf8c5467eda6c71d6238a4ae12b583f	
+A	docs/app-store/banners/play-feature-1024x500.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	0f115dd6c09bb64efec929acfb7896674d4379f4	
+A	docs/app-store/banners/social-1600x900.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	94abd2f92aa7aec281c2e33071dd29861452e759	
+A	docs/app-store/banners/square-1080x1080.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	c37e88bab3634323fa804568a0a0756900a22a5e	
+A	docs/app-store/banners/website-hero-2400x1200.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	4e38587fd1e123f1545ee950901dff3a4706d1a9	
+A	docs/app-store/live-activities.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	0b3b889a6396b7cba06d3dada1a800503d9aadd6	
+A	docs/app-store/live-activity-lock-screen.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	e7a0feaf76a8e65336ac03b57e80ec976130cb68	
+A	docs/app-store/metadata.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	7a45ad61322a9024ef8e4868170533502b250f09	
+A	docs/app-store/mockups/banners.css	DOCS_CI_REVIEW	UPSTREAM_ONLY	39a33f4d50162ab805152727e5fe2ccef722dab2	
+A	docs/app-store/mockups/banners.html	DOCS_CI_REVIEW	UPSTREAM_ONLY	da22c9b5c40f94acc100a4323a0d0c7afec03d70	
+A	docs/app-store/mockups/captures/approval-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	a1fd1d794600b3c8a7c6be199ae46f800d397588	
+A	docs/app-store/mockups/captures/duo/inner-approval-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	0c1ee216f17e830595eb7317a463879f22098932	
+A	docs/app-store/mockups/captures/duo/inner-new-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	0de8166c97d21aab00c9b812702517d5a8df4036	
+A	docs/app-store/mockups/captures/duo/inner-settings-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	1dd62a302d2af72c663ecd48c3e9dc35fb63c40f	
+A	docs/app-store/mockups/captures/duo/inner-task-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	dcadabb9d7381a6c2419733773a41f3b343354eb	
+A	docs/app-store/mockups/captures/duo/inner-working-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	6ee80960cbff6e4af3e6b0a7d07f21df22c498b0	
+A	docs/app-store/mockups/captures/duo/outer-approval-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	9c3fbbadf3ae3ce97d9e8be709511bcce8964729	
+A	docs/app-store/mockups/captures/duo/outer-inbox-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	061871c6aff7b9732355b7d2de4dd6b40de3f18c	
+A	docs/app-store/mockups/captures/duo/outer-task-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	96e41d7a45d8f8906371e7c3db0e08d32a8f80e7	
+A	docs/app-store/mockups/captures/duo/outer-working-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	107cdfce6087e6097b5ed9dd12fe1e6202a0afb9	
+A	docs/app-store/mockups/captures/inbox-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	1ec63870089ab5bb0fd653179a5af4ed1659449a	
+A	docs/app-store/mockups/captures/new-task-light.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	c1fe50d9a4c4956419a0c75fad5789415b95077a	
+A	docs/app-store/mockups/captures/settings-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	0cfbc0c4f72379e8c8d04e83c16a183b9f0786bf	
+A	docs/app-store/mockups/captures/task-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	3053d1055a4939ed537719c2668db80a5cb94d29	
+A	docs/app-store/mockups/captures/working-dark.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	f4650707709e9b87e145c282b03c7a6439cebad8	
+A	docs/app-store/mockups/duo.html	DOCS_CI_REVIEW	UPSTREAM_ONLY	68dd37febb443081dbb2c90d55e74851728ca669	
+A	docs/app-store/mockups/index.html	DOCS_CI_REVIEW	UPSTREAM_ONLY	e470bc8d59e674e913b1cea1cd0ffedea177e376	
+A	docs/app-store/mockups/mockup.css	DOCS_CI_REVIEW	UPSTREAM_ONLY	d7b6c86ad8f823a134c60ec94105bce3bb0e28bd	
+A	docs/app-store/mockups/render-banners.mjs	DOCS_CI_REVIEW	UPSTREAM_ONLY	22e0e56ffa956b355ec0965eaeb3839036f5a343	
+A	docs/app-store/mockups/render.mjs	DOCS_CI_REVIEW	UPSTREAM_ONLY	fb62cfe27079d6a96fb78eb2758612a866684f41	
+A	docs/app-store/screenshots.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	0e5149740b08f29d5213d671255dfad8015b8931	
+A	docs/app-store/screenshots/iphone-6.3/01-inbox.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	29737a51ba09acff23f2f5055d077d8d60262e20	
+A	docs/app-store/screenshots/iphone-6.3/02-task.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	caea963ad15e0b2e3a54d6029779ca3387a95cea	
+A	docs/app-store/screenshots/iphone-6.3/03-approval.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	b10aa7b833e486414b182fc0322db7e00cacbabf	
+A	docs/app-store/screenshots/iphone-6.3/04-working.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	a78c1ecc97f629d80f6c1e932b7f7460ff709ac1	
+A	docs/app-store/screenshots/iphone-6.3/05-new-task.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	c3ebded2a0344a77a39455f240c6c3e35340825c	
+A	docs/app-store/screenshots/iphone-6.3/06-settings.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	60736be639b25e1e4d3b48affa094d9511b014b9	
+A	docs/app-store/screenshots/iphone-6.9/01-inbox.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	0f365dd189009abc5782b1cbaedfb9ef6120e970	
+A	docs/app-store/screenshots/iphone-6.9/02-task.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	42d722cc79dc2bcfc2e5a97edf437fd4a9d3feb9	
+A	docs/app-store/screenshots/iphone-6.9/03-approval.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	308309b3e975232ff117df8aacaa27c1e5ddda15	
+A	docs/app-store/screenshots/iphone-6.9/04-working.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	4de57a6f86dcb4ba45fef484b1c98ed03f0d9697	
+A	docs/app-store/screenshots/iphone-6.9/05-new-task.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	3a136cb1f0a9e1d8d1405963687077df7717426a	
+A	docs/app-store/screenshots/iphone-6.9/06-settings.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	8e86ff6defb3f9feb0ec5905844c8b850fa9b8ba	
+A	docs/app-store/screenshots/iphone-duo-inner/01-side-by-side.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	217594c6b4c5f892c81eeb3aedefa045ed929b33	
+A	docs/app-store/screenshots/iphone-duo-inner/02-approval.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	25421026d4d4f2e6e190d22f1f621656340fe346	
+A	docs/app-store/screenshots/iphone-duo-inner/03-working.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	1d9cf6d844dc6e19958d6639613d363a39cd20b4	
+A	docs/app-store/screenshots/iphone-duo-inner/04-new-thread.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	34e8803a40909e813368c3e15c89a4db82125eac	
+A	docs/app-store/screenshots/iphone-duo-inner/05-settings.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	66c37d2e669f12dc59417d17e8f4185db1fc1850	
+A	docs/app-store/screenshots/iphone-duo-outer/01-inbox.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	929e14660c468056e08b913dda4b39a35f3499a2	
+A	docs/app-store/screenshots/iphone-duo-outer/02-task.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	8716e6023164343f44ec250e69bf0f61b4490d5c	
+A	docs/app-store/screenshots/iphone-duo-outer/03-approval.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	08d8aaceda13d91986ca3af812e2d336d37e1203	
+A	docs/app-store/screenshots/iphone-duo-outer/04-working.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	aff535c1a823490769bb1fa2647de1f77550870b	
+M	docs/approvals.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	16f21729d0456b780702cd1d0e010e9df67b3fd6	087b2c4781d2b07965e7cfd7cf159738146db169
+M	docs/architect-workers.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	506b33e2fa2643e4a9abf393e978fd268af80e8d	a8cf2fab63845081e70858eacd98862b52613ccc
+M	docs/bots.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	70752378f54b7f1c5cd5c8ac99ad9031f8981a57	801927a529a0d74cd1f007b4d54794d4e5d5ff4f
+M	docs/brand-assets.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	468f5fa689bb5dd623179d386f85eafa28402560	d88fd82be20ac99c9fcc28761a52e0a0f21060b3
+A	docs/capabilities.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	1fd99c851e444715c4abbd8f89aa09517e9cfcad	
+A	docs/chats.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	16057c1d06d8373aa9f8bead57f565f24aa870a2	
+A	docs/cloud-agents.md	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	ce3442176daf4bdbbfab84c3e849855de2f789bd	
+A	docs/connect-benchmark.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	ac9778b6e326b1af7e99beaf561ca4c5fef785b5	
+A	docs/design-canvas.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	15d7f3efe3cdebabc709504997c84a7e92a0d971	
+M	docs/design.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	7fbf459c74283768552d2fdce182b650ce4a4ba0	6aee4f407ac4e63eaa5edb34dda63e6d7784c702
+A	docs/file-icons.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	9d9104fa59c0c0f392f00fb9bf0f670ecb77019b	
+A	docs/homebrew.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	0f3cb5529baf123784d73969b214b1ceab04dea6	
+M	docs/jev.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	c7603ff229965687a93aad7ff61304a90fb47d60	02742808278a34d7a64c4db6718e93013531f26c
+A	docs/jj.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	16ed894eb9ca6ea80b2a965625024f61f3dba38c	
+M	docs/parity-plan.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	66d1d98319203d0f9ece33f68ba028d62990f9b0	76ed721691de724cc9c619d9c1273fa586c4bccc
+M	docs/platform-support.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	a722000b4c2dd694a262ca13afbb962af80113e7	c4ec0092a971c0ad72decc2a6c7d1f288bf12a24
+M	docs/providers.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	bc88b8b149aa5587eee996f0ed6d180cc4a4801c	b0114b6facdca3546e1ca76079fab58e11b4ff99
+A	docs/recipes.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	c83b89118b65d152af589dde989060cc4ad1010b	
+M	docs/releasing.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	4613595c0db65efa5b303a7c726281f39f406b68	76cdee4953c4f91ce205dde70246caab1ddf75bc
+A	docs/remote-access.md	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	92b2408a5ba0ec1672de7f51bbe6fc6cd24cae94	
+A	docs/rewind.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	da61386e0b75fbc0dd3672db14cbcedf8c8675ff	
+A	docs/screenshots/kilo-provider-settings.png	DOCS_CI_REVIEW	UPSTREAM_ONLY	d6978ba6af1c052661d4fe1e13555c48ef633510	
+M	docs/settings.md	DOCS_CI_REVIEW	DIVERGED_CONTENT	5f644ce76a21046a7f4b56ed5d04cc2ee61d5daa	079c67273310aaee0a4eedfeef25a733da5ffca7
+A	docs/skills-library.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	e3572d7443b4b44e03f199065b7a1eee60774fe1	
+A	docs/superpowers/specs/2026-10-22-inspector-activity-bar-search-design.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	bbd87944179f7ecb1c706787cce2a1d1fd5d83c1	
+A	mobile/.gitignore	EXCLUDE_MOBILE	UPSTREAM_ONLY	da9569c43f50145877a0ec3e3b6157ac76d60577	
+A	mobile/AGENTS.md	EXCLUDE_MOBILE	UPSTREAM_ONLY	be05e778dcf1b258fa9aed2e0e97e4a9ce66bdec	
+A	mobile/README.md	EXCLUDE_MOBILE	UPSTREAM_ONLY	e58595d3729a1f3c41e4738e5bc2f72b27a7d4c5	
+A	mobile/app.config.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	a39c1e80e4313346332099cf25c414b0f295045f	
+A	mobile/app.json	EXCLUDE_MOBILE	UPSTREAM_ONLY	3f434f0a153022a138130a2fac9436b4de2de7ae	
+A	mobile/assets/images/android-icon-foreground.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	6631bc23e7933c74e65f06544ed79b5fb07ba6ab	
+A	mobile/assets/images/favicon.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	335a11069601b67da544c4d2d8005e0130d3ad2b	
+A	mobile/assets/images/icon.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	1677fb347cb53b9489ceee5d979d58fceb236151	
+A	mobile/assets/images/splash-icon.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	7ee3dcaacb55a0610d2d27a50783d89f6346e630	
+A	mobile/assets/providers/README.md	EXCLUDE_MOBILE	UPSTREAM_ONLY	a70ed379d35cae8192cfcf820c9f6da9765db7b4	
+A	mobile/assets/providers/antigravity.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	c677e4f5f75ba256f0b1fc2e6e1f48d1ac23c0eb	
+A	mobile/assets/providers/claude.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	8238e7d489f8db128e5f83075f0fbe1c2020f60b	
+A	mobile/assets/providers/cline.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	6aa16dcae363f220fa3a3af7f69394225edf158b	
+A	mobile/assets/providers/commandcode.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	ed7c8c99b9b72c21aced2b4a1435d32552b228dc	
+A	mobile/assets/providers/deepseek.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	518346da6a9fd8d546fecd246954ede220230f9f	
+A	mobile/assets/providers/devin.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	b8a246385f01aebb87eac9a1429c4d02dd2fc55c	
+A	mobile/assets/providers/github-copilot.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	6013c74c1180c7d19d7d725e77be1b2ed98ef931	
+A	mobile/assets/providers/glm.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	4f511bd72fd817a95ff18668a06df3b13f7b84c3	
+A	mobile/assets/providers/grok.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	0be4ecce1835752f1f2cfaf24a422366db1f4cec	
+A	mobile/assets/providers/kimi.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	033c0f4fb2e28a9daeca0205812d15bf3e547893	
+A	mobile/assets/providers/mimo.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	f209e12b7f0a872fc722e5007ba7b7b69a190d09	
+A	mobile/assets/providers/muse.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	a606a5f2efa53e506e5d051c07f0c2c0c5e40e32	
+A	mobile/assets/providers/openai.svg	EXCLUDE_MOBILE	UPSTREAM_ONLY	832fa6a5f9bec29f95a7ba6961b9cc8640e4715f	
+A	mobile/assets/providers/opencode.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	15266d28f159a74d5c54634d1b3ef548e97f6c8c	
+A	mobile/assets/providers/pi.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	b80ff39fe5b1280ef5c1b78e4d4856694fdfa8ff	
+A	mobile/assets/wallpapers/README.md	EXCLUDE_MOBILE	UPSTREAM_ONLY	9e2cfe9e125fdd3741d8206e9e6132ae95bffe97	
+A	mobile/assets/wallpapers/fri-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	f3e8886bddc664fea9a1aaa6ced0dfeb7b594018	
+A	mobile/assets/wallpapers/fri-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	c23558659050747ae012b5a24d0ea896c364d9e3	
+A	mobile/assets/wallpapers/fri-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	9e0762ddc2357637df08679047983f87064d548f	
+A	mobile/assets/wallpapers/mon-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	25333c6b53519764fc799b988393a0dfe4745c7e	
+A	mobile/assets/wallpapers/mon-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	d71b8f120e83cddc2e2df7070ebe6291716529db	
+A	mobile/assets/wallpapers/mon-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	aa01e09e95440a663d8e7132ec94555305f2fba4	
+A	mobile/assets/wallpapers/sat-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	5298cbf37b00248130bc31ad172498d71ba4904b	
+A	mobile/assets/wallpapers/sat-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	51ef28f034fe2f0c85c782b474c6da9247f3b715	
+A	mobile/assets/wallpapers/sat-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	e357a3defa3763dd70ae90cf62f8bc4023f88c68	
+A	mobile/assets/wallpapers/sun-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	6e0db73902ea75ff5826fcb5d1ff6e271f94f6d8	
+A	mobile/assets/wallpapers/sun-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	fdf1ccb5b9b3509f54060d38edeaab8b6e919d2d	
+A	mobile/assets/wallpapers/sun-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	a8828af0fae1a131902612026234de2c907f2442	
+A	mobile/assets/wallpapers/thu-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	0d5729550cc6092c1bd44440b992c4d70437fe81	
+A	mobile/assets/wallpapers/thu-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	3b9e6315aacb644d22eae7e7b7bb10483bb7a072	
+A	mobile/assets/wallpapers/thu-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	215d4f69fcfcdadc617bb5b9bf582360b4f683c3	
+A	mobile/assets/wallpapers/thumbnails/fri-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	9924b8bdc24c8869a0384ff449dd5aa462340fad	
+A	mobile/assets/wallpapers/thumbnails/fri-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	9d7b97af612303adbd3557835b210e746a30221d	
+A	mobile/assets/wallpapers/thumbnails/fri-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	feb9a59cc13ae9633c4afc0393f39d69d53047a8	
+A	mobile/assets/wallpapers/thumbnails/mon-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	885a0d3864c6ed234cae912ae1f0b45b0a88dc1f	
+A	mobile/assets/wallpapers/thumbnails/mon-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	f2482b66d681d865ea2aec61551e588bd0c0840c	
+A	mobile/assets/wallpapers/thumbnails/mon-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	072e2c9331045ea00c3be049e91a3eca09025ce3	
+A	mobile/assets/wallpapers/thumbnails/sat-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	8509c3819a05a79e57826d001a98745d84e0411a	
+A	mobile/assets/wallpapers/thumbnails/sat-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	8f91e1d481ecac27cba68f93e27e25bb1fdef5e8	
+A	mobile/assets/wallpapers/thumbnails/sat-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	12c0361a63a5a375e90e7c1bc88c668900c3f207	
+A	mobile/assets/wallpapers/thumbnails/sun-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	b87e404cd31e7f2bad0f36cf2c2b2c7350e5f80d	
+A	mobile/assets/wallpapers/thumbnails/sun-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	d90887902511693732f7807bdfedd4656b860e97	
+A	mobile/assets/wallpapers/thumbnails/sun-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	4d09d633af0060a8e442fcdce2436d9971fc375b	
+A	mobile/assets/wallpapers/thumbnails/thu-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	4d1d457adb1db57bf83ca2989e5d29dec9df0352	
+A	mobile/assets/wallpapers/thumbnails/thu-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	f71ff9e32c602832a1c03a9320e56771cf82ce50	
+A	mobile/assets/wallpapers/thumbnails/thu-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	82e8e6b27c1e36ce1535bc602ebefc8c6c4ef1b9	
+A	mobile/assets/wallpapers/thumbnails/tue-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	6ea025fda11223dfb69faf9796763428b65ea623	
+A	mobile/assets/wallpapers/thumbnails/tue-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	ad03ce31aed40e12dae1599bc7c8a6e5f9cbb043	
+A	mobile/assets/wallpapers/thumbnails/tue-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	e5c63c38364560f01967683d99fbd82290bf5707	
+A	mobile/assets/wallpapers/thumbnails/wed-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	fdd0ebd42966b88d3e7b6920f2cd8794876e35cc	
+A	mobile/assets/wallpapers/thumbnails/wed-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	b82d1c444fb4522fdb69ba48036d7b3735d3b00d	
+A	mobile/assets/wallpapers/thumbnails/wed-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	c747ee5274c870f7a3dd48115d216898e4982d76	
+A	mobile/assets/wallpapers/tue-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	51570e25be7002ee3e4c677e2b2e5cd62b2f18a9	
+A	mobile/assets/wallpapers/tue-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	0b01d72541c722048a2765240ca103fa5e40ea28	
+A	mobile/assets/wallpapers/tue-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	db528892b285aa3937f5dc3e518bd33c9a0cecd2	
+A	mobile/assets/wallpapers/wed-afternoon.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	beb6f8daf52ac3b3fe62052a3eeffb948e57a2db	
+A	mobile/assets/wallpapers/wed-morning.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	6113ba06868b8367af2b3f6223d4800e8d62cf9b	
+A	mobile/assets/wallpapers/wed-night.webp	EXCLUDE_MOBILE	UPSTREAM_ONLY	08bae35c7cb02daebb864b8ece156423f83c9fde	
+A	mobile/eas.json	EXCLUDE_MOBILE	UPSTREAM_ONLY	6ed54ba956334a0ba893fce6aad3e6b11bc05ca8	
+A	mobile/eslint.config.js	EXCLUDE_MOBILE	UPSTREAM_ONLY	5025da683d6b6ecdced898af11f2e5dc5a73a4c1	
+A	mobile/package-lock.json	EXCLUDE_MOBILE	UPSTREAM_ONLY	e440d17dad5361e4d18e2f9a9546fbd4416f3162	
+A	mobile/package.json	EXCLUDE_MOBILE	UPSTREAM_ONLY	e62d9a06dd1d4b8270c426ee05ee87f2e92111e5	
+A	mobile/src/app/(tabs)/_layout.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3d48786ed1cf24d050d1f6797e6603f6f720b982	
+A	mobile/src/app/(tabs)/computers/_layout.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d564fe2ce2a6cd894b53112fd6c1a82ba29b9ca6	
+A	mobile/src/app/(tabs)/computers/index.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	86b42f985c0e8cd4bcef8efb0f304ba74244b5c4	
+A	mobile/src/app/(tabs)/inbox/_layout.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	fa0029e477c639e8bae5f7a72b478d5d49999819	
+A	mobile/src/app/(tabs)/inbox/index.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3233c1f722aa9ed7ec3ae8c2ec7ee85289790b76	
+A	mobile/src/app/(tabs)/settings/_layout.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	2d4169673b0c847607a4bd84b6762b126e2abfe9	
+A	mobile/src/app/(tabs)/settings/index.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	0facfe5643cf2c0237037eb18d4976236c46caf5	
+A	mobile/src/app/_layout.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	f84dcdb470334cc5ea6b453162366c12f3fff9dd	
+A	mobile/src/app/agent.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	1fbbd2400711f13bd22d9c4993181cad8a88dea1	
+A	mobile/src/app/agents.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	761c24b1d94aafb71d4522314a663304928b6a4c	
+A	mobile/src/app/changes.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	8114689b6d378f9b684d67d598079db69292d091	
+A	mobile/src/app/diff.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	de230b026c902f982c19c7a418fda4e0193ee15a	
+A	mobile/src/app/index.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	9f2c739c1ef10fd92b9d5a0f685652b3937d77aa	
+A	mobile/src/app/new-task.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	b11c685d4137a2b004e7057daf0dc2e5aa4ef954	
+A	mobile/src/app/pull.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	e923c59e8ca613bcf9abcc47c8a72a5d95208f94	
+A	mobile/src/app/sign-in.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	09c41af8ad342bf8fc932ab52d6264b13bbdbcaf	
+A	mobile/src/app/task-info.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3322b085da804b2182e9666bcf9f1d46a5e218ff	
+A	mobile/src/app/task-settings.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d5933a29c6e427983d01aeebdd70d9763a8b2a29	
+A	mobile/src/app/task/[device]/[session].tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	e2a3a74ac164f705875d09a08ac459a76f3cf3f7	
+A	mobile/src/connect/README.md	EXCLUDE_MOBILE	UPSTREAM_ONLY	9d57382b137ce50516514aa2599d233d9c33f095	
+A	mobile/src/connect/attachments.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b558a40921615564d24ef52c3f366aa8cd6c08b9	
+A	mobile/src/connect/auth.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	bad9a67f368db44a28b57cab824fa5ec80959e4d	
+A	mobile/src/connect/client.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	9d85d30ce5b12538cbd3c9a9a3073f4a2cbe7c06	
+A	mobile/src/connect/config.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b8d7680b334a7b23c3aa51fe0a2c5e977dc18ecd	
+A	mobile/src/connect/crypto.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	e8e1d84b48508a38dc851efd32ebd44797e97a24	
+A	mobile/src/connect/delete-account.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	89913b0b0f1a568cbf64c60b13f05dda5263d421	
+A	mobile/src/connect/inbox-file.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	2a2dcc5b4b48a57c7a2285dd0026406e019f3386	
+A	mobile/src/connect/optimistic.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	558cc26881222bc100abb6e6eb583e2d658070bf	
+A	mobile/src/connect/paging.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	90b2cbd31750a03c27540f11f95af08ee824d21e	
+A	mobile/src/connect/perf.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	267ac8ecf47b12aaa31cef71ea60655dffaf3104	
+A	mobile/src/connect/polyfill.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4edc1cb954bdf3d45e74815e02b4649713428c55	
+A	mobile/src/connect/rpc.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	f338a3d91ab5bde27a3d3abbc260dec63d84363f	
+A	mobile/src/connect/secrets.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	1aa9409957397d3ca5c8b12a8d382e467edc7155	
+A	mobile/src/connect/socket.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	5c1084c1ed5d322b37de774e85bb36c60ab6f149	
+A	mobile/src/connect/types.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	bfcbfc1a406579750969ecb7ca3cc03fab6152c6	
+A	mobile/src/demo-data.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	277d11c389a5ab6fafb0bc621014ca602713baf8	
+A	mobile/src/demo-host.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	1ec526214b05d5628b52e95327a8b6c9633d0534	
+A	mobile/src/demo-images.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	919d647659113e1070d5c0f5c614e6ead6e9e2e0	
+A	mobile/src/demo-pull.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	97fdf51c42ea8af8b333a55a24fe443c853156b3	
+A	mobile/src/demo-team.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	69933c6170d44a15d93dc7f5086f4d169ecf9919	
+A	mobile/src/demo.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	8db511a46c7afb551e8a7fda192405807c7f7783	
+A	mobile/src/live/LiveActivityHost.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	de0b3417438a9a7df32761f153d564bb4fef9211	
+A	mobile/src/live/PandaActivity.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3536bd56195395a5748f376b285ccd9d139d4883	
+A	mobile/src/live/mark.png	EXCLUDE_MOBILE	UPSTREAM_ONLY	af97523a301c31599956649048dad0bd510c4758	
+A	mobile/src/live/summary.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	f5e3f3ae2a2f47f1e966ae5af526be1e6dde1127	
+A	mobile/src/live/summary.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4e17a2141bc4b9d099007e045eb754d39b9406a1	
+A	mobile/src/routes.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b83939e0eb6c78cad72f1e56572af66cea4971b4	
+A	mobile/src/store/attachment-files.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	c0ca651415462ec04535a05af02a023d42e2695f	
+A	mobile/src/store/attachments.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	e436371e9b4057dc64c20a50d9bc9a85e6013722	
+A	mobile/src/store/diff.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	32b83039f823253a4e69217de4254171e67d491b	
+A	mobile/src/store/draft.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b8cd2d61d3d595210049e436a0221c0b768ad007	
+A	mobile/src/store/generative.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	65f58fe463c45c7fcbc351c2f8a425421295266a	
+A	mobile/src/store/icon-cache.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	8dc1a1765181e745ca0380f49d16b69711e00b81	
+A	mobile/src/store/icons.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3e04504b076981c3349e1dc6e89fbb688a7e02ad	
+A	mobile/src/store/inbox-cache.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	0d68ae825c8c3f88386adb9734143a41a297b446	
+A	mobile/src/store/inbox.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b599f75402dcda43899e3073107b7fded394627b	
+A	mobile/src/store/index.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	02e76aa6e8cc8509fcc641c497a57f513db3d1fd	
+A	mobile/src/store/local.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	8fb02f18c839dea81e34dcca71651fda7b14df8f	
+A	mobile/src/store/outbox.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	75bc69242da2ac604248ba7efc34c9843e122cd0	
+A	mobile/src/store/pandacode-tools.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4c8e17975e33a80812b26c23a6b035c48292804c	
+A	mobile/src/store/prefetch.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	a80869d0cc9f1fa84d118454d96eaf69c5a1b933	
+A	mobile/src/store/reduce.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	582846c8e73012cd10f2b13d4cd584060315b0ce	
+A	mobile/src/store/replay.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7da8e883a4cfe46c4495a0ea376ce496c6bb62d9	
+A	mobile/src/store/sent.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4e638cc1db02498bcfc453cdeab9ebfeaa43b843	
+A	mobile/src/store/team.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	917bb6537525dd1e136e17f2de123184b0aa5d66	
+A	mobile/src/store/thread-cache.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7cbf67cb068aa73c9eea19ec1f066a1eb3b34d99	
+A	mobile/src/store/threads.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	d8c386db0f4af5516021dcf93d8ca7d32a27bde9	
+A	mobile/src/store/trace.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3a36052570cd60b8ac405508059bd803686b73f8	
+A	mobile/src/store/turns.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3bd62d562c9d906a64258383f7a45772261428cc	
+A	mobile/src/ui/Attachments.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3ce1bbf7065f80b26e53094fed092c00cdae4f8d	
+A	mobile/src/ui/Backdrop.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	1123c6f07d37bc0f5c06682509e41728a47fa621	
+A	mobile/src/ui/BotRow.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	17236b2effa480bf3a46c475e3e52576ab7aac79	
+A	mobile/src/ui/Choice.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d702233b6a7d595613667f639a33bdb5e71b5ff3	
+A	mobile/src/ui/Composer.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	da81eb80ed43a9f4e55ac4131e3d2c535daed146	
+A	mobile/src/ui/DiffView.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3d9a1fb920acb68a5308b7512ee425843b22a657	
+A	mobile/src/ui/FileRow.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	2bea44c80fe1dc90b9903471824867196b7dc41f	
+A	mobile/src/ui/Glass.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	97651bb992a94191fc63f13209ed563762e29f51	
+A	mobile/src/ui/Icon.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	c271b0cd31be50f96fa9b8154a00746c63f8dcf2	
+A	mobile/src/ui/ImageViewer.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	b95a928f09b21b4de6a618f38a3223876650eba2	
+A	mobile/src/ui/InboxRow.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d323cf21d19454d95ffd9a4b53a7edc17e58697a	
+A	mobile/src/ui/Markdown.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	b70aa3019933dc51a6fea30f1665816189258d5b	
+A	mobile/src/ui/Menu.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	3912515bea81d24c92ba4e6fd8ae9ee596f7a4df	
+A	mobile/src/ui/NativeGlass.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	80e564447752c3aad3d0dcab08d3e668829a83d5	
+A	mobile/src/ui/NewThread.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	17d1d1918e6728f9adf47a4d738c04260be2621b	
+A	mobile/src/ui/ProjectTile.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	a9a1cf80b39ac3a75d461113c9b9040ba93aeebf	
+A	mobile/src/ui/Sidebar.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	a1960cf53afe5f46fce548fe0d8571febfc3e31e	
+A	mobile/src/ui/TaskHeader.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d0359b1a8b12085288775fcc5dbbab6f13884e02	
+A	mobile/src/ui/ToolCards.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	88ba0f1e41a8b27a3d5bac1b148a6da4763325c3	
+A	mobile/src/ui/Trace.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	d7c87e00adcc5fceeba872835a3ca595ce6fd336	
+A	mobile/src/ui/WallpaperSettings.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	4163f29cadebb2c4721cc6eecefdaa79f7e0e2b5	
+A	mobile/src/ui/appearance.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	cb6605146829096d1d43d95af755cff0625ff024	
+A	mobile/src/ui/form-schema.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	ea2933ac5179e63018dc03d206191c773d10cdc2	
+A	mobile/src/ui/generative/Block.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	8002eb475f6e7ebfb0279074c73ced967f946c00	
+A	mobile/src/ui/generative/Chart.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	2a960ceff4a9dcd225fd59a38c8f30c499a6014d	
+A	mobile/src/ui/generative/Code.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	cbffe60c72ba0aaf74348a9e3ba00d95f1781cab	
+A	mobile/src/ui/generative/Form.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	cd5a7316fa2021cd71cdf812497de40e01b45f7d	
+A	mobile/src/ui/generative/MarkdownText.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	dc6e312f75073f3a83cc90c3c67e5cf1ef303485	
+A	mobile/src/ui/generative/common.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	8610550417621c415734d2b17e5e566557c03d18	
+A	mobile/src/ui/harness.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	104a37d39f8042002f97b012c18acb6543038b2a	
+A	mobile/src/ui/models.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7819321b7e92e189071675d1ba30bec3cca46252	
+A	mobile/src/ui/requests.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	b85bd005d6373afb54d513e679bf588a2839ad49	
+A	mobile/src/ui/split.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	066c31fa88a0e96d0ea3cae85ae341ed8977adcb	
+A	mobile/src/ui/status.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	170579c1385bb981e353887d42fa8ddfb219509f	
+A	mobile/src/ui/theme.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	32b40f90bef1c270843500f0ba8f940d76950005	
+A	mobile/src/ui/transcript.tsx	EXCLUDE_MOBILE	UPSTREAM_ONLY	61f953c55879292b4d622e1cc738baea02cd39aa	
+A	mobile/src/ui/useAttachment.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	e0e12fba7238f69c3f6230a25323672bdcfe41dd	
+A	mobile/src/ui/useInbox.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3d6ecbb0b532d60064e26aefa965a1924b3a16a3	
+A	mobile/src/ui/useNewTask.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	5744d2b462c3463175f8bf65e10957759b764942	
+A	mobile/src/ui/useTeam.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	d45d87a865f40c7f93493275cca2310251583a63	
+A	mobile/src/ui/wallpaper.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7feebe489517d1d21117a8baad552e40b178d279	
+A	mobile/tests/attachments.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	656495941a3dfea4067d7f81e98ef8bfef6f110d	
+A	mobile/tests/crypto.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	8f6b49a9be02d6d2d541886e99b3968e055f39e8	
+A	mobile/tests/delete-account.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3010e6b953781fa2f0f05682818369f3a13030c6	
+A	mobile/tests/demo-host.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7d1ce3a8ab920b0ae9c5cefa84e6afade9bc09a7	
+A	mobile/tests/diff.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	d706671fefe5a81f9465d4a766ae2621a1536c89	
+A	mobile/tests/form-schema.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	0791fb7e41cbe74eb7c12b71520337db9da1c3a0	
+A	mobile/tests/generative.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	f238740d964a71a872ed698a2ec2afc70c1767f4	
+A	mobile/tests/icon-cache.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	9f3f40cdd61ecf70d9dc0669c44a057d5b014d95	
+A	mobile/tests/inbox-cache.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	0b2278a1e6095e757a3ddb9359e51228205e4ebc	
+A	mobile/tests/inbox.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	3311dc46875bea51c4485e7c44edacc7f21b1a5b	
+A	mobile/tests/optimistic.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	19a03db87a2950bc7d82513f3ba775f389504649	
+A	mobile/tests/outbox.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	cc5ce4554f07a19786fc530bb9b8226262469b8b	
+A	mobile/tests/paging.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	80d2bff61d6a1bd420f5783225552eb7ac5a2748	
+A	mobile/tests/pandacode-tools.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	12b1d2c02bf5aa6067227130ff81a0f0423433ca	
+A	mobile/tests/prefetch.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4380e0e267ebcfe82dc753b14f76991e9a291e38	
+A	mobile/tests/reduce.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	b7f1264b736bff76fb02d1a405325760300eb3ff	
+A	mobile/tests/replay.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	d779a6f8fd8765d75855acc84c08d6ed5a28d294	
+A	mobile/tests/routes.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	5bb6efe115b626da2d70430519700dd3d7f9c9af	
+A	mobile/tests/rpc.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	37e20a92ae77bc7360ffdaba3e1f434035efae48	
+A	mobile/tests/sent.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	7033af53008e28ee5702be6e512bb9555a485a2a	
+A	mobile/tests/team-run.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	fedd53001ef3f6a05c726f09293e4210b8a2c25b	
+A	mobile/tests/team.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	4cc6368a39cf8ecc6c381ec2909d33ff642f9657	
+A	mobile/tests/thread-cache.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	08d6267c1e7bf2db9b12b0258dddead9a80892bd	
+A	mobile/tests/trace.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	e120fb285b7920642d5c9babce95459551ccc636	
+A	mobile/tests/turns.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	24a7e5650b3310dd0f5c774b260fd6ecc4b597e6	
+A	mobile/tests/wallpaper.test.ts	EXCLUDE_MOBILE	UPSTREAM_ONLY	362ba52e5745206a40ebb99a85637b515b30f6b6	
+A	mobile/tsconfig.json	EXCLUDE_MOBILE	UPSTREAM_ONLY	ad0c5f196cc9e1b64887160ec58baae089b9a68f	
+M	package-lock.json	OTHER_REVIEW	DIVERGED_CONTENT	3ed9c7518ade3b3b604e14b9eac357c74503192b	186fba1f76fe2595cd5cc8f67a00142256b627ef
+M	package.json	OTHER_REVIEW	DIVERGED_CONTENT	07e4d3170e8f86053ad7c5b2225368f39cfbc605	a21bb11dca90d08e8c0dc1d0dd4d30d5efdbaf09
+A	packages/npx/LICENSE	OTHER_REVIEW	UPSTREAM_ONLY	62dfa660c70c145b559a7d9ab6b8cb71fbe67ea5	
+A	packages/npx/bin/pandacode.mjs	OTHER_REVIEW	UPSTREAM_ONLY	340c7c3d2c4787ee2709e2db9aad93871255421b	
+A	packages/npx/icon.png	OTHER_REVIEW	UPSTREAM_ONLY	85fe0d78c08ea45afd223582b24f9f075d991130	
+A	packages/npx/installer.mjs	OTHER_REVIEW	UPSTREAM_ONLY	def789fd2b8b9e3f64408c9a72d752350d10391b	
+A	packages/npx/installer.test.mjs	OTHER_REVIEW	UPSTREAM_ONLY	d0793d2723892b5df7b7f94908b543769f85ac03	
+A	packages/npx/package.json	OTHER_REVIEW	UPSTREAM_ONLY	d47a6af514847be4bca9f620d79bed2b162f92ce	
+M	playwright.config.ts	OTHER_REVIEW	DIVERGED_CONTENT	f29776c64a152d611cb0eb5c69139f026dfca264	9d93ca39b507cf96429ac80ffc6817f0c936c709
+M	playwright.webkit.config.ts	OTHER_REVIEW	DIVERGED_CONTENT	f4109f008bb238a92ea42f11ec122bf8fd962204	4d4f348aa0b0598993a7c149ebf747859398aeaf
+A	relay/.gitignore	OTHER_REVIEW	UPSTREAM_ONLY	073e02da0a11565b06f259988e2cd48894f5b183	
+A	relay/README.md	OTHER_REVIEW	UPSTREAM_ONLY	9fe196057547cc20e5525cbfcadb3154e04079ee	
+A	relay/package-lock.json	OTHER_REVIEW	UPSTREAM_ONLY	5c7f89939f6dc0d5adfe9039970db64bf4785fea	
+A	relay/package.json	OTHER_REVIEW	UPSTREAM_ONLY	b8ce2a2c181b8b51e6f60e069b4689aae585824f	
+A	relay/src/account-delete.ts	OTHER_REVIEW	UPSTREAM_ONLY	998bb0416525227484166f31592af7cca69060ee	
+A	relay/src/account.ts	OTHER_REVIEW	UPSTREAM_ONLY	0c12aa8c882c3c97ebba82c716459f4028d7bab4	
+A	relay/src/body.ts	OTHER_REVIEW	UPSTREAM_ONLY	5cc6f7d2a94816c77a1afc482a1740766e53739e	
+A	relay/src/bucket.ts	OTHER_REVIEW	UPSTREAM_ONLY	e6f6b7914db5aa3847609053d21467df7249383f	
+A	relay/src/config.ts	OTHER_REVIEW	UPSTREAM_ONLY	de144a1998fa229bd8b85da95d420cd08a481134	
+A	relay/src/env.ts	OTHER_REVIEW	UPSTREAM_ONLY	f9f2fe0ba7ec1b70e786515fe5c67203dbd467cb	
+A	relay/src/frames.ts	OTHER_REVIEW	UPSTREAM_ONLY	2f3577c1a2154f2404adc618a4777f660de140fd	
+A	relay/src/github.ts	OTHER_REVIEW	UPSTREAM_ONLY	48a5ce3da97b28cb8707df31d6af39516f68dc0d	
+A	relay/src/index.ts	OTHER_REVIEW	UPSTREAM_ONLY	d8751b0e56dff2b3052e3e4fba2ad19bc0702084	
+A	relay/src/limits.ts	OTHER_REVIEW	UPSTREAM_ONLY	d072f5631e88c716d9040681e623f7d2c2d3c7f5	
+A	relay/src/policy.ts	OTHER_REVIEW	UPSTREAM_ONLY	ab06298811d4ef537dacd18e0fea6a7fc63aa2dd	
+A	relay/src/routes.ts	OTHER_REVIEW	UPSTREAM_ONLY	270a8db89400affa829e02c2d16bfd9d28adf0bd	
+A	relay/src/token.ts	OTHER_REVIEW	UPSTREAM_ONLY	c0a0cab2fccaf590865110b6871d1acb5a8631c8	
+A	relay/src/validate.ts	OTHER_REVIEW	UPSTREAM_ONLY	2cc2f70d8a9f2abc02fe56bac262592e424253c4	
+A	relay/test/account-delete.test.ts	OTHER_REVIEW	UPSTREAM_ONLY	1b43feba0770d75d3946782f0366baa53ad82702	
+A	relay/test/logic.test.ts	OTHER_REVIEW	UPSTREAM_ONLY	b15d6514ec964eb12c183b773d735522c20e285b	
+A	relay/tsconfig.json	OTHER_REVIEW	UPSTREAM_ONLY	8c7d6eed31b0a39de34b675f7625baf30ae1a5de	
+A	relay/tsconfig.test.json	OTHER_REVIEW	UPSTREAM_ONLY	303eb409bb6e3483ad9c63fc04c47d8f554f47f2	
+A	relay/wrangler.jsonc	OTHER_REVIEW	UPSTREAM_ONLY	b8c4d5133d28cb0ef14cde98acb260cea1890fab	
+A	releases/0.3.17.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	26fab862fb99764d81a308c754fe66650a0e9bf0	
+A	releases/0.3.18.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	d59dd8c6cb90b8cb37af3f96e66b1ac05b4124f1	
+A	releases/0.3.19.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	769c4aaac2d4746479a344a76cb52c24a00db971	
+A	releases/0.3.20.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	3eb94d08313cc36f98d94cc78263c2cda308917b	
+A	releases/0.3.21.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	740359556e1f7197de22801f89f73d81ed82e798	
+A	releases/0.3.22.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	ac923931ae916bb5d7bda68f87cf951f5bd9cbaa	
+A	releases/0.3.23.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	9480b476e02e1d59ca433293536032d598bc871a	
+A	releases/0.3.24.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	db09bb1b5a06e516d35ee45e89e6098212bdbc83	
+A	releases/0.3.25.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	c5386f5dda02bd3d9ca421dacc1fc25356fd5f2c	
+A	releases/0.3.26.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	96dcc675279d0ee880df38044a5849538e718732	
+A	releases/0.3.27.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	83574d2c63b33bd55a814566bfce662be2ae0dcb	
+A	releases/0.3.28.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	d24b6be8d8363d942478f8ae2b3f8189413a5ce4	
+A	releases/0.3.29.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	3da38212db81189461763935f5c18bf0418720f1	
+A	releases/0.3.30.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	3bb66765be9fb46f6d31d0f32b7fab33c99195ca	
+A	releases/0.3.31.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	4d8821af4043e5472fde19606b26e5ef90d696c2	
+A	releases/0.3.32.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	5afc0680e4863cd8aab8808d1cd716aeb33419ca	
+A	releases/0.3.33.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	0a4acad201a1b245311d1ace2fb9221fb2292739	
+A	releases/0.3.34.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	d967a5253135d9d72d6722ff3149a9c455b71573	
+A	releases/0.3.35.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	87813bda90db69c6458cba148c685e1e60a7cc14	
+A	releases/0.3.36.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	6ebe70034d1ffc49b785a58f5233429fb0541f4a	
+A	releases/0.3.37.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	6ebe70034d1ffc49b785a58f5233429fb0541f4a	
+A	releases/0.3.38.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	114d8c374baae78e1601a8eae01ce270f93d92c6	
+A	releases/0.3.39.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	dd04b46cbbbe790663c915d025b3a456738f1937	
+A	releases/0.3.40.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	194270f8dd93f5a7c5817fa79ee658b894744518	
+A	releases/0.3.41.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	e53637ce29e66cb1bef9da15c4abf07f669f2f8c	
+A	releases/0.3.42.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	4f4c19d83336583d3003e5a541a3b46f9672cdb1	
+A	releases/0.3.43.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	a8bb8cc51d0f72d8944cf4577b0ecc80daae9e60	
+A	releases/0.3.44.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	d09ff587169c2b41c8ca8076a666f386d232e8f8	
+A	releases/0.3.45.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	822cdc2560b784cf2c610ab58b56ae7ce60efb97	
+A	releases/0.3.46.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	89f867dcdc052e08a45d9b3ec5a12d57111fd1f3	
+A	releases/0.3.47.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	11c9ea7a0adfa01801640d89d1613f88fc8c0fe3	
+A	releases/0.3.48.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	639bd02d0f5513aad54bd253c6f496676b824962	
+A	releases/0.3.49.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	abe3a8415558e2f176c0213b84d0040b23983f6c	
+A	releases/0.3.50.md	DOCS_CI_REVIEW	UPSTREAM_ONLY	74919eec0d2bd79d21f81a9cc89563fa64d58e8c	
+M	scripts/release/appimage.mjs	CORE_REVIEW	DIVERGED_CONTENT	d433ce19aea05f036480704f84e2057a2ff68007	dcc5acc5f50b8e989cf1cea60732428cfb0f0fea
+M	scripts/release/appimage.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	f2f51970c19292dafd8b895afd268e33f1715197	c96a78a7be6aa9169f57630bdf25ab813c8e0eae
+M	scripts/release/build.mjs	CORE_REVIEW	DIVERGED_CONTENT	2f7bc10d80baeccd14a6673324f4fef08547d4a4	771b4b88de486f150fe821c8ee034e1ba405f7bb
+M	scripts/release/ci-startup-smoke.mjs	CORE_REVIEW	DIVERGED_CONTENT	5bacf641f3363a355af1d4046a9041c51ad2904e	00a97208dfa82c91f574af7292b1f0cf85480978
+M	scripts/release/ci-startup-smoke.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	f79cf2f44a6b96b7ead2bc24a227d5cfebd242de	792c0e648e45db9cab8c90bdbad54f37891e7dce
+M	scripts/release/common.mjs	CORE_REVIEW	DIVERGED_CONTENT	1371f5de9b9d4d81401bf405c0fda37958bae55b	bd0fe7a62f2e09ef9e48a19e7b90f5c3358f678d
+M	scripts/release/common.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	f3b5824cbf7ee0a70a9e1de6704c2963e8d22b72	683cf629794f4eb68773bc6697130615fbf072d2
+M	scripts/release/desktop-build.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	3ce8714a2d6fc78600264dc93e1c668bb1e641b1	6a8ae7d982a74c7c9a34180ab32de3aa795f262a
+A	scripts/release/install-notes.mjs	CORE_REVIEW	UPSTREAM_ONLY	ef3fffa4b75e07debfb7549644b91e82e7d15704	
+A	scripts/release/install-notes.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	3eebebd751d52fecb36405d074eac1b0d1733314	
+A	scripts/release/sbom.mjs	CORE_REVIEW	UPSTREAM_ONLY	88ead16de7f678dfdd68f510d6bc84f7391acaae	
+A	scripts/release/sbom.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	08d64c8bbfa74a3c3e8bec0e504757ebcabe6081	
+M	scripts/screenshots/showcase.js	CORE_REVIEW	DIVERGED_CONTENT	a5ee6046760557bf4a705d3d9b2051a8bf94605e	4e4bdb2a46bacb574ff6a1cfccbaf499103b0661
+M	src-tauri/Cargo.lock	CORE_REVIEW	DIVERGED_CONTENT	b0517a484ae59caa2d21a4294be95729d1225a16	5fa7b282cdaead2628ff42817d598ebf9c172e4b
+M	src-tauri/Cargo.toml	CORE_REVIEW	DIVERGED_CONTENT	3dfd7a025c96d357934bb7343171fb1b108f683a	c747af95e88e61249ea54bc141b347aa2551a4c0
+M	src-tauri/build.rs	CORE_REVIEW	DIVERGED_CONTENT	fb8f86f118216fae154692bcb51fbde45dcbd371	d860e1e6a7cac333c3cc0bc9cb67faf286b07d69
+M	src-tauri/capabilities/default.json	CORE_REVIEW	DIVERGED_CONTENT	65632093e8007a65347af825eef81285c33a2d68	fe199f075b7d7e78a797ff19968f54eb6ce23da5
+A	src-tauri/capabilities/tray.json	CORE_REVIEW	UPSTREAM_ONLY	a6711030007c23d3ae82e20493d9bb693a7dda97	
+A	src-tauri/icons/tray-template.png	CORE_REVIEW	UPSTREAM_ONLY	d1e419524dc6a9e87dc4868c9a32bbba69f047fd	
+A	src-tauri/icons/tray-template@2x.png	CORE_REVIEW	UPSTREAM_ONLY	7e86552eeabe910a3536011f7c351f799d091b3d	
+M	src-tauri/src/agent_tools.rs	CORE_REVIEW	DIVERGED_CONTENT	773461f126d815430c4917d0069390aaf81ade7f	3e34009b8c113f0297b717f843d3c8245984bbbc
+M	src-tauri/src/agent_updates.rs	CORE_REVIEW	DIVERGED_CONTENT	66cefc85b0b688d2c404e5f312c4d2781ad13531	421d3a2ca5e567fea9d2e402c4d2a2a4ddc0ddf2
+M	src-tauri/src/agent_updates_install.rs	CORE_REVIEW	DIVERGED_CONTENT	67e2048029668f34ce72170490f9b699fc089e83	85450d4a036e5af11188b989f8e929e75cd71546
+M	src-tauri/src/agent_usage.rs	CORE_REVIEW	DIVERGED_CONTENT	9c736b25f29fc202d892ee04bed5b1792bfd8c9a	771f8c30cee4095d289fbc7cbfe0f0a4bb196df3
+A	src-tauri/src/app_updates.rs	CORE_REVIEW	UPSTREAM_ONLY	9fd6b414e326171040d4c627ee9147c7fdeb08c9	
+M	src-tauri/src/architect.rs	CORE_REVIEW	DIVERGED_CONTENT	01c3355938b1163b30cfd0cd9b53c51467421aa6	c4979dfcf248589ce9f2128b2fbc814992682e8e
+M	src-tauri/src/architect/profiles.rs	CORE_REVIEW	DIVERGED_CONTENT	0b0fceee4275b55c4abaed8bcda93e99c678a7c2	680e04f718aba5b8cee5d6e8a619a43cbd07c4d6
+M	src-tauri/src/architect/profiles/tests.rs	CORE_REVIEW	DIVERGED_CONTENT	30a9932a08a1efa2913dd027b3b331742bf66859	84c0984c8dd848e41c7e9a6ba8f8dcbcc434c8ec
+M	src-tauri/src/architect/tests.rs	CORE_REVIEW	DIVERGED_CONTENT	693cdecd831c07d644ab0693d419d1f234d9678d	91231f89cd22e7f768bd8b2f571af2f5c1c54f8c
+A	src-tauri/src/attachments.rs	CORE_REVIEW	UPSTREAM_ONLY	e845254d40fbde0eb5a7d400b5de448eecd9f6fe	
+M	src-tauri/src/bots.rs	CORE_REVIEW	DIVERGED_CONTENT	efee6c8292d60c699ca960019dd7fd2997eb4b01	76dd5c2e85ce23cf7673725073e41be9a4162a7d
+M	src-tauri/src/bots/brief.rs	CORE_REVIEW	DIVERGED_CONTENT	3b4314e076948369cdea249638487de3f3f4c2d7	ce3f54d34f280db554b1dede2ea9e5a593bd8713
+M	src-tauri/src/bots/channels/web.rs	CORE_REVIEW	DIVERGED_CONTENT	209bc9e0d1a2da93f997e2e5ba3445458994a094	718258402d66266dab45d696cad027db4ace6ece
+M	src-tauri/src/bots/gateway.rs	CORE_REVIEW	DIVERGED_CONTENT	8e05ee5f9704ee0a83717d1d0b42cd615edaf895	8c04b0fd3cd02825eb2cc022ecbe51318e3757f3
+M	src-tauri/src/bots/tests.rs	CORE_REVIEW	DIVERGED_CONTENT	d295c4099614f8fadd09a028a82110e7a342f303	93ff1ba2c0a2c945ed1c0260f6d06060e6d38841
+A	src-tauri/src/capabilities.rs	CORE_REVIEW	UPSTREAM_ONLY	b119a0d706118b436b3dc5d2973001314384ffc8	
+A	src-tauri/src/chats.rs	CORE_REVIEW	UPSTREAM_ONLY	34376fa2662c0bd84bab4ee7ad093356f6d9e237	
+A	src-tauri/src/checks.rs	CORE_REVIEW	UPSTREAM_ONLY	b5b3e8d3e18e3890f5017e5bc7c0bf1704a18090	
+A	src-tauri/src/child_env.rs	CORE_REVIEW	UPSTREAM_ONLY	b7a91caf287fe66c87a20cff8b095e7a5484c6a0	
+M	src-tauri/src/cloud.rs	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	9d69543cce9bb28ed47fa791b99d64c8dc04df2d	cbe1319fca396170055b8b42f82e07a24a517ddb
+A	src-tauri/src/cloud/blaxel.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	ce15d596881c079cfae4068f26eb0b2eb37686e7	
+A	src-tauri/src/cloud/boat.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	5ca6648bb949a35101a407835e34552b6444ffe2	
+M	src-tauri/src/cloud/cloudflare.rs	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	45bbe320f27f14c37fc11f4eed2208785e9a3ff4	c73aeac20f4fdbc415f9830b10034ba5f0b1e12b
+M	src-tauri/src/cloud/cloudflare_worker/src/index.ts	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	6a016124d8e44037a0fb176979068c8f7ae72bef	dbb2c438bfcd1a092beef2ef26c09119afdf4c01
+A	src-tauri/src/cloud/codesandbox.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	01cd472d7a97b33f0f52a4f3164a29ec9176396f	
+M	src-tauri/src/cloud/commands.rs	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	440e6689cc28ff56b059dcabc154ba5b279fb0dd	cca073a9fa08e9dae297c013dc690bc5709050ae
+M	src-tauri/src/cloud/daytona.rs	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	06f085f7725432c409a31944ad2c975c56fc2e51	9d9a4b1201463720c4907488768be7e32394d8c8
+A	src-tauri/src/cloud/e2b.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	5e2c8df957829e3c53102d3a6ee52fdd786349e2	
+A	src-tauri/src/cloud/freestyle.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	7aae8a9a590185d60c429a990212cbc4a6532ff4	
+A	src-tauri/src/cloud/gcloud_vm.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	bdc9c6dccfed4eafffb9c977e32c27e186616c47	
+A	src-tauri/src/cloud/instabox.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	3577e32efad3fb620fc45a105f5b29db3b77ebf2	
+A	src-tauri/src/cloud/modal.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	8a1a447bb2a217ccc82c1db60f8c212e6b57ef9a	
+A	src-tauri/src/cloud/modal_helper.py	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	302df3f82cd169d58ce9f104e9a62afe61adf76d	
+A	src-tauri/src/cloud/railway_sandbox.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	4025d423910af599efff6177a625de2cb3131d7e	
+A	src-tauri/src/cloud/runloop.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	938cc3d47aadffc7f8ca4b0d0f142ded963b9afe	
+A	src-tauri/src/cloud/sandbox.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	30ad834ae4c98b6061083fc4607eb42ea8a0bd88	
+A	src-tauri/src/cloud/tensorlake.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	c77b78333ecc61b8528e109e4c75b11700f05399	
+A	src-tauri/src/cloud/vercel_sandbox.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	cd7da0292e03457219cf9393e6a8910e441caca8	
+A	src-tauri/src/cloud_agents.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	b3b91d50f2e395664b1f8556844c223b56a77eda	
+A	src-tauri/src/cloud_agents/bridge.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	5f6a24f3dd067b3c0fdcb40bd7ccfacfae9346bc	
+A	src-tauri/src/cloud_agents/credentials.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	2e899462be2950652a7768bd0cced3452c5c16ad	
+A	src-tauri/src/cloud_agents/resume.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	821c19cca98b6394138be87efc7cd83dfabd8042	
+A	src-tauri/src/cloud_agents/runner.sh	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	ffdc345b543b0337d44d4579ca3fe8df937d3902	
+A	src-tauri/src/cloud_agents/setup.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	04a9dde668464b2e110c225cfa10fff3ef8f84ec	
+A	src-tauri/src/cloud_agents/sync.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	433828ab9d53bdf2eba3c2a5e2c847b06cfc69e9	
+A	src-tauri/src/cloud_agents/tasks.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	48e29289cbd97f28e28ae618d9743f803bc155aa	
+A	src-tauri/src/cloud_agents/transport.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	54ebe2871023b9c92d4f2f478bdb9e86777bd5c0	
+A	src-tauri/src/code_search.rs	CORE_REVIEW	UPSTREAM_ONLY	a3aae0d0bb2cf317d4fff1807b4319cf66d2ce56	
+A	src-tauri/src/connections.rs	CORE_REVIEW	UPSTREAM_ONLY	0a1149c338aab26f5da18174f1336f864a94e688	
+M	src-tauri/src/conversation_fork.rs	CORE_REVIEW	DIVERGED_CONTENT	28bf903641eb0617bfa04ca79ab120eb86b78b8a	7bf2870fae23dd36378d66d65a1441e4849998e9
+M	src-tauri/src/conversation_fork/tests.rs	CORE_REVIEW	DIVERGED_CONTENT	f7343668d4046064617c2c8943b7f8cb245cc180	e20f6f3caf5720685e9be18d19c9280c545923ee
+A	src-tauri/src/design.rs	CORE_REVIEW	UPSTREAM_ONLY	5b836dabdf3c45780aad0138b6749570b5ea276a	
+M	src-tauri/src/github_hub.rs	CORE_REVIEW	DIVERGED_CONTENT	bbedff2c96581c242e260526af259af5e93e66f3	193f97732c67549dfaeac90128d6899cbcf88e5f
+M	src-tauri/src/integrations.rs	CORE_REVIEW	DIVERGED_CONTENT	104ab35b498ae64274d8e08822dafa1a2cef0118	a4b6dff7589cb80150ce1fb4c33106951e0d124d
+M	src-tauri/src/jev.rs	CORE_REVIEW	DIVERGED_CONTENT	5b8ccc9312b004b898cbebb1dc7f75207ee10b12	7308b219c36178b0b3ade00241edb6bfcbc53ef2
+M	src-tauri/src/jev_decisions.rs	CORE_REVIEW	DIVERGED_CONTENT	c6535dd95d14cba6553d9a81a9ba245a6d732721	189a137ede72a3e73d2050d02e47802d4f211156
+M	src-tauri/src/jev_decisions/api.rs	CORE_REVIEW	DIVERGED_CONTENT	d0b16cf40e825fcbab64aeb5dbc3d9c864dec570	1da2ba9f86cc03117656aad9a5d3bf22a3528824
+A	src-tauri/src/jev_decisions/models.rs	CORE_REVIEW	UPSTREAM_ONLY	73c966a9e2bafc1c14e6d878b4a99ee144f22f84	
+A	src-tauri/src/jj.rs	CORE_REVIEW	UPSTREAM_ONLY	7383781243fe4d68eb20bc53335eab54d8177065	
+M	src-tauri/src/lib.rs	CORE_REVIEW	DIVERGED_CONTENT	7c11840d309ae9c1829fc5c8a287667e3bd531da	ef2b0418350ec761e14f33af38b886df918766e1
+A	src-tauri/src/local_signing.rs	CORE_REVIEW	UPSTREAM_ONLY	7d201921f46bd2a6ad24b9c259058f01f88d2583	
+M	src-tauri/src/main.rs	CORE_REVIEW	DIVERGED_CONTENT	ee1de22d2d21e723fad7388cf74b1c11942f390a	eab4975e539ece62fea43128a6312a6315babb55
+M	src-tauri/src/message_queue.rs	CORE_REVIEW	DIVERGED_CONTENT	31b6ab364cebd4d01ca7c956ee39faf46770e0d9	d5b0b595a068d5a2b0be5af65b585c0f3dc22d05
+M	src-tauri/src/overlay.rs	CORE_REVIEW	DIVERGED_CONTENT	a8472413d8bb462384ad10acaaa51b0b7065cb76	9c6b72ffe98b811d560d35ccea54e9ea984b58d4
+M	src-tauri/src/prompt_attachments.rs	CORE_REVIEW	DIVERGED_CONTENT	c25feeea5c9fce85312e83ead01aca2d7ec52fbe	d7d18e6dc36260f4d56c55d6884d36e4f7f83c07
+M	src-tauri/src/provider_settings.rs	CORE_REVIEW	DIVERGED_CONTENT	e54fa9b85cbfbafa8ed19b74499a755c9f9e5117	dc63424d9c7c0ca4de7bc4b02e874f4c906c2c0a
+M	src-tauri/src/providers.rs	CORE_REVIEW	DIVERGED_CONTENT	b2b575c2b940a94d7ca6b2eb3925af7a12fbad4d	01ab4d915af949e365a431bbfd03edc921adf1f2
+M	src-tauri/src/providers/acp.rs	CORE_REVIEW	DIVERGED_CONTENT	258c34c374c459d244ed619a463a958d537be870	7a079ce7431a63a63a31a923c852b0c518fafc7e
+M	src-tauri/src/providers/acp_catalog.rs	CORE_REVIEW	DIVERGED_CONTENT	29a7b595c20c4fb8d91647fe619226db36197930	5ed0ccc612ff2769376675255283d46d970e2f30
+M	src-tauri/src/providers/attachments.rs	CORE_REVIEW	DIVERGED_CONTENT	3dc1e936578361d3463ab21b6d63b944df110a36	c03c1f8089e4e2adad299e67026020d4243340af
+M	src-tauri/src/providers/claude_stream_tests.rs	CORE_REVIEW	DIVERGED_CONTENT	a1a3811d78eb3113dc338e8c151c0a18a989222f	e4d21753693341982b350ac1a9aeda4a32399d40
+A	src-tauri/src/providers/cline.rs	CORE_REVIEW	UPSTREAM_ONLY	c2ef576afd941141014638604112c13f36c0a057	
+A	src-tauri/src/providers/commandcode.rs	CORE_REVIEW	UPSTREAM_ONLY	48da76e6144dd9864cfea2ef29df1067de39afb9	
+A	src-tauri/src/providers/devin.rs	CORE_REVIEW	UPSTREAM_ONLY	69bc560bbc52a0db7d8ea0b4f3585c0c934aa0f5	
+A	src-tauri/src/providers/github_copilot.rs	CORE_REVIEW	UPSTREAM_ONLY	722e58e44203cc4b8fabe3bfb1de9f895b2d3d46	
+M	src-tauri/src/providers/glm.rs	CORE_REVIEW	DIVERGED_CONTENT	bb328ee06b5e1c7790d75d90c93877de504edf4e	d0f1846a92bed6203633e58dba66cd8dd1469eaa
+M	src-tauri/src/providers/host_tools.rs	CORE_REVIEW	DIVERGED_CONTENT	d1c6ca83edec78b96f2ebe6e4a2ca3c39fa9636a	2cdf580d3035e5cebd1e92e1f78c1925a4ba95de
+A	src-tauri/src/providers/kilo.rs	CORE_REVIEW	UPSTREAM_ONLY	9b64f88e8aee2b3bff5fb26025744015e10f750b	
+M	src-tauri/src/providers/launch.rs	CORE_REVIEW	DIVERGED_CONTENT	80ef785b7f23bdb3d2e23c74d51e7e0586d09a02	961fd4e166796115f0d4979cae81ab3b214387a9
+M	src-tauri/src/providers/limits.rs	CORE_REVIEW	DIVERGED_CONTENT	d2290f1827162c6aff5f57f15bf1d3844cc9f84f	5fb9d8f46376d5db2098698f4eb1ab1e64584e5a
+A	src-tauri/src/providers/muse.rs	CORE_REVIEW	UPSTREAM_ONLY	510bc1b2a3faff27f32c356e26e141202fc9838d	
+M	src-tauri/src/providers/pi-extension.mjs	CORE_REVIEW	DIVERGED_CONTENT	b4f489d5574e1209f896dc34dbadd28a62dabca0	d080ddc52da94c1d84e4de73a4f5573a48742240
+M	src-tauri/src/providers/pi.rs	CORE_REVIEW	DIVERGED_CONTENT	2abd507395ecea19f8903dee139ae0d88f51ec0d	d52c170bfaae826df76eebac78db4951472317f7
+A	src-tauri/src/providers/plan_reads.rs	CORE_REVIEW	UPSTREAM_ONLY	016192635cc956773a5e5e688036ac249d560cda	
+M	src-tauri/src/providers/steering.rs	CORE_REVIEW	DIVERGED_CONTENT	ea7243382ab2c69b01354edbc4f335a88b14ef5c	bb69b107186620aca693d8acb97b7fc8913eb60f
+M	src-tauri/src/providers/subagents.rs	CORE_REVIEW	DIVERGED_CONTENT	0a307641946e349998fad719bffa37122576ed19	0e32d071d0806b02efffabaedbf83d3ec96e6e93
+M	src-tauri/src/providers/warm.rs	CORE_REVIEW	DIVERGED_CONTENT	7b154fd7ce211abe943de27e8a9457d9d3002bc7	db5b595819c7cb475c3444d7f77b78e55862dade
+A	src-tauri/src/recipes.rs	CORE_REVIEW	UPSTREAM_ONLY	5b52670071875b618acc994ed2c0a11c4be73f8e	
+A	src-tauri/src/remote.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	14667645f71f8165f52226f31e69a885302ea4c2	
+A	src-tauri/src/remote/auth.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	89d425fee3560bf38536d9775fa48afdab77a695	
+A	src-tauri/src/remote/bench.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	d6f6ec4f5d713a51e449ecf22b6ead9c4e7111c5	
+A	src-tauri/src/remote/catalog.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	a2a3a338a5338831fbcf2714f0a57a4829454163	
+A	src-tauri/src/remote/client.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	5317f99c1b12fb1c745569a57f9829a588afda5b	
+A	src-tauri/src/remote/config.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	b28ebddb58714e369ec8fa93677d5da8a1267789	
+A	src-tauri/src/remote/crypto.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	51dc2c71da2e6eb9907b7716ebac28ae53cddc80	
+A	src-tauri/src/remote/diagnostics.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	0f0d805b0d58640d0998714bc485270bb55fb0c6	
+A	src-tauri/src/remote/grants.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	29cee69c1d6da5774294a1a3918c74fcb4cfb31a	
+A	src-tauri/src/remote/host.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	5e2af1548f53b046a837c33da94d1b42fb596bbe	
+A	src-tauri/src/remote/images.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	75b7a46207a975c3b133c5b45021093258b65af8	
+A	src-tauri/src/remote/mirror.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	e5d9a863542ed33cee929d49dd5bc943eebfb581	
+A	src-tauri/src/remote/routes.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	fb8c8e46db8fe128e9865d31871768a4a5db3b3f	
+A	src-tauri/src/remote/secrets.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	663cee8dd145dd810c631ce13813bc88ecfc6769	
+A	src-tauri/src/remote/socket.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	183efeab43ebe6111b29ff131757077ed9a913c2	
+A	src-tauri/src/remote/start.rs	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	fecc62239f71456f836472f7ec6f874ba272feff	
+M	src-tauri/src/secret_store.rs	CORE_REVIEW	DIVERGED_CONTENT	e640d2a1ca4cb9b83d9536b79fd014942c4b85c4	9e07efc76602cc027a124293e35461d36c6c06ab
+M	src-tauri/src/simulator.rs	CORE_REVIEW	DIVERGED_CONTENT	827c20c0589034692ce054d4c44314166f2bd452	13e82df4160811ab9eebea4fccf62a57bf52984b
+M	src-tauri/src/simulator/android_setup.rs	CORE_REVIEW	DIVERGED_CONTENT	5235a07dfe7651ce7b66491ac5966daf9b21a99e	695f1be38846f2ac8a1ae011a8b6e01a15bfc23d
+M	src-tauri/src/simulator/duo.rs	CORE_REVIEW	DIVERGED_CONTENT	f276362534527ca7fd8bc60817c0baa32a855fed	95dfdc006e96df2eb26a4b4fe471719374254e0e
+M	src-tauri/src/simulator/duo_helper.m	CORE_REVIEW	DIVERGED_CONTENT	ba2642d5c18cd5b871f47769f883f9167f1f3624	6989516972da8b85d36c490b10de2886cfffa90b
+M	src-tauri/src/simulator/tree.rs	CORE_REVIEW	DIVERGED_CONTENT	118c74a04e55e67493ce76bfd40a534c201bdf3f	0a83f3c3501c1c31d03220bfa69fcc0a0711ead2
+A	src-tauri/src/skills.rs	CORE_REVIEW	UPSTREAM_ONLY	62f05bf960bf367ca0b3e98caa04a76c5a46fe83	
+A	src-tauri/src/skills/adapter.rs	CORE_REVIEW	UPSTREAM_ONLY	f2aba2ceb29b5e91799db52779a65895353b2e57	
+A	src-tauri/src/skills/catalog.rs	CORE_REVIEW	UPSTREAM_ONLY	de8744c6fb7c337997b67a5e4a92451201e20880	
+A	src-tauri/src/skills/catalog_tests.rs	CORE_REVIEW	UPSTREAM_ONLY	c415be8a63fc35a79e3d7ac67e72aa30e841e75b	
+A	src-tauri/src/skills/github.rs	CORE_REVIEW	UPSTREAM_ONLY	1911cbc8435dcaf97c049086cb3186cf1f9066ca	
+A	src-tauri/src/skills/safety.rs	CORE_REVIEW	UPSTREAM_ONLY	f8c4573ff357474ecd091980225bc7c0b32aa774	
+A	src-tauri/src/skills/scoped.rs	CORE_REVIEW	UPSTREAM_ONLY	4b007379d32cd974051ea279af4b94312139984d	
+A	src-tauri/src/skills/tests.rs	CORE_REVIEW	UPSTREAM_ONLY	a771268aa81d637320a4dc085ea335a250adf7ea	
+M	src-tauri/src/slash_commands.rs	CORE_REVIEW	DIVERGED_CONTENT	042c349590188c1fad4ca59d619f6144da24cd4d	9025067f0081405c5991cadc24aa766441a8167c
+M	src-tauri/src/slash_commands/acp.rs	CORE_REVIEW	DIVERGED_CONTENT	69ebd32ab7f8d7d8436625734c6fe7ec8d84981a	10e6dd7ea8a6f6178a31ff5586cdfc6ac1955cf5
+A	src-tauri/src/slash_commands/muse.rs	CORE_REVIEW	UPSTREAM_ONLY	911647c641a202f24624b7e47bd0d283b67f46ff	
+M	src-tauri/src/slash_commands/pi.rs	CORE_REVIEW	DIVERGED_CONTENT	fde82b419c5fe4d78859b1d29293d43e311bec4a	f9e51d4104c2b7c1f2a803c7d76252a4a201a616
+M	src-tauri/src/storage.rs	CORE_REVIEW	DIVERGED_CONTENT	b8a7871fb087d4b558908ae663d3a918b2bc7ec0	01545dae73c4fe5b90b5fb82ec107b98c57921fa
+M	src-tauri/src/task_controls.rs	CORE_REVIEW	DIVERGED_CONTENT	9bb7f05c8522a0063159d6003fc43879b1b506fe	64a4f01d8ca57507db962f43891b2bd5ff76abea
+M	src-tauri/src/task_deletion.rs	CORE_REVIEW	DIVERGED_CONTENT	f9f690f085c033d25611698b40225d64d3c7b103	7b56976efc9ec8d7cc135a4840f14101498bde57
+M	src-tauri/src/terminal.rs	CORE_REVIEW	DIVERGED_CONTENT	362dcdd180cce2e625064e164c983f73e45028c9	15fbdd7f5aac7d100d477e847970b3a8c0f0a316
+A	src-tauri/src/tray.rs	CORE_REVIEW	UPSTREAM_ONLY	c188a1d0bfaef06b9371cf95bcd913b83c1eb0bf	
+M	src-tauri/src/turn_changes.rs	CORE_REVIEW	DIVERGED_CONTENT	6a3a4283d691019bf7030a6f732021ac8cea7ff2	9d70327782b2fd26e173c7495f111309a3b08ba6
+M	src-tauri/src/workspace.rs	CORE_REVIEW	DIVERGED_CONTENT	6d350912275e7bf4b467c75b6b9213cb35252a47	0d0947f0c0894b53dbb3f9904c73200dfdfdefc3
+A	src-tauri/src/workspace/text_search.rs	CORE_REVIEW	UPSTREAM_ONLY	3ac6b2bf6a29e798b9ff0a63bd0c811e72ffc639	
+M	src-tauri/tauri.conf.json	CORE_REVIEW	DIVERGED_CONTENT	de90b827a3dbefb6dffcc8a51877bd16d8bdd538	7d76e96f54234d2eef3b32cec498fc9f43a747fc
+M	src/about-settings.ts	CORE_REVIEW	DIVERGED_CONTENT	89661928e4795f75b94a918cc9dd9a7e1d412aa5	99246583dab50c20d0993d47b2e56b7badb1b4d9
+M	src/agent-input.ts	CORE_REVIEW	DIVERGED_CONTENT	93cc9cbc6ecc92df5634ffe3e50d5bbe51b5bd1c	f00204c61abaf87f41ad321af4b37e88234b6bbf
+M	src/agent-teams.css	CORE_REVIEW	DIVERGED_CONTENT	d4d9994eb38171644a09f4fe75000b1093a0fa29	4b6d06215db37b4895fa0e31f09a40782573595f
+M	src/agent-teams.ts	CORE_REVIEW	DIVERGED_CONTENT	b7455dd08d889e699f81842d82620bb0e71147ea	6f234d892ffc4b87619f0212dbcd3f2eb35ce2bd
+M	src/agent-usage.css	CORE_REVIEW	DIVERGED_CONTENT	aeb2975e58f91653e6976534f14448bed7bf9986	570425355cf8111951e52924996cf8c7f498e8d1
+M	src/agent-usage.ts	CORE_REVIEW	DIVERGED_CONTENT	d8943ea4289ec108f47dfa705b953f8f54bd33ef	00ec7f1ae2bcf5b72146c22b30d63034ea4d934b
+M	src/app-updates-policy.ts	CORE_REVIEW	DIVERGED_CONTENT	8f563b34d9692db9d77f09338e1945b236c913bd	c1e253567d6883cf8a445c83da202c291db93f9e
+M	src/app-updates.ts	CORE_REVIEW	DIVERGED_CONTENT	40e6d4ba3f65950fab2fddbafd48b7bcee8b900a	3cfd0e55ac885a01b2f995d983769f1787716ca9
+M	src/approval-modes.ts	CORE_REVIEW	DIVERGED_CONTENT	09d645f4410706e0de4b883ccef48cd486522706	1dc12db9599cac4870fb14adca55e5f298fe89ca
+M	src/architect-types.ts	CORE_REVIEW	DIVERGED_CONTENT	6b1e5b5e90c487b36d1c11adb33a6b714cc0865d	9200d4e5bbffb10a3951d7e8cfbb135b89b1468b
+M	src/architect.css	CORE_REVIEW	DIVERGED_CONTENT	285dff804290c97c013b7a484f79d6881c1f707f	f19eadcb1758aba3a5634d7510a8c048cb3a4daa
+M	src/architect.ts	CORE_REVIEW	DIVERGED_CONTENT	6782b290a4ef460918d724352aa7aa19803f5182	06e1c7471c5b2b3d65f519114ef31ea43c9edcd2
+A	src/assets/providers/cline.svg	CORE_REVIEW	UPSTREAM_ONLY	6aa16dcae363f220fa3a3af7f69394225edf158b	
+A	src/assets/providers/commandcode.png	CORE_REVIEW	UPSTREAM_ONLY	ed7c8c99b9b72c21aced2b4a1435d32552b228dc	
+A	src/assets/providers/devin.svg	CORE_REVIEW	UPSTREAM_ONLY	b8a246385f01aebb87eac9a1429c4d02dd2fc55c	
+A	src/assets/providers/github-copilot.svg	CORE_REVIEW	UPSTREAM_ONLY	6013c74c1180c7d19d7d725e77be1b2ed98ef931	
+A	src/assets/providers/muse.svg	CORE_REVIEW	UPSTREAM_ONLY	a606a5f2efa53e506e5d051c07f0c2c0c5e40e32	
+M	src/attachments.css	CORE_REVIEW	DIVERGED_CONTENT	dfbd51a017a896fa10ca4ae0f7eb50d73c5789f7	c0d93707148615fd9f806b0d33a085ccbe69907d
+M	src/attachments.ts	CORE_REVIEW	DIVERGED_CONTENT	ce6a2a36bc070fa699474d0bf0e2b1751f828a0e	fe50f2dc1f436e3f51d09aaa7c07d9937aa51e8e
+A	src/bot-avatars.ts	CORE_REVIEW	UPSTREAM_ONLY	5529f4756cb87663c0f515952bd8b2a5ed68e91f	
+M	src/bots-panels.ts	CORE_REVIEW	DIVERGED_CONTENT	d2637883d4300d65c7cd2eef8122a8b3d80bb54a	958451b2517de5581560eb5057cb70926aa53de7
+M	src/bots-settings.css	CORE_REVIEW	DIVERGED_CONTENT	98477e0aca5656f498ae2905f146fa3f9287dba5	d3d8271c4b142312ffb49743773dfef790c57709
+M	src/bots.css	CORE_REVIEW	DIVERGED_CONTENT	1f0dc021559921243dba0756b1282da9fc45c5ed	5065aa64acefab96cb0761aa17aacfa3e10d6ca7
+M	src/bots.ts	CORE_REVIEW	DIVERGED_CONTENT	214fa2db11d9a3402b2e8c08464890b8b82dace6	c8c43a840112e763774452ccf66b0a78a121b6f7
+M	src/bridge.ts	CORE_REVIEW	DIVERGED_CONTENT	dc5c6a2b2449d2d2c76ee951ca7cffe743470522	62f09c01b2c1a349dd0f3a47d16598b978f27dcd
+M	src/browser.ts	CORE_REVIEW	DIVERGED_CONTENT	8275ff4cb257ef42d54a66abb5200469eecf18ad	6cb13a7d2b45235f53a62036babd83f4f111968f
+A	src/capabilities-panel.css	CORE_REVIEW	UPSTREAM_ONLY	642fa40b854c6974f04bf1fa30858e8975778ca8	
+A	src/capabilities-panel.ts	CORE_REVIEW	UPSTREAM_ONLY	4bf7adb07a404504cfe332aeeb6561e25124bdcf	
+A	src/changes-view.css	CORE_REVIEW	UPSTREAM_ONLY	62de68a62dec0e3e10ab44b18a2432cebcc8b8b6	
+A	src/changes-view.ts	CORE_REVIEW	UPSTREAM_ONLY	5d38e24474bed8c149a40bebac84e6c15d21e9c4	
+A	src/chats.ts	CORE_REVIEW	UPSTREAM_ONLY	91b12715a357d45f06e3f94c3f0a9a44669b7026	
+A	src/cloud-agents.css	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	f05e62b2148100e659704a60694325e99d04d291	
+A	src/cloud-agents.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	307e6c8cdd5cdab16be004f7eaf0c87a4e097a00	
+M	src/cloud-settings.css	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	7df4c4aaf17fdcaf97dda57e7a0b0040109ed4f0	15950974d20204078c05c306c8901980f5d46bcf
+M	src/cloud-settings.ts	EXCLUDE_REMOTE_CLOUD	DIVERGED_CONTENT	6c623d5a5e1ba2a2b04f67d02fe33b592d2613b4	29c9837fe66021f68598867a9c90b47930defc04
+A	src/connections.ts	CORE_REVIEW	UPSTREAM_ONLY	3d0e87c2e2b15e65f80795276f492c30c9ce3896	
+A	src/design-canvas.css	CORE_REVIEW	UPSTREAM_ONLY	88df261b3f597964ed3f1ee82fadeb55a44c1313	
+A	src/design-canvas.ts	CORE_REVIEW	UPSTREAM_ONLY	59360ab6a375f97e1fef7a9541e21b7a2c31d046	
+M	src/document-viewer.css	CORE_REVIEW	DIVERGED_CONTENT	a4c9b595deaafe0c498c7c3b7d27af128b1acb67	b73792f9d819fece3955dc22c1209134e7ad55a7
+M	src/document-viewer.ts	CORE_REVIEW	DIVERGED_CONTENT	e4eededef1575ff70196f94f40f25fb3cbbc656a	68f69da847f21ab3d53e0ace0350e0a31e0eb2e3
+M	src/dom.ts	CORE_REVIEW	DIVERGED_CONTENT	65d9a5bb8850f4a6baabdc4a06ee0589606329f2	ec97984c2492739ae476bcb8c1b275ef663cd19d
+M	src/enriched-markdown.ts	CORE_REVIEW	DIVERGED_CONTENT	749e6a3b2e7b952977cc69eab42cb44bbfded085	fcace1235e732f803567b0f8afcb88ae69560c6c
+M	src/entry.ts	CORE_REVIEW	DIVERGED_CONTENT	5392cf66eadd79e6989435a6a14b17e3915daba4	276f2e2de738572175837b0ae52d63527c2ea74b
+A	src/external-links.ts	CORE_REVIEW	UPSTREAM_ONLY	dea8ec61011a4f5395dc878e1f45904d055879ad	
+A	src/file-icons.ts	CORE_REVIEW	UPSTREAM_ONLY	e5019eaa70fee9fd01b8871df79239cbb37db553	
+M	src/file-links.ts	CORE_REVIEW	DIVERGED_CONTENT	a4908e35fbeed597d40d20104e83243d7fba5364	aefeb195c5de1d320ac101cd2488472b7b8800e0
+M	src/file-mentions.ts	CORE_REVIEW	DIVERGED_CONTENT	97ddb7da313dfaf659fc065c30f348d565012d5e	c44bccace1c4357665395d4f94d31e7c8bd63447
+A	src/file-tabs.css	CORE_REVIEW	UPSTREAM_ONLY	ddee8e563ae43cbf51fd851a93d3a9d2de79f169	
+A	src/file-tabs.ts	CORE_REVIEW	UPSTREAM_ONLY	2184c67f4cbdb6d9682159a9f7f1400b60a7e8ab	
+A	src/github-actions.ts	CORE_REVIEW	UPSTREAM_ONLY	3dccb20143adf216af903423375c53079f60d885	
+M	src/github-hub-prompts.ts	CORE_REVIEW	DIVERGED_CONTENT	4aac91b5a99c1edae98c56f84f56ce4f77917a7f	93234d04977ccfafbb678bf627849f101b71e820
+M	src/github-hub.css	CORE_REVIEW	DIVERGED_CONTENT	7f174e37a8cd1ae5ed39f1b471bf4338cbe96490	1d172c1b458fb9e9c8db9f3fe97997427ef2a501
+M	src/github-hub.ts	CORE_REVIEW	DIVERGED_CONTENT	ed47dc2ae17586852d91439333ea4bcb981e1437	40f535a74e33d6688d7f0be246b08612d7030eee
+A	src/inspector-bar.css	CORE_REVIEW	UPSTREAM_ONLY	c9208336362fbb5a3564f4a84ca91c4da7d4b4bd	
+A	src/inspector-tabs.ts	CORE_REVIEW	UPSTREAM_ONLY	55372df1744f7ce2284bf7b066e6af20abed3db8	
+M	src/jev.ts	CORE_REVIEW	DIVERGED_CONTENT	24c23d00f40a5bc49237b136eb8a7a84eb8d3b40	964f9095b3dbb4ea03689987f7cd43ead2aa72ab
+A	src/jj.ts	CORE_REVIEW	UPSTREAM_ONLY	30d09e6ef7862f657f263b6f6c61271a94a0f5f1	
+M	src/main.ts	CORE_REVIEW	DIVERGED_CONTENT	b99c0a7736f1737fb829841594a66dcc3cd10643	bb9b902c7ca394d7b384337fd2f587fc54cd50dd
+M	src/message-actions.css	CORE_REVIEW	DIVERGED_CONTENT	1bdb0743f4bc48cb303633093d4ecd1e430a601f	b385f9627d861d8bd099decd81955d53834c8289
+M	src/message-actions.ts	CORE_REVIEW	DIVERGED_CONTENT	43bc50301db4d5b82b7bc828bd6063fa154c0ea3	415749763f491c0fef28f3f865c542d579c575ec
+A	src/message-attachments.ts	CORE_REVIEW	UPSTREAM_ONLY	d0bb51309e077b54e575390652c9fc53516bb43b	
+M	src/message-queue.ts	CORE_REVIEW	DIVERGED_CONTENT	4cc25d83a92dffbdc336007f2e255d21a24c857b	f0a739ea854de45475219225b706bdaa3ff13c19
+M	src/model-catalog.ts	CORE_REVIEW	DIVERGED_CONTENT	bd39051987ba7f82f8229c2f3010d73b9f244d94	0633a89e52a8c294c0eddc608815fe7713e7ef85
+M	src/model-picker.ts	CORE_REVIEW	DIVERGED_CONTENT	382d440c22ddd473c5605f2b7b86582679383a69	212a3086f2aa49af1dbc9fec92fb9f76e41ff698
+A	src/office-viewer.css	CORE_REVIEW	UPSTREAM_ONLY	cee8db3d15aa210327fe001e98a1448aba269e67	
+A	src/office-viewer.ts	CORE_REVIEW	UPSTREAM_ONLY	799405775bd9cf5db2a92234899fbaff24f9170b	
+M	src/overlay-client.ts	CORE_REVIEW	DIVERGED_CONTENT	8a4673eb2b04b340a116a8e5543d71a06e70bb17	3d048dd2882a6e0e7159c24340bd2a80cd565b02
+M	src/overlay-thread.ts	CORE_REVIEW	DIVERGED_CONTENT	4b0bad2655eedfc76cc48e603068c4d4cabfa255	f124267b3c2aef13d334c1f95148f17cbf792738
+M	src/overlay.ts	CORE_REVIEW	DIVERGED_CONTENT	42e38b856fe194ca7bfb01263d2f34b58f2607d9	2049b97a64df751269f8695739bcdee45f0af499
+M	src/preview-architect.ts	CORE_REVIEW	DIVERGED_CONTENT	5a8df3feeff397e38c812c78b51e3a15d05f0c5f	83064563034226231b374a8f048ce9c8bed260d9
+M	src/preview-bots.ts	CORE_REVIEW	DIVERGED_CONTENT	a7ffedbb6b385efdba0c1284eac7c4a78ace4a6c	dda48ebb8161ae58204c777af602aaa43a030e1f
+A	src/preview-capabilities.ts	CORE_REVIEW	UPSTREAM_ONLY	b6cd6f49fad855b3ab9ee7da115ad89e9a13c0ae	
+A	src/preview-design.ts	CORE_REVIEW	UPSTREAM_ONLY	d58a79dac37f70fb35d5788b016c13949dd107e5	
+A	src/preview-diagnostics.ts	CORE_REVIEW	UPSTREAM_ONLY	6da4a7a8f575c1b2e34c12c4a7532d24925cb690	
+M	src/preview-github-hub.ts	CORE_REVIEW	DIVERGED_CONTENT	1f1838be254c11c1cd46cacabb501c1c89a05a90	c361fc8046383afe294c9260ed36cf9581b8fdcf
+A	src/preview-grants.ts	CORE_REVIEW	UPSTREAM_ONLY	91911568f1c3026d0e14caa0a40e0278f8392433	
+A	src/preview-jj.ts	CORE_REVIEW	UPSTREAM_ONLY	3278a38529bb6e8158599915019e578dce796e3e	
+A	src/preview-recipes.ts	CORE_REVIEW	UPSTREAM_ONLY	357eca18ce3badd25248fa3051330e7d8c7a24c2	
+A	src/preview-remote.ts	CORE_REVIEW	UPSTREAM_ONLY	d39977630fa81b72a1d2036a50cdd22bf75665ea	
+A	src/preview-skills.ts	CORE_REVIEW	UPSTREAM_ONLY	8193ffe11eda5024da19e83afc2aba9f7d6e2f06	
+A	src/preview-traces.ts	CORE_REVIEW	UPSTREAM_ONLY	0cf00b3c119cb9ef43e95cb401b9f79e4a6ba349	
+M	src/preview-vm.ts	CORE_REVIEW	DIVERGED_CONTENT	7c022b7a8a5fa3b87ea562b6338d0328fda0cbc2	0f22aa8b8d5cb18fa51d5024db846a00fb5b83f8
+M	src/preview.ts	CORE_REVIEW	DIVERGED_CONTENT	e73d1baa2bf097ddeb7ac0ca37a6413c79f14e8e	8c0d9fa0fc0950717cbccae92ac3fb6865754c1f
+M	src/provider-handoff.ts	CORE_REVIEW	DIVERGED_CONTENT	1de0ea9cd30625fe16e3c0ec1d15127008b4b0a0	9e4b205da00e363ce66922a457c3562353b48661
+M	src/provider-logos.ts	CORE_REVIEW	DIVERGED_CONTENT	fa9c1dbeb452a78068ba5f72a8f6606926aaa6ab	dceb16a5095e60508fdffe4d7856e6198ca5479d
+M	src/provider-settings.css	CORE_REVIEW	DIVERGED_CONTENT	90db20202bd7192a4320f7e211e3398d1addde6e	008f16bb9480b20c98415abd3745e26723ba71aa
+M	src/provider-settings.ts	CORE_REVIEW	DIVERGED_CONTENT	b6489ed018a49369da8f02e33983633a38dbd7c4	79e0e3d91c49993d20cc5e198608ca0bb6b0b19d
+A	src/recipes.css	CORE_REVIEW	UPSTREAM_ONLY	7ee475fcd32399c05078f97613459130ef30a069	
+A	src/recipes.ts	CORE_REVIEW	UPSTREAM_ONLY	b593b806743aedbb53d9365b28b4c155faa64e7f	
+A	src/remote-diagnostics.css	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	7261802baa7a66e226a0084c2d1ea8f0a3643ef1	
+A	src/remote-diagnostics.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	0b884b6ce9ee0713417fcf45fbbc3fcc5d6f445f	
+A	src/remote-pairing-prompt.css	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	58e71a401d5d864adc72a171b8f8cbfcc1395d83	
+A	src/remote-pairing-prompt.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	167e6dba5a38d86d1345bb718a0716f5365727f6	
+A	src/remote-progress.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	b08a93e8fdb0fe9e0f6b0e72b5a732a87ec9e98a	
+A	src/remote-settings.css	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	cfcb8da45a8a87c2b9543f050c98f204b49be04e	
+A	src/remote-settings.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	cf384187fc0a14af2ea7934f6cf8e6e8ebeba100	
+A	src/remote-target.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	f0b617dc4735d144cc8fe6441e4febbef99aa2a4	
+A	src/remote-types.ts	EXCLUDE_REMOTE_CLOUD	UPSTREAM_ONLY	44397cc841b514137dcc3be144344b187a7e25a9	
+A	src/search-panel.css	CORE_REVIEW	UPSTREAM_ONLY	c94a4299c64c0a09063df5dbbf40f4bce73b80fc	
+A	src/search-panel.ts	CORE_REVIEW	UPSTREAM_ONLY	c9b4f92caba35b6dfa0fe705a7fe37e72503e897	
+M	src/settings.css	CORE_REVIEW	DIVERGED_CONTENT	c05b8c5e229dad408d6136e5caa59fe37804094c	857255d93fc047ffa8a0a681c3401a06632197de
+M	src/settings.ts	CORE_REVIEW	DIVERGED_CONTENT	cfeec5b26afd031b31828b9b33e2c1f595828f53	b31252d8ce25ce15721a5ec394e818d177b4e370
+M	src/sidebar-bots.ts	CORE_REVIEW	DIVERGED_CONTENT	b5e77eb53adb2a921f9c5e87c9324ddff4791c24	dace742dd56855947c1210632779ca2d2bb994ec
+A	src/sidebar-sections.ts	CORE_REVIEW	UPSTREAM_ONLY	7c20c17591e72e557c95f9d77347241ef0a9f7de	
+M	src/sidebar-tree.css	CORE_REVIEW	DIVERGED_CONTENT	ff9ff69c684c5869ded105af2a5b1b47b761bf64	5f6f4a724535116b0125f5024b3f5d82e7b308f6
+M	src/simulator-3d.ts	CORE_REVIEW	DIVERGED_CONTENT	0a650c0205558005c915012496fb0adbc524eb0a	00917c3544daebc0a6aaa0654613c3a524c3c4b4
+M	src/simulator.ts	CORE_REVIEW	DIVERGED_CONTENT	7c3056b11f115347b8633c23bdbca9972521a440	e14bdd7c391cb5e42840609065bd5430bb8f6878
+A	src/skills-library.css	CORE_REVIEW	UPSTREAM_ONLY	96cd9ff20e83fd4d0e35909367f10d2d3504e396	
+A	src/skills-library.ts	CORE_REVIEW	UPSTREAM_ONLY	ea792d485484f9afd74d1967dbe6026d6c84f1ee	
+M	src/smooth.css	CORE_REVIEW	DIVERGED_CONTENT	499098364872e372bb387483f280ae7bb38ba49c	e97abb6f68b0587502c7967e9196be4a08fc2e07
+M	src/streaming-markdown.ts	CORE_REVIEW	DIVERGED_CONTENT	2fa802376339703dfa88ee826519e4b3cebe9dcc	9724c8cd94eda54956f8ffa37140ef675ea2f0a8
+M	src/styles.css	CORE_REVIEW	DIVERGED_CONTENT	93e74254355237913b8c5ac6c3deb982c5df59a4	ee2fa1cb4a1bcd677bc24258f3ac20b17bb09330
+M	src/subagents.ts	CORE_REVIEW	DIVERGED_CONTENT	8233300a876519243aea7efbdb20a5b1fc857840	cd44f87da7dad771e13145be69e9cb225eb45161
+M	src/task-board.ts	CORE_REVIEW	DIVERGED_CONTENT	93ff45775551ec71d634cb465f9c9dbfc0d5495f	dd1cf9ec8d72aba8c93f90c38bca10a1e80cbf1d
+M	src/team-mode.ts	CORE_REVIEW	DIVERGED_CONTENT	199f1145841bc1861994560a63750735ee3ac8a2	7619ff8165703146cdd78ccc2f9cf05bfc525a16
+M	src/team-profiles.ts	CORE_REVIEW	DIVERGED_CONTENT	13cc0160a8767dc4ffb33796a042c164e1dfb755	760f9eb688f2e48184fb07bbc15baf9bb77e30ae
+M	src/team-progress.css	CORE_REVIEW	DIVERGED_CONTENT	86f8548e56c91337b51e1b5c9fd4c6833f14e5ea	38c3046f0ab8a4d6c407f00643e95b026a9a79a3
+M	src/thread-order.ts	CORE_REVIEW	DIVERGED_CONTENT	ce7cf3f632b50890fb4447644f7872b2897d8c5a	c1a96525e91f3dc8299d363f9819e6c6d66c557a
+M	src/tool-activity.ts	CORE_REVIEW	DIVERGED_CONTENT	1b47ae50c2a7d6b6814183f95f8eaf64710372a0	ad16701928fc6c35cc582cb36f53088686aa3d97
+A	src/tool-cards.css	CORE_REVIEW	UPSTREAM_ONLY	e1c6e73eba844e603910f51e2d6b3ad435932f55	
+A	src/tool-cards.ts	CORE_REVIEW	UPSTREAM_ONLY	03e192b1de3e3fa63bff4524b8c64532243d59c8	
+A	src/tool-trace.css	CORE_REVIEW	UPSTREAM_ONLY	7fd77740c5eb7055c30e8b21be92265e76d44b48	
+A	src/tool-trace.ts	CORE_REVIEW	UPSTREAM_ONLY	1894651de1b93955762e649942c85ccadef4132a	
+A	src/trace-brands.ts	CORE_REVIEW	UPSTREAM_ONLY	fbcf47e78b31a7bcc5c70b5b491ed3e7e8d382e5	
+A	src/trace-motion.css	CORE_REVIEW	UPSTREAM_ONLY	888ccd6376469e0dda6aa7623de126120c5c4036	
+A	src/trace-motion.ts	CORE_REVIEW	UPSTREAM_ONLY	d9fd2d482c17c55cba61a60c9a1c43b91d73dea4	
+A	src/tray-popover.css	CORE_REVIEW	UPSTREAM_ONLY	927286037be68ca61a148c86ab13b9acb65e67b4	
+A	src/tray-popover.ts	CORE_REVIEW	UPSTREAM_ONLY	5d67cd186aeb14c410dcdf006b0359f133ba971e	
+M	src/turn-changes.ts	CORE_REVIEW	DIVERGED_CONTENT	2032041e0f928b55ebeebb0fb982d2913e800f12	2fcaa63888a324c43664ae888eea9c4e57923290
+A	src/turn-checks.ts	CORE_REVIEW	UPSTREAM_ONLY	4d3d0b53a4832a6f670f38137df38af2c64bcb74	
+M	src/types.ts	CORE_REVIEW	DIVERGED_CONTENT	ec1ed15799ac71da0592dbe2eea97110559be1ca	0f6b7c5aab550b514320a69eae33bcbe96f2f913
+M	src/usage-limit.ts	CORE_REVIEW	DIVERGED_CONTENT	76a35f3fda6ec48a7174d89944b528b844a3efc2	9825e33ee02119cb64fdef01dfcce1450e21ee5f
+M	src/worktrees.css	CORE_REVIEW	DIVERGED_CONTENT	cf502483461a8d8e47f78261c0b1e68d9ecb2cfe	7c2d4287819109832eea11e1ee61ab665da15e73
+M	src/worktrees.ts	CORE_REVIEW	DIVERGED_CONTENT	a54b12f91abe93c5cd9516c2d8e2b148dfc9e1ec	2abacdfe3c7ddb419c814fbffdb5c9fa494ec2a8
+A	src/zip-limit.ts	CORE_REVIEW	UPSTREAM_ONLY	1570d79604c273ea35ef087c425f1ddf3546a773	
+M	tests/agent-teams.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	b46aaddbe1122174842b79f55a0e4b68722a8b26	897f1a19b220dd53b77052539ffd467fba2e93b9
+A	tests/agent-traces.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	7e043649630deba2aff1d2cb545774a4ea00ad2d	
+M	tests/agent-updates.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	e7f7d27b357ff2001585c572918dbcf87fbf72ab	6c71d135e72248cd3a9d4ea608b22c4a9c04bf9c
+M	tests/agent-usage.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	dbbdac021793c88a22b5b28d586b335b18a3a676	0519ecc2c0c08f3c4bdba3f23081dd7e10ef17a8
+M	tests/app-updates.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	9d9f8d4b5c2a41280fa982212eb970aefd422403	0bceb45b5864d6b817aefd0a38e01404852bc352
+A	tests/approval-modes.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	9768ee57d92052c2b011198a70b6dee577ae7201	
+M	tests/architect.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	c72536dbd97b6e6624e9ad62eca11af0a6846655	016cb12dcdb9a928e47e997761ce1a7d0c5000dd
+M	tests/attachments.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	8ff4838bbbf7e2eb87548c1343dea2a8c2e788c1	0e9f9bc3e0c35cb6747edd280ed573efc697fc2e
+A	tests/bot-avatars.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	985f3502a6d31e6e23a4118dc41b2f3afe34178e	
+M	tests/bots.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	98dbba157b9c94553d2e2e68c95f377bdb3bce1f	1295ef663d2e1f859f810ee228b4c8b508caa127
+M	tests/browser.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	f30b54a35c8a94c44bae5baef02478fe09ef5831	b415c35e4b29c26e1549fa6e8bf834bedffad7e5
+M	tests/bundle.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	06489ea57e6a6c5a39fe4d92965a21fb139d1c6c	457a2f79ec2b5f72a46bc3f35fd25bdf8c13b8e5
+A	tests/capabilities.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	8199ce936e8ac21d15875da74c5841b5e5bf577b	
+A	tests/changes-view.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	30372de410db4dbbb09f7c6a58d0a243ff6ab166	
+A	tests/chats.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	a0c519ca06a2c95f09be5065e7c2ee9aed25c114	
+A	tests/cloud-agents.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	2af88f974bc15afc9d5fb8bf59b8aad2e48fe55a	
+A	tests/cloud-agents.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	b781b1fb68bb807b3b942810e55c4153276f7d85	
+M	tests/compact-menus.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	1c5e1a300dc5c65a498d599f1a5f414a6ce711a4	89a0504f7b64ca820b857adca914b0a1c478a38c
+M	tests/concurrency.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	9a3f997e7853062b273203a08dbc68d4d45a291a	b55c9c321cfad68381504ed48316298d36d65281
+A	tests/connections.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	92626f06e13e056f621703c440886b70d346385c	
+A	tests/design-canvas.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	4562bdffa3b6e25bea86fa9f344aa37e5774bae4	
+M	tests/document-viewer.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	a1ed30c9e61b617273862570c6d2e7946f88531d	a1b02294f84639309177a5f0d9be79d6a22e6b5e
+A	tests/external-links.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	22d817191c114024f17a6b2a8cb921363f0f6e53	
+A	tests/file-icons.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	96cfaac2c764677d97a09d705a8d299f68eafb62	
+M	tests/file-links.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	03cdb4fda811f19ad5a0d666ef9d0c4806d09f99	338bdfcf49d46f40b349bbaf5aec69eba5f76077
+A	tests/fixtures/changes-view.html	CORE_REVIEW	UPSTREAM_ONLY	2ed8de9f5f66f4a9224228a6354a13142d0801e5	
+A	tests/fixtures/sample.docx	CORE_REVIEW	UPSTREAM_ONLY	becdd82e7c58332d13787c6f70309818091c9bfb	
+A	tests/fixtures/sample.pdf	CORE_REVIEW	UPSTREAM_ONLY	e2fe29148984d607cc66a9ea3f16dde87730a5ff	
+A	tests/fixtures/sample.png	CORE_REVIEW	UPSTREAM_ONLY	68aaee8dad1d3e39f248fe1368d1c19126971c2e	
+A	tests/fixtures/sample.svg	CORE_REVIEW	UPSTREAM_ONLY	34b07e0a1c455b6037843e89da1df06b086bd736	
+A	tests/fixtures/sample.xlsx	CORE_REVIEW	UPSTREAM_ONLY	6ad4462388128972cb2e733aa3c9ad5e18247992	
+A	tests/github-hub-keyboard.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	e0248855caf40e089e0f77b6871e6d038f7a756f	
+M	tests/github-hub.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	c076a023e36caca414c91a0ac96a84b132e60acf	8db4eda2412f207362af455d8449fe5803b80107
+M	tests/grok.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	39c2c3c31cd048acedcb511805c6fea923dbb631	e3a2456c869420d004138c3758b0c9133a02c26c
+A	tests/inspector-new-task.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	a4a69568f05293c0e46acb1b3fb0fe5200dd03d1	
+A	tests/inspector-tab-helper.ts	CORE_REVIEW	UPSTREAM_ONLY	fd7b01fd40ef9a5f0d3fee77ab3c789942d02a56	
+A	tests/inspector-tabs.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	1a3d0344fe86906417daa6962348b89ef7403947	
+M	tests/jev.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	01ab4836dbe2eb30c51a87b07245ea8b7a22e4b7	5496908905ed3a89ff83a3dec7f3dedc7aa8d66d
+A	tests/jj.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	596a6e20fb3ab7443a3dd3a12db2c379080a6ac3	
+M	tests/layout-preferences.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	12c7fa5b1da1011b024978e4556864951886ff00	6aa5cc1a68e9de0e2b084f67945ad30d24c78443
+M	tests/markdown.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	7b6d12965b387baf05a1d37574beeeb2c26c3948	352f96e899db9633d9b5ec3b46730ffd00ec6a56
+M	tests/message-actions.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	f689fc52fc9d089a5e40dab94cc2fa23e0d18b81	a3c00610a9c28e1f50bc2d5636beb6d0afd2ede1
+M	tests/message-queue.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	f47d5cd6e2f371a141e5143f39f8b5641b03286d	acbbedf28b454d593c479858d1f0b6c8b074ceaf
+A	tests/model-picker.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	3faf3fdfcf8e8528dc62d0017e1dceeaf57bdfd8	
+A	tests/office-viewer.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	d73b8138bdf8a44b8957da90e52b05a553476487	
+M	tests/overlay.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	c72be55920da4d4d5b6a55f8be60321d3b44081d	ec7a3558dea1d439833ebdaf5d2062c1f13c3d76
+M	tests/preview-architect.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	175d496645ad5b16e4ffc934671efedd5526be5e	6722e0ea873252730e8cba4eeffbec08b5af47f8
+A	tests/provider-handoff.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	e8cae5b7106eb871ea6c27a7fb09c4433e36cb63	
+M	tests/provider-settings.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	a3fa73166b16087e5d0c46d47a505a4d47130ebb	b92ed078ba244336b8fc53e1a36ab396346e5661
+A	tests/recipes.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	b5a38811c3d95cec03692166454b5e4e35fe364b	
+A	tests/release-builds.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	5a9690f1d882c37986df92b38415786eb5712f94	
+A	tests/remote-connect-ux.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	bee32474b493361e7249b9627e79596b4a3a7dcb	
+A	tests/remote-diagnostics.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	264843542031a16959df1e77013f445f38998e00	
+A	tests/remote-first-message.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	d3031c26a103b1ed4f4a446004e9537474882acf	
+A	tests/remote-images.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	bbe68317dfc6e5483923094d8b4770fcb49af61d	
+A	tests/remote-pairing.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	61f6830321bbb0ee4f84e393e16cc369d1875956	
+A	tests/remote-progress.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	27116ebb737813457d208e9180c8409993eefec3	
+A	tests/remote.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	8a2462ad70165196fc8bce42b0f4a9e250e41914	
+A	tests/remove-project.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	90c883b24fbb781cc4038b85a663f8ae4b7d3989	
+A	tests/search-panel.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	f5091ef373b15eb97116d0b2c13984b3d6f856ee	
+M	tests/settings.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	0639293b82fae4ae93e754340d8cc45a18bf03d4	59ca07a3a03dd57dfae329834a456e8c020b0c7b
+A	tests/sidebar-sections.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	5e62126f9b6d93d58140ac32fea8bd6c876e1278	
+A	tests/sidebar-sections.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	d32143a0e8ff41758416296dfdaec0cb62fa4657	
+M	tests/simulator.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	d09eb84f717c2927e08cc576efc0b5acc462c70e	cfff627ebfa82559d2fd72e6b3ed818b9aa34a8b
+A	tests/skills-library.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	c8b488d8cb0b4da84a3edc69b5a1d14071557cd7	
+M	tests/slash-commands.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	41a942a259f8f2a2296f5f1363e4fb06af7dfc67	04fc97c801d307e5081c48a7d74dc0dfd500774d
+A	tests/steering.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	01e7fda08ee5386d7d3c4efe89cdcd610a17d857	
+M	tests/streaming.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	5b5af1c934f84f3c699c2ac8a92015a8592ea7b1	d50a7c011ef61d363d2dcac501474a8366121150
+M	tests/subagents.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	6156fc1806e0b2db1f992f29cee4218265f7d6a2	0b37e25d88e433027aae2df10617d39f3892a2eb
+M	tests/thread-order.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	2c90cda8864939dcad645165ccbf70c524c1f94d	fa0851d5c2962be82b33f6b903920b167b5f1898
+M	tests/thread-panels.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	9201dc0ed71d44749022d2bd1271f98002e982f9	9592c0902c3ed37918038800cca52b15164b1da6
+M	tests/token-saver.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	f148efcf57464c280d09b79f67526dee067ada63	8dc09b9fb325a01a24dfb2b0cdd40292ab95e262
+M	tests/tool-activity.test.mjs	CORE_REVIEW	DIVERGED_CONTENT	c65e2aa311cb6f4c3c6b4e4d223626acf2805fde	041ff59fdb3d4c6da09c96c400a40b21a3744edc
+A	tests/tool-cards.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	7779eb0201d17f249594fce78c14fe4853e7c4c3	
+A	tests/tool-trace.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	13356e8855f8c8d59c73f1ce0af923b5324e8fa2	
+A	tests/trace-brands.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	ece3bbd693b3c1afacac2582b346bf85194edb94	
+A	tests/tray-popover.spec.ts	CORE_REVIEW	UPSTREAM_ONLY	1ea3fe55e7a3311b634b88ca11c8819df9082ff2	
+M	tests/turn-changes.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	7906b10ccd48133279fcc15f5e07260a991254c8	d9a752654f092528cf8d38442fe1bd097ffd6ea6
+A	tests/turn-checks.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	904a87b75206bea466baa8bf476e886a288e6352	
+M	tests/ui.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	223673f514abe5a662c2960da6c360b40c6ea9e2	63c742a481fc083f5678f54d7a08e7399fb2782a
+M	tests/vm.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	18118b50b25c69e8ed86ec68d96f903f4d60dcfd	725ca75174e26dd2074074021720b197a79fe574
+M	tests/worktrees.spec.ts	CORE_REVIEW	DIVERGED_CONTENT	7100062063fa71a63a005c4aac0803486c6f8a11	d82cde5b6eee6642ecf52c7d638137150de8ae0c
+A	tests/zip-limit.test.mjs	CORE_REVIEW	UPSTREAM_ONLY	68c0e1fff9501e797c00c278b514a009a422f9cc	
+M	tsconfig.json	OTHER_REVIEW	DIVERGED_CONTENT	7c0520c32b7ee696c298cf8b1d4002b63070fa31	a9419004336de6afef68ecc268ff386009616a0d
+M	vite.config.ts	OTHER_REVIEW	DIVERGED_CONTENT	ca4f6663c0c7eb3f4e30e1767e6705c2995328d2	7bfc824edafa80e0b63a6b5d5acd8231e10ab239
+M	website/README.md	OTHER_REVIEW	DIVERGED_CONTENT	b27fa053d4d9848c52c2e114f44a80b72aaaf9a0	cd72b2de79f644928d5edb469b792e9facad52ca
+A	website/public/assets/mobile-approval.webp	OTHER_REVIEW	UPSTREAM_ONLY	5a4afd4ff9d7c13472e743973c023e973e9d4fc6	
+A	website/public/assets/mobile-inbox.webp	OTHER_REVIEW	UPSTREAM_ONLY	b6e68dc83e00aa26b0a6ba264ee9d4d6827dbaff	
+A	website/public/assets/mobile-task.webp	OTHER_REVIEW	UPSTREAM_ONLY	c54b87fea024b4ee5f6e5790ffedb6199c009019	
+M	website/src/components/DistributionNote.astro	OTHER_REVIEW	DIVERGED_CONTENT	67572d831c6f1e1e3eb923bd0147064114b6bcc4	47eaa10027f13371b9e87c14f48a2c000c5946d5
+A	website/src/components/MobileApp.astro	OTHER_REVIEW	UPSTREAM_ONLY	d0e45069b45a6b0bb862cf4524562386463fe665	
+M	website/src/components/PrivacySection.astro	OTHER_REVIEW	DIVERGED_CONTENT	550cd95590b4ec3930c8378347aece0ef47d2ef0	6c53e4f51ad94c6044b16dedb2ef10bae1f7e3c9
+M	website/src/components/SiteFooter.astro	OTHER_REVIEW	DIVERGED_CONTENT	6e101ca44d5a0d98a12529f8fd9d4a820ba4221c	17ffd26acb42d10443f6e8da29ef0a7430e412ff
+M	website/src/data/release-dates.json	OTHER_REVIEW	DIVERGED_CONTENT	4cb5b31d8191a5f916b02fbff39b48d42a50ad59	9c147e3b43ffe82cfabc7487ce3cf377e402ed3b
+M	website/src/layouts/Page.astro	OTHER_REVIEW	DIVERGED_CONTENT	da50df9cc9d30e21ff19adbc51e1804af5933c5b	950a2819900f25b80462cc87cd98b01ae5fa337f
+M	website/src/lib/distribution.ts	OTHER_REVIEW	DIVERGED_CONTENT	b879a16dcffec0fd3195adf0dcd4facefd3ddb2e	9312b02208995278b54a890e3ba69d5a3150494b
+M	website/src/pages.css	OTHER_REVIEW	DIVERGED_CONTENT	b564ffaa85bc12c61605b89a0fe098e541a59e5a	ba6153a2ad4f0db324fb3d9b5a31a46001fba23c
+M	website/src/pages/changelog.astro	OTHER_REVIEW	DIVERGED_CONTENT	21c6c87641f6b8c919a7d81910e0b18cd194613b	9a912f53398b3fc0b4282694b75543c44edc44bc
+M	website/src/pages/index.astro	OTHER_REVIEW	DIVERGED_CONTENT	5858e959c6644aa32aa6e2b2bed41e3e069cb0ab	e482819e0c3b40a7303a7a150cd73350f32d4ae5
+M	website/src/pages/privacy.astro	OTHER_REVIEW	DIVERGED_CONTENT	1be14f4a5c8880cdc030dfcea2a827df9fc0e294	87a21d49811786f4de1c64e6abd0da0c5acd32b4
+A	website/src/pages/support.astro	OTHER_REVIEW	UPSTREAM_ONLY	1f8726c7b02d214857e3964ddde4cf86ed3b3967	
+M	website/src/style.css	OTHER_REVIEW	DIVERGED_CONTENT	6d9e0b1283d8da7ebb9ced38ba846f0d5c371686	22f5a21bfd1474c369f989e862457d95c08bb473
+M	website/tests/landing.spec.ts	OTHER_REVIEW	DIVERGED_CONTENT	0d616dfcbd787b0cf31ab6438db56931a9c3fe51	5983930e2525f19669b7b2d970c776b974b32292
+M	website/tests/pages.spec.ts	OTHER_REVIEW	DIVERGED_CONTENT	36a6a10d5bb80e78d50890e2f14471d050e71f2b	aedb2e036bdb84814539e138db35006f74fe787b
+A	website/wrangler.bambooed.jsonc	OTHER_REVIEW	UPSTREAM_ONLY	83ad24f1e5bbd0310b7994b734417a11b2bcd0ea	
