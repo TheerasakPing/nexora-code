@@ -20,6 +20,7 @@ export function classifyAcceptance(evidence) {
     installedRuntime: failed.length === 0 ? 'PASS' : 'FAIL',
     developerIdSignature: signedByDeveloperId ? 'PASS' : 'BLOCKED',
     notarization: evidence.notarized ? 'PASS' : 'BLOCKED',
+    runnerAccessibility: evidence.accessibilityAutomation === 'granted' ? 'AVAILABLE' : evidence.accessibilityAutomation === 'denied' ? 'BLOCKED_ACCESSIBILITY' : 'UNVERIFIED',
     interactiveNativeGui: 'PENDING_MANUAL_ACCEPTANCE',
     independentHumanReview: 'PENDING_HUMAN_REVIEW',
   };
@@ -42,6 +43,11 @@ export function inspectInstalledMac({ appPath = '/Applications/Nexora Code.app',
   const sqlite = existsSync(db) ? run('/usr/bin/sqlite3', ['-readonly', db, 'PRAGMA integrity_check;']) : { ok: false };
   const code = bundleExists ? run('/usr/bin/codesign', ['-dv', appPath]) : { ok: false, output: '' };
   const stapler = bundleExists ? run('/usr/bin/xcrun', ['stapler', 'validate', appPath]) : { ok: false };
+  // Permission preflight only: no GUI control or screenshot is accessed.
+  // Success is not a substitute for native GUI acceptance.
+  const accessibility = run('/usr/bin/osascript', ['-e', 'tell application "System Events" to get UI elements enabled']);
+  const accessibilityAutomation = accessibility.ok && accessibility.output === 'true' ? 'granted'
+    : accessibility.ok && accessibility.output === 'false' ? 'denied' : 'unknown';
   const signature = code.ok && /Authority=Developer ID Application/.test(code.output) ? 'developer-id' : code.ok && /Signature=adhoc/.test(code.output) ? 'adhoc' : 'unknown';
   return {
     bundleExists,
@@ -50,6 +56,7 @@ export function inspectInstalledMac({ appPath = '/Applications/Nexora Code.app',
     processRunning: pgrep.ok,
     sqliteIntegrity: sqlite.ok ? sqlite.output.split(/\s+/)[0] : null,
     signature,
+    accessibilityAutomation,
     notarized: stapler.ok,
   };
 }
