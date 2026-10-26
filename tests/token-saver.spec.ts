@@ -97,6 +97,7 @@ test('Ponytail is an opt-in saver pack with intensity, persistent defaults and f
   await saver(page).click();
   const panel = page.getByRole('dialog', { name: 'Token saver' });
   await panel.getByRole('switch', { name: /Ponytail/ }).click();
+  await expect(panel.locator('.saver-total')).toHaveText('On');
   await expect(panel.getByRole('radiogroup', { name: 'Ponytail intensity' })).toBeVisible();
   await panel.getByRole('radio', { name: 'Ultra' }).click();
   await panel.getByRole('checkbox', { name: 'Start new threads like this' }).check();
