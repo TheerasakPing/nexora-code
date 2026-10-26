@@ -12,7 +12,10 @@ async function open(page: Page): Promise<void> {
     await route.fulfill({ response, body: source.replace(/switch\s*\(command\)\s*\{/, `
       window.__simEmit ??= (name, event) => emit(name, event);
       if (command.startsWith('simulator_') && command !== 'simulator_frame') (window.__simCalls ??= []).push({ command, args: structuredClone(args) });
-      if (command === 'simulator_frame') (window.__simFrames = (window.__simFrames ?? 0) + 1);
+      if (command === 'simulator_frame') {
+        window.__simFrames = (window.__simFrames ?? 0) + 1;
+        (window.__simFrameAfters ??= []).push(args.after);
+      }
       if (command === 'simulator_pose' && window.__simPoseHold) await window.__simPoseHold;
       if (command === 'simulator_pose' && window.__simPoseFail) throw new Error(window.__simPoseFail);
       if (command === 'simulator_frame' && window.__simFrameHold) await window.__simFrameHold;
@@ -269,8 +272,12 @@ test('iPhone Duo folds on click and shows a spinner until the new display answer
   await expect(pose).toHaveAccessibleName('iPhone Duo pose: Open', { timeout: 200 });
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await expect(pose).toBeDisabled();
+  const framesBeforePose = await page.evaluate(() => ((window as any).__simFrameAfters ?? []).length);
   await page.evaluate(() => { const w = window as any; w.__simPoseHold = null; w.__simPoseRelease(); });
   await expect(pose).toBeEnabled();
+  // The new display request must reach the held mock before we release it.
+  // Otherwise an old in-flight request can race with the new frame pump.
+  await expect.poll(() => page.evaluate((before: number) => ((window as any).__simFrameAfters ?? []).slice(before).some((after: number) => after === 0), framesBeforePose)).toBe(true);
   await page.waitForTimeout(300);
   await expect(screen).toHaveAttribute('aria-busy', 'true');
   await page.evaluate(() => { const w = window as any; w.__simFrameHold = null; w.__simFrameRelease(); });
