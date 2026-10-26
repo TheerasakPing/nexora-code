@@ -50,7 +50,9 @@ test('Grok Build lists its models with context windows and reasoning efforts, an
   await expect(picker.locator('.effort-label')).toHaveText('Extra High');
   await page.keyboard.press('Escape');
   expect((await calls(page, 'configure_session')).pop()?.args).toMatchObject({ provider: 'grok', model: 'grok-4.7' });
-  expect((await calls(page, 'set_reasoning_effort')).pop()?.args).toMatchObject({ reasoningEffort: 'xhigh' });
+  // Updating the slider is synchronous; saving the selected effort is async.
+  // Wait for that exact request, not for an unrelated render or fixed delay.
+  await expect.poll(async () => (await calls(page, 'set_reasoning_effort')).at(-1)?.args).toMatchObject({ reasoningEffort: 'xhigh' });
 });
 
 test('Grok approval modes describe its permission modes, including read-only planning', async ({ page }) => {
