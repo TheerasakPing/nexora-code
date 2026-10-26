@@ -7,7 +7,7 @@
  * of Caveman (Apache-2.0, JuliusBrussee/caveman); Lite and Ultra and the exceptions follow
  * Caveman's own rules. Savings figures are the projects' published benchmarks or estimates. */
 
-export type PackId = 'caveman' | 'lean-code' | 'quiet-tools' | 'rtk';
+export type PackId = 'caveman' | 'lean-code' | 'quiet-tools' | 'ponytail' | 'rtk';
 export type Level = 'lite' | 'full' | 'ultra';
 export type Pack = { id: PackId; title: string; summary: string; saves: string; source: string; needs?: 'rtk' };
 export type ThreadSaver = { packs: PackId[]; level: Level; sentKey?: string; turns?: number };
@@ -17,6 +17,7 @@ export const PACKS: Pack[] = [
   { id: 'caveman', title: 'Caveman', summary: 'Terse replies: answer first, no filler, every technical fact kept.', saves: '15–65% of replies', source: 'caveman · caveman-micro benchmarks' },
   { id: 'lean-code', title: 'Lean code', summary: 'Least code that works: reuse what exists, no speculative extras, diffs not whole files.', saves: '~20–40% of code output (est.)', source: 'YAGNI, as in ponytail and Chisle' },
   { id: 'quiet-tools', title: 'Quiet tools', summary: 'Targeted searches, line ranges, quiet flags, no re-reading files.', saves: '~20–50% of tool input (est.)', source: 'context hygiene' },
+  { id: 'ponytail', title: 'Ponytail', summary: 'Reuse first, write only necessary code; keep tests, safety, and accessibility.', saves: 'Varies by task (no guaranteed savings)', source: 'DietrichGebert/ponytail · MIT' },
   { id: 'rtk', title: 'RTK compression', summary: 'Runs commands through rtk, which compresses their output before the agent reads it.', saves: '60–90% of command output', source: 'rtk-ai/rtk', needs: 'rtk' },
 ];
 export const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -42,10 +43,16 @@ const CAVEMAN: Record<Level, string> = {
     '- Never drop not/never/no/only. Code, paths, numbers and errors stay verbatim.',
   ].join('\n'),
 };
+const PONYTAIL: Record<Level, string> = {
+  lite: 'Ponytail Lite: Trace the real task, reuse existing code, standard library or platform features first. Avoid speculative extras. Preserve security, correctness, accessibility and appropriate tests.',
+  full: 'Ponytail Full: Trace real behavior before changing code. First ask if code is needed, then reuse existing modules, standard library, native platform features or installed dependencies. Implement the smallest complete fix with a focused regression test for risky logic. Do not compromise validation, errors, security, accessibility or data integrity.',
+  ultra: 'Ponytail Ultra: Inspect entry points and all affected call sites before coding. Challenge every new dependency, abstraction and duplicate implementation; prefer deletion or reuse when safe. Keep only necessary code and focused tests for risky logic. Preserve security, validation, error paths, data protection and accessibility; report unverified behavior explicitly.',
+};
 const EXCEPTIONS = 'Use plain full sentences for security warnings, irreversible actions, ordered steps, questions to the user, and anything written to files, commits, PRs or docs.';
 const GUIDANCE: Record<Exclude<PackId, 'caveman'>, string> = {
   'lean-code': 'Write the least code that fully solves the task. Reuse existing helpers, the standard library and platform features before adding code or dependencies. No speculative abstractions, options or unrequested features. No new comments or docs unless asked. In chat, show changed lines with minimal context, not whole files.',
   'quiet-tools': 'Keep tool output small. Search with targeted patterns (rg -n pattern path, rg -l) instead of listing or dumping trees. Read only the line ranges you need; do not re-read a file you already read unless it changed. Use quiet flags (git --no-pager, -q, --silent) and cap long output with head or tail. Run the tests closest to the change before the full suite.',
+  ponytail: 'Ponytail principles (DietrichGebert/ponytail): Understand the task and trace its real data flow first. Before coding, ask whether a change is needed, whether this codebase already solves it, whether the standard library or platform can do it, and whether an installed dependency already fits. Write only the smallest complete solution; reuse instead of duplicating. Keep input validation, security boundaries, data-loss handling, error handling and accessibility. Add a focused test for risky logic. Do not fabricate success, benchmarks or skipped checks; briefly report what was not verified.',
   rtk: 'rtk is installed and compresses command output. Prefix shell commands with rtk: rtk git status, rtk git diff, rtk git log, rtk ls, rtk read <file>, rtk grep <pattern>, rtk find, and test runners such as rtk npm test or rtk cargo test. If rtk rejects a command, run it plainly.',
 };
 
@@ -85,7 +92,7 @@ export function setDefaults(value: ThreadSaver | null): void {
 export function guidance(packs: PackId[], level: Level, available: { rtk: boolean }): string {
   const active = packs.filter(id => id !== 'rtk' || available.rtk);
   if (!active.length) return `${HEADER}): off. Answer in your normal style again.`;
-  const lines = active.map(id => id === 'caveman' ? CAVEMAN[level] : GUIDANCE[id]);
+  const lines = active.map(id => id === 'caveman' ? CAVEMAN[level] : id === 'ponytail' ? PONYTAIL[level] : GUIDANCE[id]);
   if (active.includes('caveman')) lines.push(EXCEPTIONS);
   return `${HEADER}, applies to this whole thread until changed; reader pays per token):\n${lines.join('\n\n')}`;
 }
@@ -109,7 +116,7 @@ export function contextFor(sessionId: string, available: { rtk: boolean }): stri
 
 /** Rough combined share of tokens saved, for the meter: savings compound, they don't add. */
 export function estimate(packs: PackId[], level: Level, available: { rtk: boolean }): number {
-  const share: Record<PackId, number> = { caveman: level === 'lite' ? 0.12 : level === 'full' ? 0.25 : 0.35, 'lean-code': 0.12, 'quiet-tools': 0.15, rtk: 0.2 };
+  const share: Record<PackId, number> = { caveman: level === 'lite' ? 0.12 : level === 'full' ? 0.25 : 0.35, 'lean-code': 0.12, 'quiet-tools': 0.15, ponytail: 0.1, rtk: 0.2 };
   const kept = packs.filter(id => id !== 'rtk' || available.rtk).reduce((left, id) => left * (1 - share[id]), 1);
   return Math.round((1 - kept) * 100);
 }
