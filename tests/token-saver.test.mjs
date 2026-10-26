@@ -55,3 +55,21 @@ test('the estimate compounds, ignores unavailable tools, and stays plausible', (
   assert.ok(all > 50 && all < 75, String(all));
   assert.ok(estimate(['caveman'], 'lite', noRtk) < estimate(['caveman'], 'ultra', noRtk));
 });
+
+test('Ponytail opts in per thread, supports levels, reminders and preserves safety', () => {
+  memory.clear();
+  updateThread('ponytail-thread', { packs: ['ponytail'], level: 'lite' });
+  const first = contextFor('ponytail-thread', noRtk);
+  assert.match(first, /Ponytail Lite/);
+  assert.match(first, /security, correctness, accessibility/);
+  for (let i = 1; i < REMIND_EVERY; i++) assert.equal(contextFor('ponytail-thread', noRtk), '');
+  assert.match(contextFor('ponytail-thread', noRtk), /Ponytail Lite/);
+  updateThread('ponytail-thread', { level: 'ultra' });
+  assert.match(contextFor('ponytail-thread', noRtk), /Ponytail Ultra/);
+  assert.match(guidance(['ponytail', 'quiet-tools'], 'full', noRtk), /Ponytail Full/);
+  assert.equal(estimate(['ponytail'], 'full', noRtk), 0, 'no unmeasured token-savings claim');
+  updateThread('ponytail-thread', { packs: [] });
+  assert.match(contextFor('ponytail-thread', noRtk), /: off/);
+  setDefaults({ packs: ['ponytail'], level: 'full' });
+  assert.deepEqual(threadSaver('new-ponytail-thread').packs, ['ponytail']);
+});
