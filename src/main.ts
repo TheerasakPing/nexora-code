@@ -803,12 +803,20 @@ function recentModels(id: ProviderId): string[] | null {
 function loadModels(id: ProviderId): Promise<ProviderModel[]> {
   const cached = modelCatalogs.get(id);
   if (cached && cached.expires > Date.now()) return cached.pending;
-  // OpenCode's own listing also says whether Settings saved a selection, which keeps the picker's full list.
+  // OpenCode returns saved choices even if its CLI catalog times out. Keep
+  // those IDs usable, but retry their missing metadata shortly rather than
+  // caching the fallback labels for the full five minutes.
+  let degradedCatalog = false;
   const request = id === 'opencode'
-    ? call<OpenCodeModels>('list_opencode_models').then(result => { openCodeSaved = result.selectedModelIds.length > 0; return openCodeChoices(result); })
+    ? call<OpenCodeModels>('list_opencode_models').then(result => {
+      openCodeSaved = result.selectedModelIds.length > 0;
+      degradedCatalog = Boolean(result.error);
+      return openCodeChoices(result);
+    })
     : call<ProviderModel[]>('list_provider_models', { provider: id });
   const pending = request.then(models => {
     if (modelCatalogs.get(id)?.pending === pending) {
+      if (degradedCatalog) modelCatalogs.get(id)!.expires = Date.now() + 5_000;
       const entry = provider(id); if (entry) entry.models = models;
       if (session()?.provider === id) refreshModelLabels();
       else refreshTeamProgress();

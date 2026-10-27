@@ -46,6 +46,9 @@ async function failuresAndDelay(page: Page): Promise<void> {
       const fixture = window.__openCodeModels;
       fixture.calls.push({ command, args: structuredClone(args) });
       if (fixture.errors[command]) throw new Error(fixture.errors[command]);
+      if (command === 'list_opencode_models' && fixture.partialCatalog) {
+        return { models: [], selectedModelIds: JSON.parse(localStorage.getItem('pandacode.preview.opencode-models') || '[]'), error: 'OpenCode metadata temporarily unavailable' };
+      }
       if (command === 'save_opencode_models' && fixture.delaySave) {
         await new Promise(resolve => { fixture.releaseSave = resolve; });
         fixture.delaySave = false;
@@ -130,6 +133,28 @@ test('deselecting a model does not change an existing task using it', async ({ p
   await openPicker(page);
   // Clearing the selection makes the whole catalog searchable again.
   await expect(picker(page).getByRole('button', { name: /^OpenCode ·/ })).toHaveCount(8);
+});
+
+test('saved OpenCode models recover metadata after a partial discovery failure', async ({ page }) => {
+  await page.clock.install();
+  await failuresAndDelay(page);
+  await boot(page);
+  await openModels(page);
+  await modelCheckbox(page, 'Big Pickle').check();
+  await saveModels(page);
+  await page.evaluate(() => { (window as any).__openCodeModels.partialCatalog = true; });
+  await openPicker(page);
+  // Saved model IDs remain selectable even when the CLI only returned an error.
+  await expect(picker(page).getByRole('button', { name: 'OpenCode · opencode/big-pickle', exact: true })).toBeVisible();
+  const before = await page.evaluate(() => (window as any).__openCodeModels.calls.filter((call: any) => call.command === 'list_opencode_models').length);
+  await page.keyboard.press('Escape');
+  await page.clock.fastForward(6_000);
+  await page.evaluate(() => { (window as any).__openCodeModels.partialCatalog = false; });
+  await openPicker(page);
+  await expect(picker(page).getByRole('button', { name: 'OpenCode · Big Pickle', exact: true })).toBeVisible();
+  const after = await page.evaluate(() => (window as any).__openCodeModels.calls.filter((call: any) => call.command === 'list_opencode_models').length);
+  expect(after).toBeGreaterThan(before);
+  expect(await savedIds(page)).toEqual(['opencode/big-pickle']);
 });
 
 test('refresh and save failures keep draft choices available for retry', async ({ page }) => {
