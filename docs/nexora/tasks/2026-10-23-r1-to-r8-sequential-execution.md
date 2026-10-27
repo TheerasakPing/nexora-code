@@ -1,7 +1,7 @@
 # Task Checklist Planner — Sequential R1 → R8 Execution
 
 **Date:** 2026-10-23 / User instruction: “ทำไล่ไปให้เสร็จที่ละ R เลย ไล่จาก 1-8”
-**Worktree:** /Volumes/Data/workspace/git/nexora-code-integration-20261023, PR #26. Latest accepted exact-head 9/9 CI for 8f8bd40, protected develop not yet merged.
+**Historical worktrees:** PR #26 integration was prepared at `/Volumes/Data/workspace/git/nexora-code-integration-20261023`; its exact-head baseline 8f8bd40 passed 9/9 CI. After PR #26 merged, the R1 follow-up was isolated at `/Volumes/Data/workspace/git/nexora-code-r1-sequential-20261023`. This reconciliation retains both workstream records; new head requires fresh CI and independent review.
 **Lead/Delegation:** TEAM_LEAD_SERIAL because current MCP interface exposes no API to delegate full engineering subtasks to independent agents. No invented agents; no independent reviewer present.
 **Rule:** NC-TEAM-001/002/003, each subtask needs Unit/Contract, E2E, Smoke, Team Lead review; no [x] without acceptance. Phase gates remain NO-GO if native or publisher evidence is missing. Strict *phase priority* not a claim of 8 finished phases in one turn.
 
@@ -46,7 +46,7 @@
 
 ## E. Lead initial GO/NO-GO
 
-**Team Lead verdict:** GO limited R1 source/test implementation. NO-GO R1 phase exit, protected develop merge and release absent genuine independent reviewer/native GUI/Provider and crash tests.
+**Team Lead verdict:** GO limited R1 source/test implementation via dedicated follow-up PR. NO-GO R1 phase exit, protected develop merge and release absent genuine independent reviewer/native GUI/Provider and crash tests.
 **Cross-cutting acceptance baseline:** 21/24 Engineering packages unchecked, 7/7 Branding epics awaiting final acceptance, 61 R0–R8 detailed checks unchecked; overlapping metrics, not progress percentages.
 
 ## 2026-10-23 execution evidence / remaining gates
@@ -56,3 +56,11 @@
 - Team Lead reviewed and corrected Windows safety: completed PID must not be passed to `taskkill` because it could have been reused; Windows uses a scoped Job Object and kill-on-close.
 - R1 phase exit **NO-GO**, because native provider session recovery, installed GUI and full workspace TOCTOU remain unaccepted. Thus R2–R8 queue entries are not marked started/done.
 - Protected `develop` merge **NO-GO** pending genuine independent reviewer, current-head CI, and required acceptance. No external agents actually delegated; TEAM_LEAD_SERIAL mode.
+
+## Parallel-source isolation
+
+When preparing the follow-up PR, an unrelated new R1 provider-test planner was
+found on the older integration branch. This work package was **cherry-picked
+independently** onto the freshly merged `develop` in a dedicated worktree,
+including ONLY `SEQ-R1-01`/02/03 scoped changes. No parallel agent work,
+other branches or dirty user files were overwritten.

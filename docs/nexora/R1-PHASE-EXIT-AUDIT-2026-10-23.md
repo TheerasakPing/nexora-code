@@ -53,3 +53,9 @@ This is a **partial** source-level P0 improvement only; R1 phase exit NO-GO
 pending real Native GUI/provider/resume tests, Windows junction E2E and
 independent review. Test commands/evidence: task planner
 `2026-10-23-r1-workspace-directory-index-hardening.md`.
+
+## 2026-10-26 develop rebase-equivalent merge reconciliation (PR #28)
+
+- TEAM_LEAD_SERIAL resolved the two add/add documentation conflicts between PR #28 and current `origin/develop`, preserving both audit narratives and explicit R1 NO-GO. Rust `providers.rs` and `workspace.rs` were auto-merged without conflict; this is not human code approval.
+- Local Mac: `npm run build` PASS, `npm test` 210/210 PASS, `npm run test:release` 35 PASS / 1 platform-specific SKIP; `git diff --cached --check` PASS.
+- Pending after pushing this merge commit: exact-head cross-OS Rust/CI rerun, independent human reviewer, native session and PTY E2E. R1 phase exit remains NO-GO.
