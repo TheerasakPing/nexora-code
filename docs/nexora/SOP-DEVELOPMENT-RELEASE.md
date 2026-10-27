@@ -411,6 +411,19 @@ Next owner and next safe action:
 - **Remote GitHub:** ตรวจสิทธิ์และยืนยัน Repository จริงก่อน Push; ห้ามกล่าวว่า PR/CI ทำงานแล้วหากมีแต่ Local Commit
 - **โหมดตอนผู้ใช้ไม่อยู่หน้าเครื่อง:** ให้ทำ Source/Tests/Docs/Local Commits ต่อได้ แต่ **ไม่ติดตั้งแอป**, ไม่เปิด GUI, ไม่ Push/Merge/Publish โดยปราศจากสิทธิ์หรือคำสั่งที่เหมาะสม
 
+## 15.1 Mandatory cleanup of unused test artifacts (NC-CLEAN-001)
+
+**ทุกครั้งที่งานย่อยทดสอบเสร็จแล้ว ต้องเก็บหลักฐานให้ครบและลบไฟล์ทดสอบชั่วคราวที่ไม่ใช้ต่อเสมอ** ก่อนส่งมอบ โดย Team Lead เป็นผู้ตรวจผล Cleanup และบันทึกใน Planner/PR ทุกครั้ง
+
+1. Collect PASS/FAIL, exact commit SHA, CI URL, screenshots/traces needed for bug triage, and release checksum provenance **before** cleaning. If a test failed or is still running, retain relevant evidence until issue investigation and external review finish.
+2. Run `node scripts/nexora/cleanup-test-artifacts.mjs` (**dry-run**); inspect the candidate list, confirm the worktree is idle and owned by this task.
+3. Run `node scripts/nexora/cleanup-test-artifacts.mjs --apply` to remove only **untracked/ignored generated** root directories: `test-results/`, `playwright-report/`, and `coverage/`. The helper refuses deletion of tracked files or symlinks and refuses arbitrary subdirectory roots.
+4. Independently inspect temporary `/tmp/nexora-...` logs and build `dist/`/`src-tauri/target/` folders in task-specific isolated worktrees. Remove only if their evidence is recorded, no job uses them, the path is verified, and deleting them cannot affect an active agent or installer.
+5. Remove **only your own** completed, fully committed and pushed isolated Git worktrees when no further local editing is required. Never remove another worker's worktree, a dirty checkout, a real user profile/SQLite database, installed application, credentials, or artifacts needed for reproducible release.
+6. Confirm `git status --short`, record removed candidates / retained evidence / any exception in the task Planner, and have the Team Lead review it. Do **not** delete regression test source files (`tests/**/*.test.*`, `*.spec.ts`), committed fixtures, source files, docs, or Git history merely because the tests already passed.
+
+On CI, do not run cleanup before required test artifact uploads. Test helper verification: `node --test tests/cleanup-test-artifacts.test.mjs`. This policy applies to all future A–C and U1–U7 work, including local Mac/Windows workflows.
+
 ## 16. References
 
 - [Nexora Code Roadmap](ROADMAP.md)
