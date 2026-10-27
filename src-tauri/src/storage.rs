@@ -178,6 +178,16 @@ fn settle_unfinished_subagents(db: &Connection, sid: Option<&str>, status: &str)
 impl Store {
     pub fn open(path: &Path) -> Result<Self> {
         let mut db = Connection::open(path).map_err(|e| e.to_string())?;
+        // Refuse a database written by a newer app before WAL or schema DDL can
+        // change it. Downgrades must never silently modify user sessions.
+        let on_disk_version: i64 = db
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .map_err(|e| e.to_string())?;
+        if on_disk_version > SCHEMA_VERSION {
+            return Err(format!(
+                "This database uses schema version {on_disk_version}, newer than this Nexora Code build supports ({SCHEMA_VERSION}). Update Nexora Code to open it; do not downgrade the database."
+            ));
+        }
         db.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-1024; PRAGMA mmap_size=0;
             CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, name TEXT NOT NULL, path TEXT NOT NULL UNIQUE);
             CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -1639,6 +1649,33 @@ mod tests {
             .create_session(&project.id, "claude", "sonnet", "auto")
             .unwrap();
         (store, session)
+    }
+
+    #[test]
+    fn newer_schema_refuses_downgrade_without_changing_database_bytes() {
+        let folder = std::env::temp_dir().join(format!("nexora-future-schema-{}", Uuid::new_v4()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("sessions.sqlite");
+        {
+            let db = Connection::open(&path).unwrap();
+            db.execute_batch(&format!(
+                "PRAGMA user_version={}; CREATE TABLE future_data(value TEXT NOT NULL); INSERT INTO future_data VALUES('preserve');",
+                SCHEMA_VERSION + 1
+            )).unwrap();
+        }
+        let before = std::fs::read(&path).unwrap();
+        let error = Store::open(&path).err().expect("newer database must not open");
+        assert!(error.contains("newer than this Nexora Code build"), "{error}");
+        assert_eq!(std::fs::read(&path).unwrap(), before, "never edit newer database bytes");
+        let db = Connection::open(&path).unwrap();
+        let version: i64 = db.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap();
+        assert_eq!(version, SCHEMA_VERSION + 1);
+        let preserved: String = db.query_row("SELECT value FROM future_data", [], |row| row.get(0)).unwrap();
+        assert_eq!(preserved, "preserve");
+        let old_tables: i64 = db.query_row("SELECT COUNT(*) FROM sqlite_master WHERE name='sessions'", [], |row| row.get(0)).unwrap();
+        assert_eq!(old_tables, 0, "no old-schema tables may be created");
+        drop(db);
+        std::fs::remove_dir_all(folder).unwrap();
     }
 
     #[test]
