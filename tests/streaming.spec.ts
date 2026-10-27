@@ -113,6 +113,25 @@ test.describe('streamed responses', () => {
     await expect(page.locator('.task-item.selected .task-title')).toHaveText('Make search feel instant');
   });
 
+  test('shows a slow working-button orbit without intercepting Stop and respects reduced motion', async ({ page }) => {
+    const sessionId = await startTurn(page, 'conversation');
+    const stop = page.getByRole('button', { name: 'Stop task', exact: true });
+    await expect(page.locator('.composer-running .send-button.stop-button')).toBeVisible();
+    const orbit = await stop.evaluate(button => {
+      const style = getComputedStyle(button, '::before');
+      return { animationName: style.animationName, duration: style.animationDuration, pointerEvents: style.pointerEvents };
+    });
+    expect(orbit.animationName).toContain('nexora-send-working-orbit');
+    expect(orbit.duration).toBe('5.5s');
+    expect(orbit.pointerEvents).toBe('none');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(() => stop.evaluate(button => getComputedStyle(button, '::before').animationName)).toBe('none');
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expect.poll(() => stop.evaluate(button => getComputedStyle(button, '::before').animationName)).toContain('nexora-send-working-orbit');
+    await finish(page, sessionId);
+    await expect(page.locator('.composer-running .send-button.stop-button')).toHaveCount(0);
+  });
+
   test('keeps the latest streaming narrative before tools when older activity is trimmed', async ({ page }) => {
     const id = await startTurn(page, 'conversation');
     await push(page, id, 'I’m checking all project files.');
