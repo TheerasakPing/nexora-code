@@ -44,6 +44,20 @@ dependencies, status inventory, acceptance tests and explicit NO-GO criteria.
 19 Workflow Studio; 20 Agent Dashboard; 21 Mac acceptance;
 22 Windows acceptance; 23 Linux acceptance; 24 security and release gates.
 
+## U1–U7 — selective PandaCode upstream synchronization (parallel workstream)
+
+Our pinned upstream fork baseline is PandaCode v0.3.16; v0.3.50 is a **review target**, not a merged or accepted source version. See the [selective upstream plan](UPSTREAM-SYNC-U1-U7-2026-10-26.md), the [full 0.3.17–0.3.50 release-notes inventory](UPSTREAM-RELEASE-INVENTORY-2026-10-26.md) and [task planner](tasks/2026-10-26-upstream-panda-v0350-sync.md).
+
+- U1 audit source / contract / license diffs and classify already-present vs backport vs excluded;
+- U2 harden native session lifecycle and improve measured local performance;
+- U3 evaluate CLI providers and resilient model discovery;
+- U4 extend live agent traces and tool result cards without unsafe output rendering;
+- U5 refine task sidebar, inspector and attachment UX in Nexora design/Thai;
+- U6 integrate against the existing R1–R7 security, migration, E2E and native gates;
+- U7 package verifiable Mac/Windows beta only after passing prior gates.
+
+**No automatic upstream merge, Connect/Cloud accounts, or upstream updater keys.** These batches enhance, but do not substitute for, the existing 24 engineering PRs and BR-01–07 work. As of the 2026-10-26 plan, 0/7 U-batches are fully accepted.
+
 ## Architecture commitments
 
 Retain Tauri v2, Rust backend and vanilla TypeScript initially; no unnecessary React rewrite.
